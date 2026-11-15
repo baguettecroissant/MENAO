@@ -91,6 +91,7 @@ export function PlanWorks({
   trades,
   workTrades,
   lotChoices,
+  symbolCounts = {},
   measureHref,
   files,
   pages,
@@ -106,6 +107,8 @@ export function PlanWorks({
   workTrades: { code: string; label: string }[];
   /** Lots de l'appel d'offres et lots demandés par les ouvrages écrits, à cocher. */
   lotChoices: PlanLotChoice[];
+  /** Symboles électriques comptés par type (ADR 0336) : le lot de l'électricien n'est pas vide. */
+  symbolCounts?: Record<string, number>;
   measureHref: string;
   files: PlanFileLink[];
   pages: PlanPageInfo[];
@@ -141,6 +144,7 @@ export function PlanWorks({
   );
   const [lotsError, setLotsError] = useState<string | null>(null);
   const [savingLots, startLots] = useTransition();
+  const electricalCount = Object.values(symbolCounts).reduce((sum, v) => sum + v, 0);
 
   const quantities = useMemo(() => drafts.map(quantityOf), [drafts]);
   const invalid = drafts.some((d, i) => !d.name.trim() || quantities[i] === undefined);
@@ -535,7 +539,11 @@ export function PlanWorks({
                   {choice.label}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {count ? w.lotCount(count) : n.lotEmpty}
+                  {count
+                    ? w.lotCount(count)
+                    : choice.code === "electricien" && electricalCount
+                      ? n.symbolsCounted(electricalCount)
+                      : n.lotEmpty}
                 </span>
               </label>
             </li>

@@ -145,32 +145,50 @@ test("appels d'offres : plans lus, relevé corrigé, DPGF créé puis exporté a
     timeout: 30_000,
   });
   await expect(page.getByText(/^Plans lus : 3 pièces relevées/)).toBeVisible();
+  // Parcours guidé (lot 56) : chiffres clés, détail de la lecture replié.
+  await expect(page.getByText("3 pièces", { exact: true })).toBeVisible();
+  await page.getByText("Détails de la lecture").click();
   await expect(page.getByText("Échelle 1/50 lue dans le cartouche")).toBeVisible();
 
-  const table = page.getByRole("table", { name: "Pièces relevées" });
-  await expect(table.getByText("Lu p. 2")).toBeVisible();
-  await expect(table.getByText("Calculé (cotes)")).toBeVisible();
-  await expect(table.getByText("À vérifier")).toBeVisible();
+  // Trois états seulement : lu sur le plan (cotes comprises), estimé par MENAO (lecture incertaine).
+  const rooms = page.getByRole("list", { name: "Pièces relevées" });
+  await expect(rooms.getByRole("button", { name: "Corriger Séjour-cuisine" })).toContainText(
+    "Lu sur le plan",
+  );
+  await expect(rooms.getByRole("button", { name: "Corriger Dégagement" })).toContainText(
+    "Lu sur le plan",
+  );
+  await expect(rooms.getByRole("button", { name: "Corriger WC" })).toContainText(
+    "Estimé par MENAO",
+  );
+  await rooms.getByRole("button", { name: "Corriger Dégagement" }).click();
   await expect(page.getByLabel("Surface (m²) : Dégagement")).toHaveValue("8,22");
-  await expect(page.getByLabel("Hauteur (m) : WC")).toHaveValue("2,5");
 
-  // Correction d'une surface, nouvelle pièce, une porte de plus.
+  // Correction d'une surface, nouvelle pièce, une porte de plus ; « Terminé » enregistre.
+  await rooms.getByRole("button", { name: "Corriger WC" }).click();
+  await expect(page.getByLabel("Hauteur (m) : WC")).toHaveValue("2,5");
   await page.getByLabel("Surface (m²) : WC").fill("1,8");
   await page.getByRole("button", { name: "Ajouter une pièce" }).click();
   await page.getByLabel("Pièce : Pièce").fill("Palier");
   await page.getByLabel("Surface (m²) : Palier").fill("4,6");
+  await page.getByText("Aussi relevé sur les plans").click();
   await page.getByLabel("Portes intérieures").fill("10");
-  await page.getByRole("button", { name: "Enregistrer le relevé" }).click();
+  await page.getByRole("button", { name: "Terminé" }).click();
   await expect(page.getByText("Relevé enregistré.")).toBeVisible();
 
   await page.reload();
-  await expect(page.getByLabel("Surface (m²) : WC")).toHaveValue("1,8");
-  await expect(page.getByLabel("Surface (m²) : Palier")).toHaveValue("4,6");
-  await expect(table.getByText("Saisi")).toHaveCount(2);
+  await expect(rooms.getByText("Votre valeur")).toHaveCount(2);
+  await rooms.getByRole("button", { name: "Corriger WC" }).click();
+  await expect(page.getByLabel("Surface (m²) : WC")).toHaveValue("1,80");
+  await rooms.getByRole("button", { name: "Corriger Palier" }).click();
+  await expect(page.getByLabel("Surface (m²) : Palier")).toHaveValue("4,60");
+  await page.getByText("Aussi relevé sur les plans").click();
   await expect(page.getByLabel("Portes intérieures")).toHaveValue("10");
 
-  // Revêtements proposés (ADR 0292), puis DPGF créé : lot Carreleur, quantités avec leur origine.
-  await page.getByRole("link", { name: "Choisir les revêtements" }).click();
+  // « Continuer » d'étape en étape, puis revêtements proposés (ADR 0292) et DPGF créé.
+  await page.getByRole("link", { name: "Continuer : ce qu'il y a à faire" }).click();
+  await expect(page).toHaveURL(/etape=ouvrages/);
+  await page.getByRole("link", { name: "Continuer : revêtements" }).click();
   await expect(page).toHaveURL(/etape=revetements/);
   await expect(page.getByLabel("Sol : Palier")).toHaveValue("parquet");
   await expect(page.getByLabel("Murs : WC")).toHaveValue("faience");
@@ -234,7 +252,8 @@ test("appels d'offres : plan de terrain, ouvrages relevés, DPGF du terrassier e
   ).toBeVisible();
   // Pas de pièces : pas d'étape « Revêtements ».
   const steps = page.getByRole("navigation", { name: "Étapes de l'appel d'offres" });
-  await expect(steps.getByText("Relevé")).toBeVisible();
+  await expect(steps.getByText("Ce qu'il y a à faire")).toBeVisible();
+  await expect(steps.getByText("Mes pièces")).toHaveCount(0);
   await expect(steps.getByText("Revêtements")).toHaveCount(0);
 
   const table = page.getByRole("table", { name: "Ouvrages relevés" });
@@ -284,6 +303,7 @@ test("appels d'offres : photo de plan tracée, contours et contrôle de l'estima
   await expect(page.getByText(/^Plans lus : 3 pièces relevées/)).toBeVisible();
 
   // Échelle calée sur les deux cotes désignées, contours posés sur la photo.
+  await page.getByText("Détails de la lecture").click();
   await expect(
     page.getByText("Échelle calée sur 2 cotes lues : elles concordent à 0 % près"),
   ).toBeVisible();
@@ -292,6 +312,7 @@ test("appels d'offres : photo de plan tracée, contours et contrôle de l'estima
   const control = page.locator("section", { hasText: "Contrôle de l'estimation" }).last();
   await expect(control.getByText("8,22 → 8,22 m²")).toBeVisible();
   // Rien n'est remplacé : les trois pièces gardent leur surface lue ou calculée.
+  await page.getByRole("button", { name: "Corriger Dégagement" }).click();
   await expect(page.getByLabel("Surface (m²) : Dégagement")).toHaveValue("8,22");
 });
 
@@ -317,11 +338,17 @@ test("appels d'offres : ouvrages écrits sur le plan, rangés par lot, démoliti
   await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres\/[0-9a-f-]{36}\?lecture=ok/, {
     timeout: 30_000,
   });
+  await page.getByText("Détails de la lecture").click();
   await expect(page.getByText("4 ouvrages écrits, rangés dans 3 lots")).toBeVisible();
   // Type de chaque plan lu (ADR 0340).
   await expect(page.getByText("Plans lus : cloisons et menuiseries")).toBeVisible();
   // Symboles comptés sur le plan (ADR 0336) : le lot de l'électricien reste coché.
   await expect(page.getByText("Compté sur le plan : 2 points lumineux, 4 prises")).toBeVisible();
+  await expect(page.getByText("1 menuiserie avec son repère et ses dimensions")).toBeVisible();
+  await expect(page.getByText("1 quantité tirée des pièces mesurées")).toBeVisible();
+  // Étape « Ce qu'il y a à faire » : ouvrages par lot et symboles.
+  await page.getByRole("link", { name: "Continuer : ce qu'il y a à faire" }).click();
+  await expect(page).toHaveURL(/etape=ouvrages/);
   // Écran des symboles (ADR 0337) : une prise retirée sur le plan, enregistrée.
   const symbols = page.getByRole("form", { name: "Symboles comptés sur le plan" });
   await expect(symbols.getByRole("button", { name: "Prises de courant · 4" })).toBeVisible();
@@ -331,9 +358,7 @@ test("appels d'offres : ouvrages écrits sur le plan, rangés par lot, démoliti
   await symbols.getByRole("button", { name: "Enregistrer les symboles" }).click();
   await expect(page.getByText("Symboles enregistrés.")).toBeVisible();
   await page.reload();
-  await expect(page.getByText("Compté sur le plan : 2 points lumineux, 3 prises")).toBeVisible();
-  await expect(page.getByText("1 menuiserie avec son repère et ses dimensions")).toBeVisible();
-  await expect(page.getByText("1 quantité tirée des pièces mesurées")).toBeVisible();
+  await expect(page.getByText("5 symboles", { exact: true })).toBeVisible();
 
   // Un onglet par lot ; la démolition en tête, ouverte.
   const tabs = page.getByRole("tablist", { name: "Lots des ouvrages écrits" });
@@ -364,7 +389,7 @@ test("appels d'offres : ouvrages écrits sur le plan, rangés par lot, démoliti
   await expect(page.getByRole("checkbox", { name: "Lot Plaquiste" })).toBeChecked();
 
   // DPGF : le lot Démolition en tête, la dépose avec sa pièce.
-  await page.getByRole("link", { name: "Choisir les revêtements" }).click();
+  await page.getByRole("link", { name: "Continuer : revêtements" }).click();
   await expect(page).toHaveURL(/etape=revetements/);
   // Revêtements lus sur le plan (ADR 0331) : sols existants conservés, note citée, pièce proposée.
   await expect(page.getByText("2 pièces lues sur le plan · 1 proposée")).toBeVisible();
@@ -439,10 +464,11 @@ test("appels d'offres : pièce tracée à la main sur le plan, ajoutée au relev
   await page.getByRole("button", { name: "Ajouter au relevé" }).click();
   await expect(page).toHaveURL(/etape=releve&mesures=1/, { timeout: 20_000 });
   await expect(page.getByText("1 mesure ajoutée au relevé.")).toBeVisible();
+  await page.getByRole("button", { name: "Corriger Cellier" }).click();
   await expect(page.getByLabel("Pièce : Cellier")).toHaveValue("Cellier");
-  await expect(
-    page.getByRole("table", { name: "Pièces relevées" }).getByText("Tracé à la main"),
-  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Corriger Cellier" })).toContainText(
+    "Votre valeur",
+  );
 });
 
 // Pages de PDF (F-159 lot 4, ADR 0328) : le navigateur rend chaque page en image ; la page de
@@ -470,6 +496,7 @@ test("appels d'offres : PDF de plans, page tracée et mesurable comme une photo"
     "true",
   );
   await expect(page.getByRole("link", { name: "Ouvrir le PDF" })).toBeVisible();
+  await page.getByText("Détails de la lecture").click();
   const control = page.locator("section", { hasText: "Contrôle de l'estimation" }).last();
   await expect(control.getByText("8,22 → 8,22 m²")).toBeVisible();
 

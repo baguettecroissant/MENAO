@@ -25,13 +25,23 @@ import { PlanFinishes } from "@/components/pro/plan-finishes";
 import { PlanMeasure } from "@/components/pro/plan-measure";
 import { PlanReleve } from "@/components/pro/plan-releve";
 import type { PlanFileLink } from "@/components/pro/plan-viewer";
+import { GuideBar, GuideFigures, GuidePoints } from "@/components/pro/plan-guide";
 import { PlanSymbols } from "@/components/pro/plan-symbols";
 import { PlanWorks } from "@/components/pro/plan-works";
 import { PlanSteps, type PlanStep } from "@/components/pro/plan-steps";
 import { QuantitiesCheck } from "@/components/pro/quantities-check";
 import { RereadPlansForm } from "@/components/pro/reread-plans-form";
 import { TenderEditor } from "@/components/pro/tender-editor";
-import { Alert, Button, Card, CardTitle, Field, StatusBadge, inputClasses } from "@/components/ui";
+import {
+  Alert,
+  Button,
+  buttonClasses,
+  Card,
+  CardTitle,
+  Field,
+  StatusBadge,
+  inputClasses,
+} from "@/components/ui";
 import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { requireTeamPermission } from "@/lib/artisan/space";
@@ -85,26 +95,30 @@ export default async function TenderPage({
   const warnings = (query.alertes ?? "").split(",").filter((w) => warningTexts[w]);
   const plan = isPlan ? { ...(await planData(supabase, tender)), ...linesToVerify(lines) } : null;
 
-  // Étapes (maquette du lot 35) : relevé, revêtements, DPGF ; par défaut, la plus avancée.
-  // Plan de terrain (lot 52) : des ouvrages mesurés sans pièces, donc sans revêtements.
+  // Parcours guidé (maquette du lot 56) : mes pièces, ce qu'il y a à faire, revêtements, mon prix ;
+  // par défaut, la plus avancée. Plan de terrain (lot 52) : des ouvrages sans pièces, donc ni
+  // « Mes pièces » ni « Revêtements ».
   const asked = query.etape;
+  const withRooms = !!plan && plan.rooms.length > 0;
   const step: PlanStep | null = !plan
     ? null
-    : asked === "revetements" && plan.rooms.length > 0
+    : asked === "revetements" && withRooms
       ? "revetements"
-      : asked === "releve" || lines.length === 0
-        ? "releve"
-        : "dpgf";
+      : asked === "ouvrages" || (!withRooms && (asked === "releve" || lines.length === 0))
+        ? "ouvrages"
+        : asked === "releve" || lines.length === 0
+          ? "releve"
+          : "dpgf";
   // Métré à la main (F-159 lot 3) : un écran du relevé, sur les photos de plans.
   const measuring = !!plan && asked === "mesure";
   const reachable: PlanStep[] = [
-    "releve",
-    ...(plan && plan.rooms.length > 0 ? (["revetements"] as const) : []),
+    ...(withRooms ? (["releve"] as const) : []),
+    "ouvrages",
+    ...(withRooms ? (["revetements"] as const) : []),
     ...(lines.length > 0 ? (["dpgf"] as const) : []),
   ];
-  const summaryCard = plan && (
-    <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card">
-      <h2 className="text-lg font-semibold">{t.plan.summaryTitle}</h2>
+  const summaryList = plan && (
+    <>
       <ul className="flex flex-col gap-2.5 text-sm">
         {plan.summary.map(({ icon: Icon, tone, text }) => (
           <li key={text} className="flex items-start gap-2.5">
@@ -124,6 +138,12 @@ export default async function TenderPage({
       {plan.rooms.length === 0 && plan.works.length === 0 && (
         <RereadPlansForm tenderId={tender.id} label={t.plan.retry} />
       )}
+    </>
+  );
+  const summaryCard = plan && (
+    <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card">
+      <h2 className="text-lg font-semibold">{t.plan.summaryTitle}</h2>
+      {summaryList}
     </section>
   );
 
@@ -143,7 +163,6 @@ export default async function TenderPage({
                 {[
                   tender.client_name,
                   tender.due_on ? t.dueOn(formatDay(`${tender.due_on}T12:00:00Z`)) : null,
-                  isPlan ? t.plan.withoutDpgf : null,
                 ]
                   .filter(Boolean)
                   .join(" · ")}
@@ -151,15 +170,18 @@ export default async function TenderPage({
             )}
             <h1 className="text-[1.75rem] leading-[1.05] sm:text-[2.25rem]">{tender.name}</h1>
           </div>
-          <StatusBadge tone="primary">{t.plan.planBadge}</StatusBadge>
+          {plan ? (
+            <GuidePoints count={plan.points} />
+          ) : (
+            <StatusBadge tone="primary">{t.plan.planBadge}</StatusBadge>
+          )}
         </div>
         {plan && step && (
           <PlanSteps
             tenderId={tender.id}
             current={step}
             reachable={reachable}
-            checked={!!tender.quantities_checked_at}
-            withFinishes={plan.rooms.length > 0 || plan.works.length === 0}
+            withRooms={withRooms || plan.works.length === 0}
           />
         )}
 
@@ -209,10 +231,18 @@ export default async function TenderPage({
             trades={plan.trades.filter((tr) => tr.code !== DEMOLITION_LOT)}
           />
         )}
+        {plan && (step === "releve" || step === "ouvrages") && !measuring && (
+          <GuideFigures
+            rooms={plan.rooms.length}
+            areaM2={plan.areaM2}
+            works={plan.works.length}
+            symbols={plan.symbols.length}
+            points={plan.points}
+          />
+        )}
         {plan && step === "releve" && !measuring && (
           <>
-            <Alert tone="info">{t.plan.responsibility}</Alert>
-            {plan.rooms.length > 0 ? (
+            {withRooms ? (
               <PlanReleve
                 tenderId={tender.id}
                 rooms={plan.rooms}
@@ -222,12 +252,12 @@ export default async function TenderPage({
                 canMeasure={plan.files.some((f) =>
                   f.kind === "pdf" ? (f.pages ?? []).some((p) => p.url) : !!f.url,
                 )}
-                summary={
+                details={
                   <>
-                    {summaryCard}
+                    {summaryList}
                     {plan.control.length > 0 && (
-                      <section className="flex flex-col gap-2 rounded-card border border-border bg-surface p-5 shadow-card">
-                        <h2 className="text-lg font-semibold">{t.plan.measure.controlTitle}</h2>
+                      <section className="flex flex-col gap-2 border-t border-border pt-4">
+                        <h3 className="font-semibold">{t.plan.measure.controlTitle}</h3>
                         <p className="text-sm text-muted-foreground">
                           {t.plan.measure.controlLead(plan.control.length)}
                         </p>
@@ -258,12 +288,22 @@ export default async function TenderPage({
                         </p>
                       </section>
                     )}
+                    <p className="border-t border-border pt-4 text-sm text-muted-foreground">
+                      {t.plan.responsibility}
+                    </p>
                   </>
                 }
               />
-            ) : plan.works.length === 0 ? (
+            ) : (
               <div className="max-w-xl">{summaryCard}</div>
-            ) : null}
+            )}
+          </>
+        )}
+        {plan && step === "ouvrages" && !measuring && (
+          <>
+            {plan.works.length === 0 && plan.symbols.length === 0 && (
+              <div className="max-w-xl">{summaryCard}</div>
+            )}
             {plan.works.length > 0 && (
               <PlanWorks
                 tenderId={tender.id}
@@ -271,11 +311,12 @@ export default async function TenderPage({
                 trades={plan.trades}
                 workTrades={plan.workTrades}
                 lotChoices={plan.lotChoices}
+                symbolCounts={plan.symbolTotals}
                 measureHref={`/pro/demandes/appels-offres/${tender.id}?etape=mesure`}
                 files={plan.files}
                 pages={plan.pages}
                 summary={summaryCard}
-                withViewer={plan.rooms.length === 0}
+                withViewer={!withRooms}
                 hasDpgf={lines.length > 0}
               />
             )}
@@ -288,6 +329,26 @@ export default async function TenderPage({
                 traces={plan.traces}
                 hasDpgf={lines.length > 0}
               />
+            )}
+            {withRooms && (
+              <GuideBar
+                back={
+                  <Link
+                    href={`/pro/demandes/appels-offres/${tender.id}?etape=releve` as Route}
+                    className={buttonClasses({ variant: "secondary", block: false })}
+                  >
+                    {t.plan.guide.backRooms}
+                  </Link>
+                }
+                text={plan.worksMissing ? t.plan.guide.worksToCheck(plan.worksMissing) : undefined}
+              >
+                <Link
+                  href={`/pro/demandes/appels-offres/${tender.id}?etape=revetements` as Route}
+                  className={buttonClasses({ block: false })}
+                >
+                  {t.plan.guide.toFinishes}
+                </Link>
+              </GuideBar>
             )}
           </>
         )}
@@ -651,6 +712,20 @@ async function planData(
     counts,
     summary,
     trades: tender.plan_trades.map(lot),
+    // Parcours guidé (lot 56) : surface totale, ouvrages à compléter et points à vérifier.
+    areaM2: formatPlanMeasure(
+      Math.round(rooms.reduce((sum, r) => sum + (r.area_cm2 ?? 0), 0) / 10),
+    ),
+    worksMissing: works.filter((w) => w.quantity_milli === null && w.trade_code).length,
+    points:
+      rooms.filter(
+        (r) => r.area_cm2 === null || r.source === "estime" || r.source === "photo" || r.uncertain,
+      ).length +
+      works.filter((w) => w.quantity_milli === null && w.trade_code).length +
+      Object.values(symbolTotals).filter((c) => c?.doubt).length,
+    symbolTotals: Object.fromEntries(
+      Object.entries(symbolTotals).map(([kind, c]) => [kind, c?.total ?? 0]),
+    ) as Record<string, number>,
     // Symboles électriques comptés et pages comptées (ADR 0336).
     symbols: planSymbols(tender.plan_symbols).filter((x) => ELECTRICAL_SYMBOLS.includes(x.type)),
     symbolPages: planSymbolPages(tender.plan_symbol_legend),

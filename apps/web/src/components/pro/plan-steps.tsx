@@ -6,34 +6,31 @@ import { fr } from "@/i18n/fr";
 
 const t = fr.pro.tenders.plan.steps;
 
-export type PlanStep = "releve" | "revetements" | "dpgf";
-const ORDER = ["plans", "releve", "revetements", "dpgf", "chiffrage"] as const;
+export type PlanStep = "releve" | "ouvrages" | "revetements" | "dpgf";
+const ORDER = ["plans", "releve", "ouvrages", "revetements", "dpgf"] as const;
 
 /**
- * Étapes d'un appel d'offres créé depuis les plans (maquette du lot 35) : Plans · Relevé ·
- * Revêtements · DPGF · Chiffrage. Les étapes déjà ouvertes se rouvrent d'un clic. Un plan de
- * terrain n'a aucune pièce : sans revêtements à choisir, l'étape n'est pas affichée (lot 52).
+ * Étapes d'un appel d'offres créé depuis les plans (parcours guidé, maquette du lot 56) : Plans ·
+ * Mes pièces · Ce qu'il y a à faire · Revêtements · Mon prix. Les étapes déjà ouvertes se rouvrent
+ * d'un clic. Un plan de terrain n'a aucune pièce : ni « Mes pièces » ni « Revêtements » (lot 52).
  */
 export function PlanSteps({
   tenderId,
   current,
   reachable,
-  checked,
-  withFinishes = true,
+  withRooms = true,
 }: {
   tenderId: string;
   current: PlanStep;
   /** Étapes qui peuvent s'ouvrir (relevé fait, DPGF créé). */
   reachable: readonly PlanStep[];
-  /** Quantités vérifiées : l'étape « Chiffrage » est en cours. */
-  checked: boolean;
-  /** Faux pour un relevé sans pièces (plan de terrain) : pas d'étape « Revêtements ». */
-  withFinishes?: boolean;
+  /** Faux pour un relevé sans pièces (plan de terrain) : ni « Mes pièces » ni « Revêtements ». */
+  withRooms?: boolean;
 }) {
-  const steps: readonly (typeof ORDER)[number][] = withFinishes
+  const steps: readonly (typeof ORDER)[number][] = withRooms
     ? ORDER
-    : ORDER.filter((s) => s !== "revetements");
-  const index = checked && current === "dpgf" ? steps.length - 1 : steps.indexOf(current);
+    : ORDER.filter((s) => s !== "revetements" && s !== "releve");
+  const index = steps.indexOf(current);
   return (
     <nav
       aria-label={t.label}
@@ -42,10 +39,9 @@ export function PlanSteps({
       {steps.map((step, i) => {
         const done = i < index;
         const active = i === index;
-        const target = step === "chiffrage" ? "dpgf" : step;
         const link =
-          step !== "plans" && !active && reachable.includes(target as PlanStep)
-            ? (`/pro/demandes/appels-offres/${tenderId}?etape=${target}` as Route)
+          step !== "plans" && !active && reachable.includes(step as PlanStep)
+            ? (`/pro/demandes/appels-offres/${tenderId}?etape=${step}` as Route)
             : null;
         const content = (
           <span
@@ -63,7 +59,7 @@ export function PlanSteps({
                 done
                   ? "bg-success text-white"
                   : active
-                    ? "bg-foreground text-surface"
+                    ? "bg-primary text-white"
                     : "bg-border/70 text-muted-foreground"
               }`}
             >
