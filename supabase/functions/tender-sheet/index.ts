@@ -438,6 +438,14 @@ async function readTenderPlans(
               image.file,
               image.page,
               Math.min(TRACE_TIMEOUT_MS, budget - 5_000),
+              // Pièces relevées sur cette image (photo : page 1) : le tracé les cherche par leur nom.
+              [
+                ...new Set(
+                  reading.rooms
+                    .filter((r) => r.file === image.file && (r.page ?? 1) === image.page)
+                    .map((r) => r.name),
+                ),
+              ],
             ).catch(() => null),
           ),
         );

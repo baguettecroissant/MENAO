@@ -24,7 +24,10 @@ type Case = {
   fichier: string;
   largeur: number;
   hauteur: number;
-  pieces: { nom: string; surface_m2: number }[];
+  /** Surface connue, ou null : on vérifie seulement que la pièce est tracée. */
+  pieces: { nom: string; surface_m2: number | null }[];
+  /** Pièces relevées sur ce plan, données au tracé (ADR 0335) ; absent : rien n'est donné. */
+  releve?: string[];
   dossier: string;
 };
 
@@ -38,6 +41,8 @@ const passes = Math.max(1, Number(args.get("passes") ?? 1));
 const only = args.get("cas")?.split(",");
 const realDir = args.get("vrais");
 const outputPath = args.get("sortie");
+// `--sans-releve` : tracé sans la liste des pièces relevées, pour comparer.
+const withRooms = args.get("sans-releve") !== "true";
 const model = args.get("modele") ?? planModel();
 const effort = (args.get("effort") ?? "medium") as "low" | "medium" | "high";
 
@@ -96,7 +101,17 @@ for (let pass = 1; pass <= passes; pass++) {
           max_tokens: 16000,
           thinking: reasoning.thinking,
           system: [{ type: "text", text: CONTOUR_SYSTEM }],
-          messages: [{ role: "user", content: contourUserContent(bytes, c.largeur, c.hauteur) }],
+          messages: [
+            {
+              role: "user",
+              content: contourUserContent(
+                bytes,
+                c.largeur,
+                c.hauteur,
+                withRooms ? (c.releve ?? []) : [],
+              ),
+            },
+          ],
           output_config: {
             ...(reasoning.effort ? { effort } : {}),
             format: { type: "json_schema", schema: CONTOUR_SCHEMA },
@@ -137,7 +152,10 @@ for (let pass = 1; pass <= passes; pass++) {
           nom: expected.nom,
           attendu: expected.surface_m2,
           estime: found?.m2 ?? null,
-          ecartBp: found?.m2 != null ? measureGapBp(found.m2, expected.surface_m2) : null,
+          ecartBp:
+            found?.m2 != null && expected.surface_m2 !== null
+              ? measureGapBp(found.m2, expected.surface_m2)
+              : null,
         });
       }
       for (const extra of free) {
