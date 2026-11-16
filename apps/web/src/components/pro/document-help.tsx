@@ -1,11 +1,12 @@
 "use client";
 
-import { DOCUMENT_HELP, type RequiredDocumentType } from "@menao/core";
+import { DOCUMENT_HELP, DOCUMENT_HELP_VIDEO, type RequiredDocumentType } from "@menao/core";
 import { AlertTriangle, ChevronDown, ExternalLink, Info, Mail } from "lucide-react";
 import type { Route } from "next";
 import { useState } from "react";
 import { ButtonLink, buttonClasses, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { HelpVideo } from "./help-video";
 
 const t = fr.pro.onboarding.help;
 
@@ -20,8 +21,10 @@ export function DocumentHelpSteps({ type }: { type: RequiredDocumentType }) {
   if (!variant) return null;
   // L'URSSAF ne délivre pas l'attestation à un compte en retard : avertissement plutôt qu'info.
   const warn = type === "urssaf";
+  const video = DOCUMENT_HELP_VIDEO[type];
   return (
     <div className="flex flex-col gap-4">
+      {video && <HelpVideo id={video} />}
       {help.variants.length > 1 && (
         <div
           role="group"

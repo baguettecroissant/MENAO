@@ -60,6 +60,8 @@ Projets Supabase : staging `izwdfxynzegntubminth`, production `ffidtbwxiyqybyfdq
   - Sirene : `INSEE_API_KEY`.
 - [ ] Secrets du coffre (Vault), sans lesquels aucune notification ne part : `menao_notify_url` (adresse de la fonction `notify` de production) et `menao_notify_secret` (la même valeur que `NOTIFY_SECRET`).
 
+- [ ] Déposer les vidéos de l'aide à l'inscription dans le compartiment public `aide-videos` (ADR 0349) : `SUPABASE_ACCESS_TOKEN=… node scripts/aide-videos.mjs --project ffidtbwxiyqybyfdqmkj --dossier medias/films/aide/sortie` (versions légères fabriquées hors dépôt).
+
 ### Authentification (Ensemble)
 - [ ] `scripts/supabase-auth.mjs --project ffidtbwxiyqybyfdqmkj --production oui --site-url https://menao.fr --extra-urls https://www.menao.fr --app-urls menao://** --smtp oui` (avec la clé SMTP Resend de production) :
   - adresse du site, adresses de retour autorisées (jamais `exp://**` en production), modèles d'e-mails français, envoi par Resend.

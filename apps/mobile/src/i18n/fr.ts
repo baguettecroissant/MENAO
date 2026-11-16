@@ -635,6 +635,10 @@ export const fr = {
       title: "Gardez sous la main",
       intro: "Le formulaire Stripe prend environ 3 minutes.",
     },
+    video: {
+      label: (seconds: number) => `VIDÉO · ${seconds} S`,
+      hint: "Les vrais écrans, avec des sous-titres",
+    },
   },
   proDocuments: {
     title: "Mes documents",

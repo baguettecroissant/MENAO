@@ -1,12 +1,17 @@
 import {
   DOCUMENT_HELP,
+  DOCUMENT_HELP_VIDEO,
+  HELP_VIDEOS,
   PREPARE_ITEMS,
   STRIPE_CHECKLIST,
+  helpVideoUrls,
+  type HelpVideoId,
   type PrepareItemKey,
   type RequiredDocumentType,
 } from "@menao/core";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import {
   AlertTriangle,
   CalendarDays,
@@ -19,15 +24,17 @@ import {
   Info,
   Landmark,
   Mail,
+  Play,
   ShieldCheck,
   Smartphone,
   type LucideIcon,
 } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { BottomSheet } from "@/components/bottom-sheet";
 import { Segmented } from "@/components/segmented";
 import { fr } from "@/i18n/fr";
+import { env } from "@/lib/env";
 import { theme } from "@/ui/theme";
 import { CardHeading, FicheButton, FicheCard } from "./fiche-kit";
 import { IconSquare } from "./tools-kit";
@@ -67,8 +74,39 @@ export function DocumentHelpButton({ type }: { type: RequiredDocumentType }) {
   );
 }
 
+/**
+ * Vidéo verticale de l'aide (ADR 0349) : carte avec l'aperçu, qui ouvre la vidéo dans le navigateur
+ * du téléphone (lecteur du système, sans nouvelle dépendance). Fichiers du stockage Supabase.
+ */
+export function HelpVideoCard({ id }: { id: HelpVideoId }) {
+  const { title, seconds } = HELP_VIDEOS[id];
+  const urls = helpVideoUrls(env.supabaseUrl, id);
+  return (
+    <Pressable
+      role="button"
+      aria-label={`${t.video.label(seconds)}, ${title}`}
+      onPress={() => void WebBrowser.openBrowserAsync(urls.video)}
+      style={({ pressed }) => [styles.video, pressed && styles.pressed]}
+    >
+      <View style={styles.videoThumb}>
+        <Image source={{ uri: urls.poster }} style={styles.videoPoster} alt="" />
+        <View style={styles.videoPlay}>
+          <Play size={13} color={colors.foreground} fill={colors.foreground} />
+        </View>
+      </View>
+      <View style={styles.itemTexts}>
+        <Text style={styles.videoLabel}>{t.video.label(seconds)}</Text>
+        <Text style={styles.itemTitle}>{title}</Text>
+        <Text style={styles.itemHint}>{t.video.hint}</Text>
+      </View>
+      <ChevronRight size={16} color={colors["muted-foreground"]} />
+    </Pressable>
+  );
+}
+
 function DocumentHelpSteps({ type, onLater }: { type: RequiredDocumentType; onLater: () => void }) {
   const help = DOCUMENT_HELP[type];
+  const video = DOCUMENT_HELP_VIDEO[type];
   const [index, setIndex] = useState(0);
   const variant = help.variants[index] ?? help.variants[0];
   if (!variant) return null;
@@ -76,6 +114,7 @@ function DocumentHelpSteps({ type, onLater }: { type: RequiredDocumentType; onLa
   const warn = type === "urssaf";
   return (
     <View style={styles.steps}>
+      {video ? <HelpVideoCard id={video} /> : null}
       {help.variants.length > 1 ? (
         <Segmented
           label={help.title}
@@ -145,6 +184,7 @@ export function PrepareCard() {
     <FicheCard padding={4.5} gap={3}>
       <CardHeading title={t.prepare.title} />
       <Text style={styles.body}>{t.prepare.intro}</Text>
+      <HelpVideoCard id="v01-inscription" />
       {PREPARE_ITEMS.map((item) => {
         const document =
           item.key === "siret" || item.key === "rib" ? null : (item.key as RequiredDocumentType);
@@ -199,11 +239,46 @@ export function StripeChecklist() {
           </View>
         </View>
       ))}
+      <HelpVideoCard id="v11-stripe" />
     </FicheCard>
   );
 }
 
 const styles = StyleSheet.create({
+  video: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(3),
+    padding: spacing(3),
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  videoThumb: {
+    width: 54,
+    height: 96,
+    borderRadius: 10,
+    overflow: "hidden",
+    backgroundColor: colors.foreground,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  videoPoster: { position: "absolute", width: 54, height: 96, opacity: 0.8 },
+  videoPlay: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  videoLabel: {
+    fontFamily: font.bold,
+    fontSize: 12,
+    letterSpacing: 0.4,
+    color: colors["primary-strong"],
+  },
   whereRow: {
     flexDirection: "row",
     alignItems: "center",

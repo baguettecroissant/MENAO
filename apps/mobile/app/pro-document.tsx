@@ -15,7 +15,7 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
 import { PageHead, PrivacyNote, SoftBanner } from "@/components/pro/dossier-kit";
-import { DocumentHelpButton } from "@/components/pro/onboarding-help";
+import { DocumentHelpButton, HelpVideoCard } from "@/components/pro/onboarding-help";
 import { CardHeading, FicheButton, FicheCard, FicheScreen } from "@/components/pro/fiche-kit";
 import { CheckRow, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
@@ -337,6 +337,7 @@ function DocumentForm({
     >
       {intro}
       {help ? <DocumentHelpButton type={type} /> : null}
+      {help ? <HelpVideoCard id="v05-photo" /> : null}
       <View style={styles.photoBlock}>
         {photo ? (
           <View style={styles.stage}>

@@ -18,6 +18,7 @@ import { useState, type ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { CardHeading, FicheButton, FicheCard, FicheRow } from "@/components/pro/fiche-kit";
 import { SignaturePad } from "@/components/pro/signature-pad";
+import { HelpVideoCard } from "@/components/pro/onboarding-help";
 import { CheckRow, ProgressBar, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import {
@@ -130,6 +131,7 @@ function CharterForm({
       }
     >
       <Notice tone="info">{t.intro}</Notice>
+      <HelpVideoCard id="v04-charte" />
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>{T.eyebrow}</Text>
         <Text role="heading" style={styles.heroTitle}>

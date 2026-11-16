@@ -3,6 +3,7 @@ import { ChevronRight, Clock, FileText, Hash, IdCard, Landmark, ShieldCheck } fr
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { HelpVideo } from "@/components/pro/help-video";
 import { focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 
@@ -43,6 +44,7 @@ export function PrepareCard() {
         </h2>
         <p className="text-label">{t.intro}</p>
       </div>
+      <HelpVideo id="v01-inscription" />
       <ul className="grid gap-x-6 sm:grid-cols-2">
         {PREPARE_ITEMS.map((item) => {
           const href = hrefs[item.key];

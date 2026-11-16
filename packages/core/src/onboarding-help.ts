@@ -224,3 +224,54 @@ export function buildInsurerRequest(input: InsurerRequestInput): { subject: stri
 export function insurerMailto(to: string, subject: string, body: string): string {
   return `mailto:${to.trim()}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
+
+/**
+ * Vidéos verticales de l'aide (lot 60, ADR 0349) : 15 à 40 secondes chacune, hébergées hors de
+ * Vercel dans le compartiment public `aide-videos` du stockage Supabase (règle 13).
+ */
+export type HelpVideoId =
+  | "v01-inscription"
+  | "v02-entreprise"
+  | "v03-metiers-zone"
+  | "v04-charte"
+  | "v05-photo"
+  | "v06-decennale"
+  | "v07-rc-pro"
+  | "v08-urssaf"
+  | "v09-identite"
+  | "v10-profil"
+  | "v11-stripe";
+
+export const HELP_VIDEOS: Record<HelpVideoId, { title: string; seconds: number }> = {
+  "v01-inscription": { title: "Votre inscription en quelques étapes", seconds: 27 },
+  "v02-entreprise": { title: "Retrouver votre entreprise avec le SIRET", seconds: 16 },
+  "v03-metiers-zone": { title: "Choisir vos métiers et votre zone", seconds: 17 },
+  "v04-charte": { title: "Signer la charte qualité", seconds: 12 },
+  "v05-photo": { title: "Bien photographier un document", seconds: 17 },
+  "v06-decennale": { title: "Demander votre attestation décennale", seconds: 29 },
+  "v07-rc-pro": { title: "Trouver votre attestation de RC Pro", seconds: 19 },
+  "v08-urssaf": { title: "Trouver votre attestation URSSAF", seconds: 39 },
+  "v09-identite": { title: "Déposer votre pièce d’identité", seconds: 18 },
+  "v10-profil": { title: "Rédiger votre présentation", seconds: 18 },
+  "v11-stripe": { title: "Le formulaire Stripe, case par case", seconds: 21 },
+};
+
+/** Vidéo de chaque pièce dans « Où trouver ce document ? » (pas de vidéo pour le Kbis). */
+export const DOCUMENT_HELP_VIDEO: Record<RequiredDocumentType, HelpVideoId | null> = {
+  kbis: null,
+  decennale: "v06-decennale",
+  rc_pro: "v07-rc-pro",
+  urssaf: "v08-urssaf",
+  identite: "v09-identite",
+};
+
+export const HELP_VIDEO_BUCKET = "aide-videos";
+
+/** Adresses publiques de la vidéo et de son image d'aperçu. */
+export function helpVideoUrls(
+  supabaseUrl: string,
+  id: HelpVideoId,
+): { video: string; poster: string } {
+  const base = `${supabaseUrl.replace(/\/+$/, "")}/storage/v1/object/public/${HELP_VIDEO_BUCKET}/${id}`;
+  return { video: `${base}.mp4`, poster: `${base}.jpg` };
+}
