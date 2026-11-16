@@ -447,6 +447,44 @@ export async function savePlanSymbols(_prev: FormState, formData: FormData): Pro
   return { success: t.plan.works.symbols.saved };
 }
 
+const checkedPoint = z.object({
+  tenderId: z.uuid(),
+  key: z.string().regex(/^(piece|ouvrage|symbole):.{1,230}$/),
+  target: z.uuid().nullable(),
+  value: z.coerce.number().int().min(1).max(10_000_000_000).nullable(),
+  heightMm: z.coerce.number().int().min(1500).max(10_000).nullable(),
+});
+
+/**
+ * Point à vérifier validé (lot 56, ADR 0343) : la surface d'une pièce, la quantité d'un ouvrage
+ * (tracée sur le plan ou saisie), ou un type de symbole recompté. La base enregistre la valeur et
+ * note le point fait ; la vérification des quantités du DPGF est à refaire.
+ */
+export async function checkPlanPoint(_prev: FormState, formData: FormData): Promise<FormState> {
+  const optional = (name: string) => text(formData, name) || null;
+  const point = checkedPoint.safeParse({
+    tenderId: text(formData, "tenderId"),
+    key: text(formData, "key"),
+    target: optional("target"),
+    value: optional("value"),
+    heightMm: optional("heightMm"),
+  });
+  if (!point.success) return { error: t.plan.verify.invalid };
+  const { supabase } = await requireTeamPermission("money");
+  const { error } = await supabase.rpc("artisan_check_plan_point", {
+    p_tender_id: point.data.tenderId,
+    p_key: point.data.key,
+    ...(point.data.target ? { p_target: point.data.target } : {}),
+    ...(point.data.value !== null ? { p_value: point.data.value } : {}),
+    ...(point.data.heightMm !== null ? { p_height_mm: point.data.heightMm } : {}),
+  });
+  if (error) {
+    return { error: error.code === "42501" ? t.errors.forbidden : t.plan.verify.error };
+  }
+  revalidatePath(`${BASE}/${point.data.tenderId}`);
+  return { success: t.plan.verify.saved };
+}
+
 /** Lots de l'appel d'offres cochés par l'artisan (F-159 lot 6) : métiers, et « Démolition ». */
 export async function setPlanLots(tenderId: string, lots: string[]): Promise<FormState> {
   const id = z.uuid().safeParse(tenderId);

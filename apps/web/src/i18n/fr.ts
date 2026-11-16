@@ -6720,6 +6720,85 @@ export const fr = {
           toWorks: "Continuer : ce qu'il y a à faire",
           toFinishes: "Continuer : revêtements",
           backRooms: "Mes pièces",
+          verifyNow: "Vérifier maintenant",
+        },
+        // Points à vérifier, un par un (lot 56, ADR 0343).
+        verify: {
+          title: "À vérifier",
+          progress: (done: number, total: number) =>
+            `${done} fait${done > 1 ? "s" : ""} sur ${total}`,
+          progressLabel: "Points vérifiés",
+          empty:
+            "Rien à vérifier : tout ce qui sert au prix est lu sur vos plans ou saisi par vous.",
+          more: (n: number) => `Voir les ${n} autres points`,
+          start: "Vérifier point par point",
+          review: "Revoir les points",
+          done: "fait",
+          room: {
+            estimated: "Surface estimée par MENAO : à vérifier",
+            missing: "Surface à mesurer",
+          },
+          work: {
+            length: "Longueur à tracer sur le plan",
+            wall: "Longueur à tracer sur le plan",
+            facade: "Surface de façade à mesurer",
+            area: "Surface à mesurer sur le plan",
+            none: "Quantité à saisir",
+          } as Record<string, string>,
+          symbol: (n: number) => `${n} compté${n > 1 ? "s" : ""}, un groupe douteux`,
+          // Écran « point par point » (maquette GuideVerifier).
+          close: "Fermer la vérification",
+          position: (n: number, total: number) => `Point ${n} sur ${total}`,
+          saving: "Enregistrement…",
+          saved: "Enregistré automatiquement",
+          eyebrowRoom: "Mes pièces",
+          eyebrowSymbol: "Électricité",
+          roomTitle: (name: string) => `Surface de la pièce : ${name}`,
+          roomLead: {
+            estimated:
+              "MENAO a estimé cette pièce à partir du tracé du plan. Vérifiez la surface et la hauteur, corrigez-les si besoin.",
+            missing:
+              "Le plan ne donne pas la surface de cette pièce. Saisissez-la, ou mesurez-la sur le plan.",
+          },
+          workLead: {
+            length:
+              "Le plan écrit cet ouvrage, pas sa longueur. Tracez-le sur le plan : cliquez ses deux bouts, ou chaque angle.",
+            wall: "Le plan écrit cet ouvrage, pas sa longueur. Tracez-le sur le plan : MENAO calcule la surface avec la hauteur de la pièce.",
+            facade:
+              "Le plan écrit cet ouvrage, pas sa surface. Saisissez la surface de façade concernée.",
+            area: "Le plan écrit cet ouvrage, pas sa surface. Saisissez-la, ou mesurez-la sur le plan.",
+            none: "Le plan écrit cet ouvrage, pas sa quantité. Saisissez-la.",
+          } as Record<string, string>,
+          symbolTitle: (label: string) => `${label} : un groupe à recompter`,
+          symbolLead: (n: number) =>
+            `MENAO en compte ${n}. Les symboles en orange forment un groupe que la lecture n'a pas su trancher : regardez-les sur le plan.`,
+          symbolFix: "Corriger dans Électricité",
+          area: "Surface (m²)",
+          height: "Hauteur (m)",
+          length: "Longueur tracée (ml)",
+          roomHeight: (room: string) => `Hauteur de la pièce (m) : ${room}`,
+          roomHeightAny: "Hauteur (m)",
+          surface: "Surface",
+          quantity: (unit: string) => `Quantité (${unit})`,
+          roomPlanHint: "La pièce est surlignée en orange sur le plan.",
+          symbolPlanHint:
+            "En orange, le groupe à recompter ; en bleu, les autres symboles du même type.",
+          planHint: "L'ouvrage se trouve sur ce plan.",
+          traceHint: "Cliquez les deux bouts de l'ouvrage sur le plan (ou chaque angle).",
+          noScale: "Échelle inconnue sur ce plan : saisissez la longueur.",
+          clear: "Effacer le tracé",
+          validate: "Valider et suivant",
+          confirm: "C'est bon, suivant",
+          previous: "Précédent",
+          later: "Je le ferai plus tard",
+          next: "Ensuite",
+          finishedTitle: "Tout est vérifié",
+          finishedText:
+            "Les quantités vérifiées servent au prix. Vous pourrez les revoir à tout moment.",
+          finishedBack: "Revenir à mon appel d'offres",
+          noPlan: "Pas d'image de plan pour ce point.",
+          invalid: "Vérifiez la valeur saisie.",
+          error: "Le point n'a pas pu être enregistré. Réessayez.",
         },
         withoutDpgf: "sans DPGF",
         planBadge: "Formule Entreprise",

@@ -140,6 +140,7 @@ export function PlanReleve({
   details,
   traces = [],
   canMeasure = false,
+  verifyHref,
 }: {
   tenderId: string;
   rooms: TenderRoom[];
@@ -151,6 +152,8 @@ export function PlanReleve({
   traces?: PlanTrace[];
   /** Une image de plan est déposée : le métré à la main est proposé (lot 3). */
   canMeasure?: boolean;
+  /** Points à vérifier (lot 56) : « Vérifier maintenant » ouvre la vérification point par point. */
+  verifyHref?: string;
 }) {
   const [state, formAction, pending] = useActionState(savePlanRooms, initialFormState);
   const [drafts, setDrafts] = useState<Draft[]>(() => rooms.map(toDraft));
@@ -518,6 +521,14 @@ export function PlanReleve({
           >
             <Ruler aria-hidden="true" className="size-4" />
             {t.measure.open}
+          </Link>
+        )}
+        {verifyHref && !dirty && (
+          <Link
+            href={verifyHref as Route}
+            className={buttonClasses({ variant: "secondary", block: false })}
+          >
+            {g.verifyNow}
           </Link>
         )}
         {dirty ? (

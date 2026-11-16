@@ -1,4 +1,6 @@
 import { AlertTriangle, Check, CheckCircle2, LayoutGrid, Ruler, Sparkles } from "lucide-react";
+import type { Route } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { fr } from "@/i18n/fr";
 
@@ -44,8 +46,8 @@ export function GuideState({ kind, title }: { kind: GuideStateKind; title?: stri
   );
 }
 
-/** Pastille « N points à vérifier » de l'en-tête. */
-export function GuidePoints({ count }: { count: number }) {
+/** Pastille « N points à vérifier » de l'en-tête, qui ouvre la vérification point par point. */
+export function GuidePoints({ count, href }: { count: number; href?: string }) {
   if (count === 0) {
     return (
       <span className="inline-flex items-center gap-2 rounded-pill bg-success-soft px-3.5 py-2 text-sm font-bold text-success">
@@ -54,11 +56,20 @@ export function GuidePoints({ count }: { count: number }) {
       </span>
     );
   }
-  return (
-    <span className="inline-flex items-center gap-2 rounded-pill bg-warning-soft px-3.5 py-2 text-sm font-bold text-warning">
+  const className =
+    "inline-flex items-center gap-2 rounded-pill bg-warning-soft px-3.5 py-2 text-sm font-bold text-warning";
+  const content = (
+    <>
       <AlertTriangle aria-hidden="true" className="size-4" />
       {g.points(count)}
-    </span>
+    </>
+  );
+  return href ? (
+    <Link href={href as Route} className={`${className} hover:underline`}>
+      {content}
+    </Link>
+  ) : (
+    <span className={className}>{content}</span>
   );
 }
 
