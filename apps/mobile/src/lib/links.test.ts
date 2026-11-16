@@ -41,6 +41,7 @@ describe("liens des notifications vers les écrans de l'application", () => {
     expect(appRouteForSitePath("/pro/onboarding")).toBe("/pro");
     expect(appRouteForSitePath("/pro/bienvenue")).toBe("/pro-bienvenue");
     expect(appRouteForSitePath("/pro/onboarding/documents")).toBe("/pro-documents");
+    expect(appRouteForSitePath("/pro/onboarding/documents/assureur")).toBe("/pro-assureur");
     expect(appRouteForSitePath("/pro/onboarding/profil")).toBe("/pro-profil-public");
     expect(appRouteForSitePath("/pro/onboarding/paiements")).toBe("/pro-paiements");
     expect(appRouteForSitePath("/pro/onboarding/entreprise")).toBe("/pro-entreprise");

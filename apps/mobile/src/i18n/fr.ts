@@ -596,6 +596,46 @@ export const fr = {
     loadError: "L'état de votre compte de paiement n'a pas pu être chargé. Réessayez.",
   },
   /** « Mes documents » (ADR 0123), comme la page des documents du site. */
+  /**
+   * Aide de l'inscription (lot 60, ADR 0348), comme sur le site (ADR 0347) ; le contenu des étapes
+   * vient de @menao/core.
+   */
+  proHelp: {
+    where: "Où trouver ce document ?",
+    close: "Fermer",
+    later: "Plus tard",
+    laterHint: "Continuez votre dossier : MENAO vous rappelle les pièces qui manquent.",
+    askInsurer: "Demander mon attestation à mon assureur",
+    prepare: {
+      title: "Avant de commencer",
+      intro:
+        "Préparez ces documents : l'inscription prend environ 10 minutes. Vous pouvez vous arrêter et reprendre plus tard.",
+      missing:
+        "Il vous manque un document ? Commencez quand même : il se dépose plus tard, et MENAO vous le rappelle.",
+    },
+    insurer: {
+      title: "Votre assureur vous l'envoie",
+      lead: "MENAO a préparé le message avec votre entreprise et vos métiers. Ajoutez l'adresse de votre assureur, relisez, envoyez.",
+      to: "À",
+      toPlaceholder: "E-mail de votre assureur ou courtier",
+      subject: "Objet",
+      message: "Message",
+      withRcPro: "Demander aussi la RC Pro",
+      withRcProHint: "Souvent chez le même assureur.",
+      privacy:
+        "Le message part de votre messagerie, à votre nom : MENAO ne l'envoie pas à votre place.",
+      send: "Envoyer avec ma messagerie",
+      share: "Copier ou partager le message",
+      noMail: "Aucune messagerie trouvée sur ce téléphone : copiez ou partagez le message.",
+      after:
+        "Quand vous la recevez, revenez la déposer : MENAO vous rappelle les pièces qui manquent.",
+      error: "Le message n'a pas pu être préparé. Réessayez.",
+    },
+    stripe: {
+      title: "Gardez sous la main",
+      intro: "Le formulaire Stripe prend environ 3 minutes.",
+    },
+  },
   proDocuments: {
     title: "Mes documents",
     lead: "Vos documents obligatoires. Renouvelez-les avant leur échéance pour rester visible des particuliers.",
