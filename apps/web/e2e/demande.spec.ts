@@ -246,7 +246,7 @@ test("demande à 2 artisans, compte créé en chemin, rendez-vous fixé par l'ar
   await calendar.getByRole("button", { name: "Fermer" }).click();
 
   // Logo de l'entreprise (ADR 0038) : déposé avant l'envoi, il figure sur le devis envoyé.
-  await proPage.goto("/pro/onboarding/entreprise");
+  await proPage.goto("/pro/onboarding/profil");
   const logo = proPage.getByRole("region", { name: "Logo sur vos documents (facultatif)" });
   await logo.getByLabel("Fichier du logo").setInputFiles(files.logo);
   await logo.getByRole("button", { name: "Envoyer mon logo" }).click();

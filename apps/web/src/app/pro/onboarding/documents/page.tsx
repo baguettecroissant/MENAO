@@ -4,12 +4,14 @@ import {
   daysUntil,
   documentIsValid,
   expiryStatus,
+  registryCheckPending,
   type RequiredDocumentType,
 } from "@menao/core";
 import { Alert, ButtonLink, Card } from "@/components/ui";
 import { Check, Clock, Lock } from "lucide-react";
 import { DocumentHelpDisclosure, DocumentHelpSteps } from "@/components/pro/document-help";
 import { HelpVideo } from "@/components/pro/help-video";
+import { RegistryAutoCheck } from "@/components/pro/registry-auto-check";
 import { sheetCard } from "@/components/pro/sheet";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
@@ -58,6 +60,19 @@ export default async function DocumentsStepPage({
     : { data: [] };
   const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
 
+  // Contrôle au registre jamais abouti : MENAO le relance tout seul (ADR 0354).
+  const registryPending = registryCheckPending({
+    status: artisan.status,
+    sireneActive: artisan.sirene_active,
+    registryStatus: artisan.registre_statut,
+    hasKbis: documents.some((d) => d.type === "kbis"),
+  });
+  // Kbis vérifié au registre : il ne compte plus parmi les documents à déposer.
+  const kbisAuto = documents.some(
+    (d) => d.type === "kbis" && d.source === "registre" && d.status === "valide",
+  );
+  const counted = REQUIRED_DOCUMENT_TYPES.filter((type) => type !== "kbis" || !kbisAuto);
+
   const stateOf = (type: RequiredDocumentType) => {
     const rows = documents
       .filter((d) => d.type === type)
@@ -84,15 +99,20 @@ export default async function DocumentsStepPage({
   // Refonte « Nette » (ADR 0254) : une pièce à gauche, ce que l'équipe vérifie à droite.
   const cards = (
     <div className="flex flex-col gap-6">
-      {focused && onboarding && types[0] && (
+      {focused && onboarding && types[0] && counted.includes(types[0]) && (
         <span className="self-start rounded-pill bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary-strong">
-          {t.position(
-            REQUIRED_DOCUMENT_TYPES.indexOf(types[0]) + 1,
-            REQUIRED_DOCUMENT_TYPES.length,
-          )}
+          {t.position(counted.indexOf(types[0]) + 1, counted.length)}
         </span>
       )}
-      <p className="text-label">{focused ? fr.pro.onboarding.documents.photoHint : t.intro}</p>
+      <p className="text-label">
+        {!focused
+          ? t.intro
+          : types[0] === "kbis"
+            ? t.kbisLead
+            : types[0] === "decennale" || types[0] === "rc_pro"
+              ? t.photoHint
+              : t.photoHintOther}
+      </p>
       {/* « Bien photographier un document » (ADR 0349), pendant l'inscription. */}
       {onboarding && <HelpVideo id="v05-photo" />}
       {artisan.status === "en_verification" && (
@@ -109,7 +129,8 @@ export default async function DocumentsStepPage({
                 </h2>
                 <span
                   className={`rounded-pill px-2.5 py-1 text-xs font-semibold whitespace-nowrap ${
-                    !current && type === "decennale" && exempt
+                    !current &&
+                    ((type === "decennale" && exempt) || (type === "kbis" && registryPending))
                       ? chip.en_attente
                       : chip[current?.status ?? "missing"]
                   }`}
@@ -118,7 +139,9 @@ export default async function DocumentsStepPage({
                     ? t.statuses[current.status]
                     : type === "decennale" && exempt
                       ? fr.pro.onboarding.dossier.states.exempt
-                      : t.missing}
+                      : type === "kbis" && registryPending
+                        ? t.registry.pendingChip
+                        : t.missing}
                 </span>
               </div>
               {[current, pending]
@@ -187,9 +210,12 @@ export default async function DocumentsStepPage({
                     </div>
                   );
                 })}
+              {type === "kbis" && registryPending && <RegistryAutoCheck />}
               {registryFailed && (
                 <div className="flex flex-col gap-2">
-                  <Alert tone="info">{registryFailed}</Alert>
+                  <Alert tone="info">
+                    <b>{t.registry.why}</b> {registryFailed}
+                  </Alert>
                   <form action={recheckRegistry}>
                     <button
                       type="submit"

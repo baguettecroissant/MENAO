@@ -8800,6 +8800,28 @@ export const fr = {
         // Kbis remplacé par la vérification au registre (ADR 0217).
         registryHint: "Vérifié automatiquement au registre des entreprises",
         registryFailedHint: "Vérification automatique impossible : déposez-le",
+        registryPendingHint:
+          "MENAO vérifie votre entreprise au registre : rien à faire pour l'instant",
+        // Ce qui est facultatif, rendu visible (ADR 0354).
+        extras: {
+          title: "Pour vous démarquer",
+          lead: "Facultatif. Rien de tout cela ne retarde votre dossier.",
+          optional: "Facultatif",
+          added: "Ajouté",
+          logoTitle: "Votre logo",
+          logoHint: "En haut de vos devis, factures et cartes de visite",
+          skillsTitle: "Spécialités, diplôme, expérience",
+          skillsHint: "Vos spécialités et vos années de métier comptent dans votre Score MENAO",
+          certsTitle: "Certifications",
+          certsHint:
+            "Qualibat, Qualifelec, QualiPAC… vérifiées par l'équipe, affichées sur votre fiche",
+          certsCount: (n: number) =>
+            `${n} certification${n > 1 ? "s" : ""} ajoutée${n > 1 ? "s" : ""}`,
+          budgetTitle: "Budget minimum des chantiers",
+          budgetHint:
+            "Tous les budgets pour l'instant : choisissez un minimum si vous le souhaitez",
+          budgetSet: "Budget minimum choisi",
+        },
         states: {
           missing: "À ajouter",
           en_attente: "Déposé",
@@ -9542,6 +9564,14 @@ export const fr = {
           verified: (date: string) =>
             `Entreprise vérifiée automatiquement au registre des entreprises le ${date} : rien à déposer.`,
           view: "Voir la fiche de vérification",
+          // Relance automatique quand l'annuaire n'a pas répondu (ADR 0354).
+          checking: "MENAO vérifie votre entreprise au registre…",
+          checkingHint:
+            "Le registre de l'État met parfois un peu de temps à répondre. Vous n'avez rien à faire : MENAO réessaie tout seul.",
+          noAnswer:
+            "Le registre de l'État ne répond pas pour l'instant. MENAO réessaiera à votre prochaine visite : dans la plupart des cas, vous n'aurez pas de Kbis à fournir. Vous pouvez aussi le déposer tout de suite ci-dessous.",
+          pendingChip: "Vérification…",
+          why: "Pourquoi on vous le demande :",
           reasons: {
             introuvable:
               "Votre entreprise n'a pas été trouvée dans l'annuaire public des entreprises : déposez votre Kbis ou un extrait RNE.",
@@ -9605,6 +9635,9 @@ export const fr = {
         photo: "Prendre en photo",
         chooseFile: "Choisir un fichier",
         photoHint: "Une photo nette, à plat et bien éclairée, ou le PDF reçu de votre assureur.",
+        photoHintOther: "Une photo nette, à plat et bien éclairée, ou le document en PDF.",
+        kbisLead:
+          "Dans la plupart des cas, MENAO vérifie votre entreprise tout seul : un document de moins à fournir.",
         chosen: (name: string) => `Fichier choisi : ${name}`,
         position: (n: number, total: number) => `Document ${n} sur ${total}`,
         dropHere: "Glissez votre document ici",

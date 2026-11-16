@@ -6,6 +6,7 @@ import {
   dossierGroups,
   dossierItemsLeft,
   planChoiceOpen,
+  registryCheckPending,
   zoneDemandShown,
   type DocumentState,
 } from "@menao/core";
@@ -18,14 +19,18 @@ import {
   CreditCard,
   Eye,
   FileText,
+  Image as ImageIcon,
   Lock,
   PenLine,
+  ShieldCheck,
   Sparkles,
   UserRound,
+  Wallet,
 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { RegistryAutoCheck } from "@/components/pro/registry-auto-check";
 import { sheetCard } from "@/components/pro/sheet";
 import { Alert, ButtonLink, Card, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -35,6 +40,7 @@ import { SubmitOnboarding } from "./submit-onboarding";
 
 const t = fr.pro.onboarding;
 const d = t.dossier;
+const x = d.extras;
 
 type Tone = "todo" | "pending" | "done" | "danger";
 
@@ -60,8 +66,24 @@ const documentTone: Record<DocumentState, Tone> = {
  * validé, c'est « Mon dossier » (renouvellement des documents).
  */
 export default async function OnboardingIndexPage() {
-  const { supabase, artisan, progress, canSubmit, visibility, snapshot, documents } =
-    await getOnboardingContext();
+  const {
+    supabase,
+    artisan,
+    progress,
+    canSubmit,
+    visibility,
+    snapshot,
+    documents,
+    workTypeCodes,
+    certifications,
+  } = await getOnboardingContext();
+  // Contrôle au registre jamais abouti : MENAO le relance tout seul (ADR 0354).
+  const registryPending = registryCheckPending({
+    status: artisan.status,
+    sireneActive: artisan.sirene_active,
+    registryStatus: artisan.registre_statut,
+    hasKbis: documents.some((doc) => doc.type === "kbis"),
+  });
   const editable = artisan.status === "brouillon" || artisan.status === "refuse";
   const validated = artisan.status === "valide" || artisan.status === "suspendu";
   // Paiements et formule ouverts sans attendre l'envoi du dossier (ADR 0353).
@@ -219,6 +241,7 @@ export default async function OnboardingIndexPage() {
             />
           </Group>
 
+          {registryPending && <RegistryAutoCheck silent />}
           <Group title={d.groups.documents} progress={groups.documents}>
             {REQUIRED_DOCUMENT_TYPES.map((type) => {
               // « Non soumis » à la décennale (ADR 0116) : pas exigée, l'équipe le vérifie.
@@ -263,7 +286,9 @@ export default async function OnboardingIndexPage() {
                         ? d.registryHint
                         : registryFailed
                           ? d.registryFailedHint
-                          : d.documentHints[type]
+                          : type === "kbis" && registryPending
+                            ? d.registryPendingHint
+                            : d.documentHints[type]
                   }
                   tone={documentTone[state]}
                   status={d.states[state]}
@@ -380,6 +405,69 @@ export default async function OnboardingIndexPage() {
               />
             </ul>
           </section>
+
+          {/* Ce qui est facultatif, rendu visible (ADR 0354) : logo, spécialités, certifications. */}
+          {!validated && artisan.status !== "radie" && (
+            <section aria-labelledby="pour-vous-demarquer" className={sheetCard}>
+              <div className="flex flex-col gap-0.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 id="pour-vous-demarquer" className="text-lg">
+                    {x.title}
+                  </h2>
+                  <span className="rounded-pill bg-background px-2.5 py-1 text-xs font-semibold text-label">
+                    {x.optional}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">{x.lead}</p>
+              </div>
+              <ul className="-mx-5 flex flex-col divide-y divide-border border-t border-border sm:-mx-6">
+                {(
+                  [
+                    {
+                      href: "/pro/onboarding/profil#logo",
+                      icon: <ImageIcon aria-hidden="true" className="size-5" />,
+                      title: x.logoTitle,
+                      hint: x.logoHint,
+                      done: artisan.logo_path !== null,
+                    },
+                    {
+                      href: "/pro/onboarding/metiers",
+                      icon: <PenLine aria-hidden="true" className="size-5" />,
+                      title: x.skillsTitle,
+                      hint: x.skillsHint,
+                      done: workTypeCodes.length > 0 && artisan.experience_years !== null,
+                    },
+                    {
+                      href: "/pro/onboarding/metiers#certif-titre",
+                      icon: <ShieldCheck aria-hidden="true" className="size-5" />,
+                      title: x.certsTitle,
+                      hint: certifications.length
+                        ? x.certsCount(certifications.length)
+                        : x.certsHint,
+                      done: certifications.length > 0,
+                    },
+                    {
+                      href: "/pro/onboarding/metiers",
+                      icon: <Wallet aria-hidden="true" className="size-5" />,
+                      title: x.budgetTitle,
+                      hint: artisan.budget_minimum ? x.budgetSet : x.budgetHint,
+                      done: artisan.budget_minimum !== null,
+                    },
+                  ] as const
+                ).map((item) => (
+                  <Row
+                    key={item.title}
+                    href={item.href}
+                    icon={item.icon}
+                    title={item.title}
+                    hint={item.hint}
+                    tone={item.done ? "done" : "pending"}
+                    status={item.done ? x.added : x.optional}
+                  />
+                ))}
+              </ul>
+            </section>
+          )}
 
           <p className="flex items-start gap-2 px-1 text-sm text-muted-foreground">
             <Lock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
