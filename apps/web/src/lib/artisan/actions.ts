@@ -95,6 +95,15 @@ export async function recheckRegistry(): Promise<void> {
   await verifySiret();
 }
 
+/**
+ * Relance automatique du seul contrôle au registre (ADR 0354), quand il n'a jamais abouti :
+ * plusieurs essais patients côté serveur, sans refaire la vérification du SIRET.
+ */
+export async function retryRegistry(): Promise<void> {
+  const { supabase } = await getOnboardingContext();
+  await supabase.functions.invoke("sirene-check", { method: "POST", body: { registre: true } });
+}
+
 /** Nouvelle lecture de l'annuaire RGE pour le SIRET de l'artisan (ADR 0118), « Actualiser ». */
 export async function refreshRge(): Promise<void> {
   const { supabase } = await getOnboardingContext();

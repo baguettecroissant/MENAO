@@ -99,7 +99,7 @@ const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
     rows: [
       { key: "company", icon: Building2, href: "/pro/onboarding/entreprise" },
       // Logo des devis, factures et DPGF (ADR 0300), déposé au même endroit que l'entreprise.
-      { key: "logo", icon: ImageIcon, href: "/pro/onboarding/entreprise#logo" },
+      { key: "logo", icon: ImageIcon, href: "/pro/onboarding/profil#logo" },
       { key: "trades", icon: Wrench, href: "/pro/onboarding/metiers" },
       { key: "zone", icon: MapPin, href: "/pro/onboarding/zone" },
       { key: "availability", icon: CalendarClock, href: "/pro/agenda/disponibilites" },

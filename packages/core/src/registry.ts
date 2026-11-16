@@ -122,3 +122,33 @@ export function registryOutcome(
     ? "verifie"
     : "dirigeant_absent";
 }
+
+/**
+ * L'annuaire de l'État répond parfois lentement ou pas du tout (ADR 0354) : essais successifs,
+ * de plus en plus patients, quand MENAO relance le contrôle tout seul.
+ */
+export const REGISTRY_RETRY_TIMEOUTS_MS = [8000, 12000, 15000] as const;
+
+/** Un nouvel essai a un sens : pas de réponse (`null`), trop de demandes ou panne du service. */
+export function registryRetryable(httpStatus: number | null): boolean {
+  return httpStatus === null || httpStatus === 429 || httpStatus >= 500;
+}
+
+/**
+ * Le contrôle au registre n'a jamais abouti alors qu'il le pourrait (ADR 0354) : dossier encore
+ * modifiable, entreprise active à l'INSEE, aucun résultat enregistré et aucun Kbis au dossier.
+ * MENAO relance alors le contrôle tout seul au lieu de demander le Kbis sans explication.
+ */
+export function registryCheckPending(a: {
+  status: string;
+  sireneActive: boolean | null;
+  registryStatus: string | null;
+  hasKbis: boolean;
+}): boolean {
+  return (
+    (a.status === "brouillon" || a.status === "refuse") &&
+    a.sireneActive === true &&
+    a.registryStatus === null &&
+    !a.hasKbis
+  );
+}

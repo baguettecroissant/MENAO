@@ -3,7 +3,9 @@ import {
   comparableName,
   matchingManager,
   parseRegistrySearch,
+  registryCheckPending,
   registryOutcome,
+  registryRetryable,
   registrySearchUrl,
 } from "../src/registry";
 
@@ -113,5 +115,25 @@ describe("entreprise vérifiée au registre (ADR 0217)", () => {
     expect(registryOutcome(parse(company), { ...person, firstName: null })).toBe(
       "dirigeant_absent",
     );
+  });
+});
+
+describe("relance du contrôle au registre (ADR 0354)", () => {
+  it("nouvel essai sans réponse, en cas de surcharge ou de panne ; pas pour une vraie réponse", () => {
+    expect(registryRetryable(null)).toBe(true);
+    expect(registryRetryable(429)).toBe(true);
+    expect(registryRetryable(503)).toBe(true);
+    expect(registryRetryable(200)).toBe(false);
+    expect(registryRetryable(404)).toBe(false);
+  });
+
+  it("contrôle à relancer : dossier modifiable, entreprise active, aucun résultat, aucun Kbis", () => {
+    const base = { status: "brouillon", sireneActive: true, registryStatus: null, hasKbis: false };
+    expect(registryCheckPending(base)).toBe(true);
+    expect(registryCheckPending({ ...base, status: "refuse" })).toBe(true);
+    expect(registryCheckPending({ ...base, status: "en_verification" })).toBe(false);
+    expect(registryCheckPending({ ...base, sireneActive: null })).toBe(false);
+    expect(registryCheckPending({ ...base, registryStatus: "masque" })).toBe(false);
+    expect(registryCheckPending({ ...base, hasKbis: true })).toBe(false);
   });
 });

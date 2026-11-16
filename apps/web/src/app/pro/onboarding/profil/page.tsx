@@ -11,6 +11,8 @@ import { PresentationForm } from "./presentation-form";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
 import { TradeCover } from "@/components/trade-cover";
 import { TRADE_IMAGES } from "@/lib/site/images";
+import { documentLogoUrl } from "@/lib/documents/logo";
+import { LogoCard } from "./logo-card";
 
 const t = fr.pro.onboarding.profile;
 const MAX_PHOTOS = PORTFOLIO_MAX_PHOTOS;
@@ -54,6 +56,7 @@ export default async function ProfileStepPage() {
 
   const name = artisan.nom_commercial ?? artisan.raison_sociale ?? "";
   const tradeLabels = (trades.data ?? []).map((trade) => trade.label);
+  const logoUrl = await documentLogoUrl(supabase, artisan.logo_path);
   // Refonte « Nette » (ADR 0254) : le formulaire à gauche, l'aperçu de la fiche à droite.
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
@@ -90,6 +93,9 @@ export default async function ProfileStepPage() {
             />
           </section>
         </Card>
+
+        {/* Logo des documents (ADR 0038), rangé avec la photo et la présentation (ADR 0354). */}
+        <LogoCard userId={userId} logoUrl={logoUrl} hasLogo={artisan.logo_path !== null} />
 
         <Card>
           <PresentationForm presentation={artisan.presentation} draft={draft} />

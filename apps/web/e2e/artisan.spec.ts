@@ -290,6 +290,12 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   // sans rien payer.
   await page.goto("/pro/onboarding");
   await expect(page.getByRole("heading", { name: "À faire en attendant" })).toBeVisible();
+  // Ce qui est facultatif est proposé dans le dossier (ADR 0354), le logo dans « Votre fiche ».
+  await expect(page.getByRole("heading", { name: "Pour vous démarquer" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Votre logo.*Facultatif/ })).toHaveAttribute(
+    "href",
+    "/pro/onboarding/profil#logo",
+  );
   await expect(
     page.getByText("Vous pouvez le faire dès maintenant : Stripe vérifie pendant ce temps"),
   ).toBeVisible();

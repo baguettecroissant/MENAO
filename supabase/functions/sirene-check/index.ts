@@ -52,11 +52,23 @@ Deno.serve(async (req) => {
 
   const { data: artisan } = await admin
     .from("artisans")
-    .select("id, siret")
+    .select("id, siret, sirene_active")
     .eq("user_id", user.id)
     .maybeSingle();
   if (!artisan?.siret || !isValidSiret(artisan.siret))
     return respond({ status: "siret_missing" }, 400);
+
+  // Relance du seul contrôle au registre (ADR 0354) : l'entreprise est déjà vérifiée à l'INSEE,
+  // on réessaie patiemment l'annuaire sans refaire la vérification du SIRET.
+  const body = (await req.json().catch(() => null)) as { registre?: unknown } | null;
+  if (body?.registre === true && artisan.sirene_active === true) {
+    await checkRegistry(
+      admin,
+      { id: artisan.id, siret: artisan.siret, userId: user.id },
+      { patient: true },
+    );
+    return respond({ status: "ok" });
+  }
 
   if (!INSEE_API_KEY) {
     console.error("sirene-check : INSEE_API_KEY absente");

@@ -8,7 +8,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   matchingManager,
   parseRegistrySearch,
+  REGISTRY_RETRY_TIMEOUTS_MS,
   registryOutcome,
+  registryRetryable,
   registrySearchUrl,
 } from "../../../packages/core/src/registry.ts";
 import { registryCheckFilename } from "../../../packages/documents/src/registry-model.ts";
@@ -20,9 +22,35 @@ const BUCKET = "artisan-documents";
 
 type RecordResult = { resultat: "document" | "conserve" | "enregistre"; retires: string[] };
 
+/**
+ * Lecture de l'annuaire : un essai pendant la vérification du SIRET, plusieurs essais de plus en
+ * plus patients quand MENAO relance le contrôle tout seul (ADR 0354).
+ */
+async function fetchRegistry(url: string, patient: boolean): Promise<Response | null> {
+  const timeouts = patient ? REGISTRY_RETRY_TIMEOUTS_MS : REGISTRY_RETRY_TIMEOUTS_MS.slice(0, 1);
+  for (const timeout of timeouts) {
+    let status: number | null = null;
+    try {
+      const res = await fetch(url, {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(timeout),
+      });
+      if (res.ok) return res;
+      status = res.status;
+      await res.body?.cancel();
+      console.error(`registre : réponse de l'annuaire ${res.status}`);
+    } catch (error) {
+      console.error("registre : annuaire injoignable", error instanceof Error ? error.name : "");
+    }
+    if (!registryRetryable(status)) return null;
+  }
+  return null;
+}
+
 export async function checkRegistry(
   admin: SupabaseClient,
   artisan: { id: string; siret: string; userId: string },
+  options: { patient?: boolean } = {},
 ): Promise<void> {
   const siren = artisan.siret.slice(0, 9);
   const [fiche, profile, deposited] = await Promise.all([
@@ -46,20 +74,8 @@ export async function checkRegistry(
     isDirigeant: fiche.data?.is_dirigeant ?? null,
   };
 
-  let res: Response;
-  try {
-    res = await fetch(registrySearchUrl(BASE_URL, siren), {
-      headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(8000),
-    });
-  } catch (error) {
-    console.error("registre : annuaire injoignable", error instanceof Error ? error.name : "");
-    return;
-  }
-  if (!res.ok) {
-    console.error(`registre : réponse de l'annuaire ${res.status}`);
-    return;
-  }
+  const res = await fetchRegistry(registrySearchUrl(BASE_URL, siren), options.patient === true);
+  if (!res) return;
   const entry = parseRegistrySearch(await res.json(), siren);
   const outcome = registryOutcome(entry, person);
 

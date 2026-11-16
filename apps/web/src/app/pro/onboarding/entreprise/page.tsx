@@ -3,9 +3,7 @@ import { CircleCheck, Lock } from "lucide-react";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
-import { documentLogoUrl } from "@/lib/documents/logo";
 import { CompanyForm } from "./company-form";
-import { LogoCard } from "./logo-card";
 import { SiretForm } from "./siret-form";
 
 const t = fr.pro.onboarding.company;
@@ -18,7 +16,6 @@ export default async function CompanyStepPage() {
   const { supabase, userId, artisan } = await getOnboardingContext();
   const verified = artisan.sirene_checked_at !== null;
   const editable = artisan.status === "brouillon";
-  const logoUrl = await documentLogoUrl(supabase, artisan.logo_path);
 
   const rows: [string, string | null][] = [
     ...(artisan.sirene_partial
@@ -95,8 +92,6 @@ export default async function CompanyStepPage() {
       </div>
 
       <div className="flex flex-col gap-4">
-        {/* Logo des documents (ADR 0038) : modifiable à tout moment, même après la validation. */}
-        <LogoCard userId={userId} logoUrl={logoUrl} hasLogo={artisan.logo_path !== null} />
         <Card className="flex flex-col gap-2">
           <span className="flex size-10 items-center justify-center rounded-input bg-background text-label">
             <Lock aria-hidden="true" className="size-5" />

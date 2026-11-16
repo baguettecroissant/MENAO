@@ -11,7 +11,7 @@ test("logo des documents : dépôt, remplacement, retrait", async ({ page }) => 
   await page.getByRole("button", { name: "Me connecter" }).click();
   await expect(page).toHaveURL(/\/pro\/tableau-de-bord$/);
 
-  await page.goto("/pro/onboarding/entreprise");
+  await page.goto("/pro/onboarding/profil");
   const logo = page.getByRole("region", { name: "Logo sur vos documents (facultatif)" });
   await expect(
     logo.getByText("Les documents déjà envoyés gardent le logo qu'ils avaient.", { exact: false }),
