@@ -81,6 +81,13 @@ test("espace commercial : code, QR code, inscrits, guide terrain et cartes", asy
   await expect(page.getByRole("button", { name: "Imprimer la planche" })).toBeVisible();
   await expect(page.getByText("Code : remi-06").first()).toBeVisible();
 
+  // Mémo A4 pour l'artisan (ADR 0347) : la liste à préparer, le code et le QR code.
+  await page.goto("/commercial/memo");
+  await expect(page.getByRole("heading", { name: "Mémo pour l'artisan", level: 1 })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Imprimer le mémo" })).toBeVisible();
+  await expect(page.getByText("Attestation URSSAF")).toBeVisible();
+  await expect(page.getByText("Code conseiller : remi-06")).toBeVisible();
+
   // Le back-office et l'espace pro lui restent fermés.
   await page.goto("/admin");
   await expect(page).toHaveURL(/\/commercial$/);

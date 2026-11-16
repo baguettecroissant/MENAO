@@ -29,6 +29,7 @@ import { sheetCard } from "@/components/pro/sheet";
 import { Alert, ButtonLink, Card, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
+import { PrepareCard } from "./prepare-card";
 import { SubmitOnboarding } from "./submit-onboarding";
 
 const t = fr.pro.onboarding;
@@ -120,6 +121,9 @@ export default async function OnboardingIndexPage() {
       )}
 
       {editable && <p className="max-w-3xl leading-relaxed text-label">{d.lead}</p>}
+      {/* « Avant de commencer » (ADR 0347) : tant que l'artisan n'a déposé aucune pièce (le Kbis
+          vérifié au registre, créé à l'inscription, ne compte pas). */}
+      {editable && documents.every((doc) => doc.source === "registre") && <PrepareCard />}
 
       {/* Refonte « Nette » (ADR 0254) : les éléments par groupe à gauche ; l'envoi et la suite à
           droite (en bas sur téléphone, l'envoi collé au bas de l'écran). */}

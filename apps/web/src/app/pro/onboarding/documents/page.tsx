@@ -4,9 +4,11 @@ import {
   daysUntil,
   documentIsValid,
   expiryStatus,
+  type RequiredDocumentType,
 } from "@menao/core";
 import { Alert, ButtonLink, Card } from "@/components/ui";
 import { Check, Lock } from "lucide-react";
+import { DocumentHelpDisclosure, DocumentHelpSteps } from "@/components/pro/document-help";
 import { sheetCard } from "@/components/pro/sheet";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
@@ -55,6 +57,29 @@ export default async function DocumentsStepPage({
     : { data: [] };
   const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
 
+  const stateOf = (type: RequiredDocumentType) => {
+    const rows = documents
+      .filter((d) => d.type === type)
+      .sort((a, b) => (a.status === "valide" ? -1 : b.status === "valide" ? 1 : 0));
+    const current = rows.find((d) => d.status === "valide") ?? rows[0];
+    const pending = rows.find((d) => d !== current);
+    const monitored = (MONITORED_DOCUMENT_TYPES as readonly string[]).includes(type);
+    // Kbis remplacé par la fiche de vérification au registre (ADR 0217) : rien à déposer.
+    const registry = current?.source === "registre" && current.status === "valide";
+    const registryFailed =
+      type === "kbis" && onboarding && !current && artisan.registre_statut !== null
+        ? (t.registry.reasons[artisan.registre_statut] ?? null)
+        : null;
+    const canUpload = (onboarding || (renewal && monitored)) && !registry;
+    // « Où trouver ce document ? » (ADR 0347) : seulement quand il y a quelque chose à déposer ;
+    // le Kbis, seulement si la vérification au registre a échoué.
+    const help =
+      canUpload &&
+      !(type === "decennale" && exempt) &&
+      (type !== "kbis" || registryFailed !== null);
+    return { current, pending, monitored, registryFailed, canUpload, help };
+  };
+
   // Refonte « Nette » (ADR 0254) : une pièce à gauche, ce que l'équipe vérifie à droite.
   const cards = (
     <div className="flex flex-col gap-6">
@@ -63,19 +88,7 @@ export default async function DocumentsStepPage({
         <Alert tone="success">{fr.pro.onboarding.upload.status.locked}</Alert>
       )}
       {types.map((type) => {
-        const rows = documents
-          .filter((d) => d.type === type)
-          .sort((a, b) => (a.status === "valide" ? -1 : b.status === "valide" ? 1 : 0));
-        const current = rows.find((d) => d.status === "valide") ?? rows[0];
-        const pending = rows.find((d) => d !== current);
-        const monitored = (MONITORED_DOCUMENT_TYPES as readonly string[]).includes(type);
-        // Kbis remplacé par la fiche de vérification au registre (ADR 0217) : rien à déposer.
-        const registry = current?.source === "registre" && current.status === "valide";
-        const registryFailed =
-          type === "kbis" && onboarding && !current && artisan.registre_statut !== null
-            ? (t.registry.reasons[artisan.registre_statut] ?? null)
-            : null;
-        const canUpload = (onboarding || (renewal && monitored)) && !registry;
+        const { current, pending, monitored, registryFailed, canUpload, help } = stateOf(type);
         return (
           <Card key={type}>
             <section aria-labelledby={`doc-${type}`} className="flex flex-col gap-4">
@@ -197,6 +210,10 @@ export default async function DocumentsStepPage({
                   </form>
                 </div>
               )}
+              {help && (
+                // Page d'une pièce sur ordinateur : l'aide est dans la colonne de droite.
+                <DocumentHelpDisclosure type={type} className={focused ? "lg:hidden" : ""} />
+              )}
               {canUpload && !(type === "decennale" && exempt) && (
                 <DocumentUpload
                   type={type}
@@ -217,6 +234,12 @@ export default async function DocumentsStepPage({
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
       {cards}
       <aside className="flex flex-col gap-4">
+        {focusedType && stateOf(focusedType).help && (
+          <div className={`${sheetCard} hidden lg:flex`}>
+            <h2 className="text-[1.0625rem]">{fr.pro.onboarding.help.where}</h2>
+            <DocumentHelpSteps type={focusedType} />
+          </div>
+        )}
         {focusedType && (
           // Pas de « region » ici : la page d'une pièce n'en compte qu'une (la pièce elle-même).
           <div className={sheetCard}>
@@ -238,6 +261,9 @@ export default async function DocumentsStepPage({
         <ButtonLink href="/pro/onboarding" variant="outline" block>
           {t.backToDossier}
         </ButtonLink>
+        {onboarding && focusedType && stateOf(focusedType).help && (
+          <p className="px-1 text-sm text-muted-foreground">{fr.pro.onboarding.help.later}</p>
+        )}
       </aside>
     </div>
   );

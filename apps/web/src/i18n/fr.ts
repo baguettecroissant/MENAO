@@ -214,6 +214,7 @@ export const fr = {
       whatsappMessage: (link: string) =>
         `Bonjour, voici le lien pour vous inscrire sur MENAO avec votre conseiller : ${link}`,
       cards: "Cartes à imprimer",
+      memo: "Mémo pour l'artisan",
     },
     signups: {
       title: "Vos inscriptions",
@@ -257,6 +258,33 @@ export const fr = {
       unavailable: "Vos cartes seront disponibles quand votre accès sera actif.",
       previewLabel: "Aperçu de votre carte",
       format: "Format carte de visite : 85 × 55 mm.",
+    },
+    // Mémo A4 à laisser à l'artisan (lot 60, ADR 0347) ; la liste vient de @menao/core.
+    memo: {
+      title: "Mémo pour l'artisan",
+      intro:
+        "Une page A4 à laisser à l'artisan ou à lui envoyer : ce qu'il doit préparer, où le trouver, et votre QR code d'inscription.",
+      print: "Imprimer le mémo",
+      printHint: "Une page A4 : imprimez à 100 %, sans mise à l'échelle.",
+      back: "Mon code",
+      unavailable: "Votre mémo sera disponible quand votre accès sera actif.",
+      kicker: "Mémo à garder",
+      heading: "Votre inscription MENAO en 10 minutes",
+      lead: "Préparez ces six éléments avant le rendez-vous ou avant de vous inscrire seul : tout se fait sur votre téléphone, en photo.",
+      missing:
+        "Un document manque ? Commencez quand même : il se dépose plus tard, et MENAO vous le rappelle. L'application explique où trouver chaque pièce.",
+      duringTitle: "Pendant le rendez-vous, votre conseiller vous aide à :",
+      during: [
+        "installer l'application et créer votre compte ;",
+        "photographier vos documents : MENAO lit les dates pour vous ;",
+        "choisir vos métiers et votre zone.",
+      ],
+      safety:
+        "Votre conseiller ne vous demandera jamais votre mot de passe ni un code reçu par SMS.",
+      scan: "Scannez pour vous inscrire",
+      advisor: (name: string) => `Votre conseiller MENAO : ${name}`,
+      code: (code: string) => `Code conseiller : ${code}`,
+      previewLabel: "Aperçu du mémo",
     },
   },
   /** Suivi des prospects des commerciaux (F-65, lot 2, ADR 0206). */
@@ -9344,6 +9372,45 @@ export const fr = {
           rate_limited: "Trop d'envois en peu de temps. Réessayez plus tard.",
           unavailable:
             "Le service est momentanément indisponible. Réessayez dans quelques minutes.",
+        },
+      },
+      // Aide de l'inscription (lot 60, ADR 0347) ; le contenu des étapes vient de @menao/core.
+      help: {
+        where: "Où trouver ce document ?",
+        askInsurer: "Demander mon attestation à mon assureur",
+        later:
+          "Vous pouvez le déposer plus tard : MENAO vous rappelle par e-mail les pièces qui manquent.",
+        prepare: {
+          title: "Avant de commencer",
+          intro:
+            "Préparez ces documents : l'inscription prend environ 10 minutes. Vous pouvez vous arrêter et reprendre plus tard.",
+          listTitle: "À préparer",
+          help: "Où le trouver",
+          missing:
+            "Il vous manque un document ? Commencez quand même : il se dépose plus tard, et MENAO vous le rappelle.",
+        },
+        insurer: {
+          title: "Votre assureur vous l'envoie",
+          intro:
+            "MENAO a préparé le message avec votre entreprise et vos métiers. Ajoutez l'adresse de votre assureur, relisez, envoyez.",
+          to: "À",
+          toPlaceholder: "E-mail de votre assureur ou courtier",
+          subject: "Objet",
+          message: "Message",
+          withRcPro: "Demander aussi la RC Pro",
+          withRcProHint: "Souvent chez le même assureur.",
+          privacy:
+            "Le message part de votre messagerie, à votre nom : MENAO ne l'envoie pas à votre place.",
+          send: "Envoyer avec ma messagerie",
+          copy: "Copier le message",
+          copied: "Message copié.",
+          after:
+            "Quand vous la recevez, revenez la déposer : MENAO vous rappelle les pièces qui manquent.",
+          back: "Retour au document",
+        },
+        stripe: {
+          title: "Gardez sous la main",
+          intro: "Le formulaire Stripe prend environ 3 minutes.",
         },
       },
       documents: {
