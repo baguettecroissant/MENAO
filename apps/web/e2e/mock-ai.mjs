@@ -456,6 +456,47 @@ async function readJson(req) {
   }
 }
 
+function planChat(body) {
+  const last = body.messages.at(-1);
+  const toolUse = (name, input) => ({
+    id: "msg_mock",
+    type: "message",
+    role: "assistant",
+    model: body.model ?? "mock",
+    content: [{ type: "tool_use", id: `toolu_${name}`, name, input }],
+    stop_reason: "tool_use",
+    stop_sequence: null,
+    usage: { input_tokens: 900, output_tokens: 60 },
+  });
+  if (Array.isArray(last?.content) && last.content[0]?.type === "tool_result") {
+    const cloison = JSON.parse(last.content[0].content);
+    return toolUse("repondre", {
+      reponse: `Il vous faut ${cloison.plaques} plaques BA13 pour ${String(cloison.longueur_ml).replace(".", ",")} ml de cloisons.`,
+      titre: "Cloisons 72/48 · hauteur 2,50 m",
+      lignes: [
+        { libelle: "Cloison A", quantite: 7.58, unite: "ml", piece: "Séjour-cuisine" },
+        { libelle: "Cloison B", quantite: 3, unite: "ml", piece: "WC" },
+      ],
+      fournitures: [
+        {
+          libelle: "Plaques BA13",
+          quantite: cloison.plaques,
+          unite: "u",
+          prix_unitaire_centimes: 790,
+        },
+      ],
+    });
+  }
+  const question = typeof last?.content === "string" ? last.content : "";
+  if (/peinture/i.test(question)) {
+    return toolUse("demander_precision", {
+      question: "Le plan ne cote pas les portes. Je prends des dimensions courantes ?",
+      choix: ["Portes 0,83 × 2,04 m", "Je les donne"],
+    });
+  }
+  return toolUse("cloison", { longueurs_m: [7.58, 3], hauteur_m: 2.5 });
+}
+
 createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", "http://localhost");
   const send = (status, body) => {
@@ -480,6 +521,11 @@ createServer(async (req, res) => {
           message: "Reasoning is mandatory for this endpoint and cannot be disabled.",
         },
       });
+    }
+    // « Demander à MENAO » (ADR 0346) : outil « cloison », puis réponse avec le résultat de MENAO ;
+    // une question sur la peinture demande une précision.
+    if (Array.isArray(body?.tools) && body.tools.some((tool) => tool?.name === "repondre")) {
+      return send(200, planChat(body));
     }
     const content = body?.messages?.[0]?.content;
     const text = typeof content === "string" ? content : JSON.stringify(content ?? "");

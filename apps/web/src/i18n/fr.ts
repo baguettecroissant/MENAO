@@ -6900,6 +6900,62 @@ export const fr = {
           invalid: "Vérifiez la valeur saisie.",
           error: "Le point n'a pas pu être enregistré. Réessayez.",
         },
+        // « Demander à MENAO », le chat sur les plans (F-160, maquette du lot 59, ADR 0347).
+        chat: {
+          title: "Demander à MENAO",
+          open: "Demander à MENAO",
+          back: (name: string) => `← ${name}`,
+          close: "Fermer",
+          quota: (used: number, limit: number) =>
+            `Question ${Math.min(used + 1, limit)} sur ${limit} ce mois`,
+          quotaFull: (limit: number) => `${limit} questions sur ${limit} ce mois`,
+          conversation: "Conversation avec MENAO",
+          placeholder: "Posez votre question sur le plan…",
+          send: "Envoyer",
+          pending: "MENAO lit le relevé et calcule…",
+          you: "Vous",
+          intro:
+            "Posez votre question sur ces plans : un métré, des fournitures, un prix. MENAO part du relevé, fait les calculs et vous montre chaque étape.",
+          suggestions: [
+            "Combien de plaques de BA13 pour les cloisons ?",
+            "Peinture des murs et des plafonds, ouvertures déduites, pièce par pièce",
+            "Linéaire de plinthes par pièce",
+            "Combien de prises et de points lumineux par pièce ?",
+          ],
+          steps: (n: number) => `${n} étape${n > 1 ? "s" : ""} de calcul`,
+          precision: "Une précision avant de calculer",
+          precisionNote: "MENAO ne devine aucune mesure : votre choix est noté dans le métré.",
+          disclaimer:
+            "Chaque chiffre vient du plan ou d'un calcul de MENAO. Vérifiez-les avant de chiffrer.",
+          planHint: "Les pièces du métré sélectionné sont surlignées sur le plan.",
+          metre: "Métré",
+          metreEmpty: "Le métré de la réponse sélectionnée s'affiche ici.",
+          ready: "Prêt à vérifier",
+          waiting: "En attente de votre réponse",
+          supplies: "Fournitures",
+          total: "Total",
+          ht: "HT",
+          excel: "Excel",
+          howTitle: "Comment MENAO a calculé",
+          columns: {
+            label: "Ligne",
+            room: "Pièce",
+            quantity: "Quantité",
+            unitPrice: "Prix unitaire",
+            amount: "Montant",
+          },
+          csvName: (title: string) => `metre-${title}.csv`,
+          errors: {
+            quota: (limit: number) =>
+              `Les ${limit} questions du mois sont utilisées. Le compteur repart le 1er du mois prochain.`,
+            busy: "Beaucoup de questions en même temps : réessayez dans quelques minutes.",
+            timeout:
+              "La réponse a pris trop de temps. Posez une question plus précise ou réessayez.",
+            unavailable: "Le chat est momentanément indisponible. Réessayez plus tard.",
+            forbidden: "Le chat est inclus dans la formule Entreprise.",
+            error: "MENAO n'a pas pu répondre. Réessayez.",
+          } as Record<string, string | ((limit: number) => string)>,
+        },
         withoutDpgf: "sans DPGF",
         planBadge: "Formule Entreprise",
         invalid:
