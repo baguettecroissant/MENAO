@@ -1,6 +1,7 @@
 import "server-only";
 import { parseAiAgents, SYMBOL_KINDS, type PlanSymbol } from "@menao/core";
 import type { createClient } from "@/lib/supabase/server";
+import type { PlanFileLink } from "@/components/pro/plan-viewer";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
 
@@ -195,6 +196,28 @@ export function planFiles(value: unknown): PlanFileEntry[] {
         ]
       : [];
   });
+}
+
+/**
+ * Plans d'un appel d'offres avec leurs liens signés d'une heure (bucket privé, règle 8) : le
+ * fichier, puis les pages de PDF rendues en images, en un seul appel.
+ */
+export async function planFileLinks(supabase: Client, value: unknown): Promise<PlanFileLink[]> {
+  const entries = planFiles(value);
+  if (entries.length === 0) return [];
+  const { data: signed } = await supabase.storage
+    .from("tender-files")
+    .createSignedUrls(
+      [...entries.map((f) => f.path), ...entries.flatMap((f) => f.pages.map((p) => p.path))],
+      3600,
+    );
+  let next = entries.length;
+  return entries.map((f, i) => ({
+    name: f.name,
+    kind: f.kind,
+    url: signed?.[i]?.signedUrl ?? null,
+    pages: f.pages.map((p) => ({ page: p.page, url: signed?.[next++]?.signedUrl ?? null })),
+  }));
 }
 
 /** Pièces relevées d'un appel d'offres créé depuis les plans (lecture : RLS). */

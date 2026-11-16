@@ -20,13 +20,12 @@ import {
   type PlanPage,
   type PlanTrace,
 } from "@menao/core";
-import { CheckCircle2, Layers, Ruler, TriangleAlert } from "lucide-react";
+import { CheckCircle2, Layers, Ruler, Sparkles, TriangleAlert } from "lucide-react";
 import { CopySnippet } from "@/components/copy-snippet";
 import { PlanDpgfEditor } from "@/components/pro/plan-dpgf-editor";
 import { PlanFinishes } from "@/components/pro/plan-finishes";
 import { PlanMeasure } from "@/components/pro/plan-measure";
 import { PlanReleve } from "@/components/pro/plan-releve";
-import type { PlanFileLink } from "@/components/pro/plan-viewer";
 import { GuideBar, GuideFigures, GuidePoints } from "@/components/pro/plan-guide";
 import { PlanSymbols } from "@/components/pro/plan-symbols";
 import { PlanVerifier, VerifyCard } from "@/components/pro/plan-verify";
@@ -53,7 +52,7 @@ import {
   getTender,
   getTenderRooms,
   getTenderWorks,
-  planFiles,
+  planFileLinks,
   planSymbolPages,
   planSymbols,
 } from "@/lib/artisan/tenders";
@@ -198,7 +197,17 @@ export default async function TenderPage({
             <h1 className="text-[1.75rem] leading-[1.05] sm:text-[2.25rem]">{tender.name}</h1>
           </div>
           {plan ? (
-            <GuidePoints count={plan.points} href={verifying ? undefined : verifyHref} />
+            <span className="flex flex-wrap items-center gap-2.5">
+              <GuidePoints count={plan.points} href={verifying ? undefined : verifyHref} />
+              {/* « Demander à MENAO » (ADR 0347) : à chaque étape de l'appel d'offres. */}
+              <Link
+                href={`${base}/demander` as Route}
+                className={`${buttonClasses({ variant: "dark", block: false })} gap-2`}
+              >
+                <Sparkles aria-hidden="true" className="size-4" />
+                {t.plan.chat.open}
+              </Link>
+            </span>
           ) : (
             <StatusBadge tone="primary">{t.plan.planBadge}</StatusBadge>
           )}
@@ -556,27 +565,13 @@ async function planData(
     plan_traces: unknown;
   },
 ) {
-  const entries = planFiles(tender.plan_files);
-  const [rooms, works, { data: signed }, { data: trades }] = await Promise.all([
+  const [rooms, works, files, { data: trades }] = await Promise.all([
     getTenderRooms(supabase, tender.id),
     getTenderWorks(supabase, tender.id),
-    entries.length
-      ? supabase.storage.from("tender-files").createSignedUrls(
-          // Plans, puis pages de PDF rendues en images, dans le même appel.
-          [...entries.map((f) => f.path), ...entries.flatMap((f) => f.pages.map((p) => p.path))],
-          3600,
-        )
-      : Promise.resolve({ data: [] as { signedUrl: string | null }[] }),
+    planFileLinks(supabase, tender.plan_files),
     // Tous les métiers : un ouvrage écrit peut demander un lot qui n'est pas encore coché.
     supabase.from("trades").select("code, label").eq("active", true),
   ]);
-  let next = entries.length;
-  const files: PlanFileLink[] = entries.map((f, i) => ({
-    name: f.name,
-    kind: f.kind,
-    url: signed?.[i]?.signedUrl ?? null,
-    pages: f.pages.map((p) => ({ page: p.page, url: signed?.[next++]?.signedUrl ?? null })),
-  }));
   const figures = planReadingFigures(
     rooms.map((r) => ({
       areaCm2: r.area_cm2,

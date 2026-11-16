@@ -537,3 +537,51 @@ test("appels d'offres : PDF de plans, page tracée et mesurable comme une photo"
   await expect(page.getByRole("button", { name: /plans-exemple\.pdf · Page 2/ })).toBeVisible();
   await expect(page.getByRole("img", { name: "Plan à mesurer" })).toBeVisible();
 });
+
+// « Demander à MENAO » (F-160, ADR 0346-0347) : question en un toucher, calcul de MENAO (faux
+// modèle en CI), métré et fournitures chiffrées, puis une question de précision.
+test("appels d'offres : demander à MENAO, métré calculé et précision demandée", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await signIn(page);
+  await setPlan("entreprise");
+  await page.goto("/pro/demandes/appels-offres");
+  await page.getByRole("radio", { name: /J'ai seulement les plans/ }).click();
+  await page.getByLabel("Nom du projet").fill(`Chat E2E ${test.info().retry}`);
+  await page.getByLabel("Plans de l'architecte").setInputFiles(files.planPhoto);
+  await page.getByRole("button", { name: "Lire les plans" }).click();
+  await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres\/[0-9a-f-]{36}\?lecture=ok/, {
+    timeout: 30_000,
+  });
+
+  await page.getByRole("link", { name: "Demander à MENAO" }).click();
+  await expect(page).toHaveURL(/\/demander$/);
+  await expect(page.getByText(/^Question \d+ sur 40 ce mois$/)).toBeVisible();
+  await page
+    .getByRole("button", { name: "Combien de plaques de BA13 pour les cloisons ?" })
+    .click();
+  // 10,58 ml × 2,50 m × 2 faces × 1,05 ÷ 3 m² = 18,5 → 19 plaques (ratio Placo, ADR 0345).
+  await expect(
+    page.getByText("Il vous faut 19 plaques BA13 pour 10,58 ml de cloisons."),
+  ).toBeVisible({
+    timeout: 30_000,
+  });
+  const metre = page.getByRole("region", { name: "Métré" });
+  await expect(metre.getByText("Cloisons 72/48 · hauteur 2,50 m")).toBeVisible();
+  await expect(metre.getByRole("button", { name: /Cloison A/ })).toContainText("7,58 ml");
+  await expect(metre).toContainText("150,10");
+  await expect(metre.getByRole("button", { name: "Excel" })).toBeVisible();
+
+  const box = page.getByLabel("Posez votre question sur le plan…");
+  await box.fill("Et la peinture des murs ?");
+  await box.press("Enter");
+  await expect(page.getByText("Une précision avant de calculer")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "Portes 0,83 × 2,04 m" })).toBeVisible();
+
+  // La conversation est gardée.
+  await page.reload();
+  await expect(
+    page.getByText("Il vous faut 19 plaques BA13 pour 10,58 ml de cloisons."),
+  ).toBeVisible();
+});
