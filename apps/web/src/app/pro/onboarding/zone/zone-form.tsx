@@ -113,7 +113,10 @@ export function ZoneForm({
                 legend={t.radius}
                 columns={3}
                 value={radiusKm}
-                options={radiusOptions.map((km) => ({ value: String(km), label: t.radiusOption(km) }))}
+                options={radiusOptions.map((km) => ({
+                  value: String(km),
+                  label: t.radiusOption(km),
+                }))}
                 onChange={setRadiusKm}
               />
               <input type="hidden" name="radiusKm" value={radiusKm} />

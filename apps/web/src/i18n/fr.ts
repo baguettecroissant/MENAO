@@ -8770,9 +8770,9 @@ export const fr = {
         trade: (label: string, n: number) => `${label} : ${n}`,
       },
       dossier: {
-      nextLabel: "Prochaine étape",
-      nextHint: "Tout est enregistré : vous pouvez vous arrêter et reprendre quand vous voulez.",
-      nextButton: "Continuer",
+        nextLabel: "Prochaine étape",
+        nextHint: "Tout est enregistré : vous pouvez vous arrêter et reprendre quand vous voulez.",
+        nextButton: "Continuer",
         title: "Faire vérifier mon entreprise",
         lead: "Ajoutez chaque élément, dans l'ordre que vous voulez. Tout est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre plus tard.",
         back: "Mon dossier",

@@ -86,7 +86,10 @@ export default async function DocumentsStepPage({
     <div className="flex flex-col gap-6">
       {focused && onboarding && types[0] && (
         <span className="self-start rounded-pill bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary-strong">
-          {t.position(REQUIRED_DOCUMENT_TYPES.indexOf(types[0]) + 1, REQUIRED_DOCUMENT_TYPES.length)}
+          {t.position(
+            REQUIRED_DOCUMENT_TYPES.indexOf(types[0]) + 1,
+            REQUIRED_DOCUMENT_TYPES.length,
+          )}
         </span>
       )}
       <p className="text-label">{focused ? fr.pro.onboarding.documents.photoHint : t.intro}</p>
