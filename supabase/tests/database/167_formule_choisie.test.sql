@@ -11,8 +11,8 @@ insert into auth.users (id, email, is_anonymous, email_confirmed_at, raw_app_met
 insert into public.artisans (id, user_id, status, raison_sociale, zone_mode, assujetti_tva) values
   ('e1671000-0000-4000-8000-000000000001', 'e1670000-0000-4000-8000-000000000001', 'brouillon', 'FORMULE 167', 'communes', true),
   ('e1671000-0000-4000-8000-000000000002', 'e1670000-0000-4000-8000-000000000002', 'refuse', 'REFUS 167', 'communes', true);
-insert into public.plans (code, nom, prix_mensuel_ht_centimes, stripe_lookup_key, ouverte, ordre) values
-  ('fermeetest', 'Fermée 167', 10000, 'menao_fermee_167', false, 99);
+insert into public.plans (code, nom, prix_mensuel_ht_centimes, stripe_lookup_key, stripe_lookup_key_annuel, ouverte, ordre) values
+  ('fermeetest', 'Fermée 167', 10000, 'menao_fermee_167', 'menao_fermee_167_annuel', false, 99);
 
 create function pg_temp.connecter(uid uuid) returns void language sql as $$
   select set_config('request.jwt.claims', jsonb_build_object(
