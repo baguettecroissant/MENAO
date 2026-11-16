@@ -7,6 +7,7 @@ import {
 } from "@menao/core";
 import { safeRedirectPath } from "@menao/validation";
 import { NextResponse, type NextRequest } from "next/server";
+import { COMMERCIAL_DEMO_COOKIE } from "@/lib/commercial/demo-cookie";
 import { updateSession } from "@/lib/supabase/proxy";
 
 const PROTECTED_PREFIXES = [
@@ -47,6 +48,8 @@ const PROTECTED_PREFIXES = [
   ARTISAN_SIGNUP_FINALIZE_PATH,
   ARTISAN_WELCOME_PATH,
 ];
+const DEMO_LINK = "/commercial/demo";
+const DEMO_PREFIXES = ["/commercial", "/pro/decouvrir"];
 // Compte Google ou Apple à finaliser (ADR 0108) : ramené à cette page tant que les CGU ne sont
 // pas acceptées, depuis les espaces protégés et la recherche. Depuis l'inscription artisan, la
 // finalisation a sa propre page (ADR 0110).
@@ -66,9 +69,17 @@ export async function proxy(request: NextRequest) {
     return redirectWithSession(new URL("/", request.url), response);
   }
 
-  const isProtected = PROTECTED_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
+  // Démo de l'espace commercial (ADR 0344) : le lien est ouvert à tous ; avec son cookie, l'espace
+  // commercial et la démo artisan s'ouvrent sans compte (chaque page revérifie la clé).
+  const demoLink = pathname === DEMO_LINK || pathname.startsWith(`${DEMO_LINK}/`);
+  const demo =
+    !claims &&
+    !!request.cookies.get(COMMERCIAL_DEMO_COOKIE)?.value &&
+    DEMO_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const isProtected =
+    !demoLink &&
+    !demo &&
+    PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   if (isProtected && !claims) {
     const url = new URL("/connexion", request.url);
     url.searchParams.set("next", safeRedirectPath(pathname + search));

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { COMMERCIAL_DEMO_COOKIE } from "../commercial/demo-cookie";
 
 /**
  * Mode pré-lancement (ADR 0101) : tant que PRELAUNCH_ACCESS_CODE est défini au build, toute adresse
@@ -48,12 +49,26 @@ const OPEN = [
   "assistant-particulier\\.txt",
 ];
 
+// Démo de l'espace commercial (ADR 0344) : le lien est toujours servi ; l'espace commercial et la
+// démo artisan, avec le cookie de la démo (sa clé est revérifiée par chaque page) ou le code.
+const DEMO_LINK = "commercial/demo";
+const DEMO_PAGES = ["commercial", "pro/decouvrir"];
+
 /** Réécritures « beforeFiles » de next.config : aucune si le mode est désactivé. */
 export function prelaunchRewrites(code: string | undefined) {
   if (!code) return [];
-  const missing = [{ type: "cookie" as const, key: PRELAUNCH_COOKIE, value: prelaunchToken(code) }];
+  const access = { type: "cookie" as const, key: PRELAUNCH_COOKIE, value: prelaunchToken(code) };
+  const missing = [access];
+  const demo = { type: "cookie" as const, key: COMMERCIAL_DEMO_COOKIE };
+  const open = [...OPEN, DEMO_LINK, ...DEMO_PAGES];
   return [
     { source: "/", missing, destination: PRELAUNCH_PAGE },
-    { source: `/:path((?!(?:${OPEN.join("|")})(?:/|$)).+)`, missing, destination: PRELAUNCH_PAGE },
+    { source: `/:path((?!(?:${open.join("|")})(?:/|$)).+)`, missing, destination: PRELAUNCH_PAGE },
+    // Pages de la démo : fermées sans le code ni le cookie de la démo (lien de démo exclu).
+    {
+      source: `/:path((?:commercial(?!/demo(?:/|$))|pro/decouvrir)(?:/.*)?)`,
+      missing: [access, demo],
+      destination: PRELAUNCH_PAGE,
+    },
   ];
 }

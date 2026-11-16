@@ -271,6 +271,7 @@ function BriefPanel({
         type="button"
         variant={brief ? "secondary" : "primary"}
         onClick={generate}
+        data-demo-block="ai"
         disabled={pending}
         className="sm:w-auto sm:self-start sm:px-6"
       >
@@ -463,6 +464,7 @@ function MessagePanel({
         type="button"
         variant={current ? "secondary" : "primary"}
         onClick={generate}
+        data-demo-block="ai"
         disabled={pending}
         className="sm:w-auto sm:self-start sm:px-6"
       >
@@ -561,6 +563,7 @@ function ReportPanel({
       <Button
         type="button"
         onClick={generate}
+        data-demo-block="ai"
         disabled={pending || !transcript.trim()}
         className="sm:w-auto sm:self-start sm:px-6"
       >

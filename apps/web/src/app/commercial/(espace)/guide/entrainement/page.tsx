@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { DemoTraining } from "@/components/commercial/demo-training";
 import { TrainingSimulator } from "@/components/commercial/training-simulator";
 import { ListPanel, ListRow } from "@/components/list-kit";
 import { Alert } from "@/components/ui";
@@ -26,6 +27,7 @@ export default async function CommercialTrainingPage() {
         .limit(5)
     : { data: null };
 
+  const Simulator = space.demo ? DemoTraining : TrainingSimulator;
   return (
     <main className="bg-background">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
@@ -48,8 +50,8 @@ export default async function CommercialTrainingPage() {
           <Alert tone="error">{fr.commercialSpace.suspended}</Alert>
         ) : (
           // Refonte « Nette » (lot 51) : l'échange à gauche ; les artisans et les séances passées
-          // à droite.
-          <TrainingSimulator
+          // à droite. Démo (ADR 0344) : un échange d'exemple déjà noté, sans appel à l'IA.
+          <Simulator
             aside={
               sessions && sessions.length > 0 ? (
                 <ListPanel label={t.history.title}>

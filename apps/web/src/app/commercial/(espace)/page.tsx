@@ -10,6 +10,8 @@ import { fr } from "@/i18n/fr";
 import { getCommercialSpace } from "@/lib/commercial/space";
 import { formatDay } from "@/lib/format";
 import { qrSvg } from "@/lib/qr";
+import { DemoWelcome } from "@/components/commercial/demo-welcome";
+import { DEMO_COPILOT_PROSPECT } from "@/lib/commercial/demo-data";
 
 const t = fr.commercialSpace;
 
@@ -39,15 +41,23 @@ export default async function CommercialHomePage() {
   return (
     <main className="bg-background">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
-            {t.greeting(space.account.firstName)}
-          </h1>
-          <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
-        </div>
+        {space.demo ? (
+          // Démo par lien (ADR 0344) : l'accueil du visiteur, puis l'écran réel.
+          <DemoWelcome copilotHref={`/commercial/prospects/${DEMO_COPILOT_PROSPECT}`} />
+        ) : (
+          <div className="flex flex-col gap-2">
+            <h1 className="text-[2rem] leading-[1.05] font-medium tracking-tight sm:text-[2.5rem]">
+              {t.greeting(space.account.firstName)}
+            </h1>
+            <p className="max-w-3xl text-[0.9375rem] text-label sm:text-base">{t.intro}</p>
+          </div>
+        )}
 
         {/* Refonte « Nette » (ADR 0260) : le code à gauche, les inscriptions à droite. */}
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_25rem]">
+        <div
+          id="mon-code"
+          className="grid scroll-mt-6 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_25rem]"
+        >
           <div className="flex min-w-0 flex-col gap-6">
             {!commercial ? (
               <Alert tone="info">{t.missing}</Alert>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell/app-shell";
+import { CommercialDemoBanner, CommercialDemoGuard } from "@/components/commercial/demo-guard";
 import { fr } from "@/i18n/fr";
 import { getCommercialSpace } from "@/lib/commercial/space";
 
@@ -13,9 +14,14 @@ export const metadata: Metadata = {
 /** Espace commercial (F-65, ADR 0205) : code et inscrits, guide terrain, dans la coque. */
 export default async function CommercialSpaceLayout({ children }: { children: ReactNode }) {
   const space = await getCommercialSpace();
+  // Démo par lien (ADR 0344) : bandeau orange et actions arrêtées avant d'agir.
   return (
-    <AppShell space="commercial" account={space.account}>
-      {children}
+    <AppShell
+      space="commercial"
+      account={space.account}
+      topBanner={space.demo ? <CommercialDemoBanner /> : null}
+    >
+      {space.demo ? <CommercialDemoGuard>{children}</CommercialDemoGuard> : children}
     </AppShell>
   );
 }
