@@ -186,6 +186,19 @@ export const fr = {
       error: "Le lien de démo n'a pas pu être changé. Réessayez.",
     },
   },
+  // Carte de France de la zone d'intervention (F-162, ADR 0349).
+  franceMap: {
+    label: {
+      departements: "Carte des départements",
+      regions: "Carte des régions",
+      france: "Carte de France",
+    },
+    hint: {
+      departements: "Touchez un département pour l'ajouter ou le retirer · © IGN",
+      regions: "Touchez une région pour l'ajouter ou la retirer · © IGN",
+    },
+    caption: "© IGN",
+  },
   commercialSpace: {
     metaTitle: "Espace commercial — MENAO",
     nav: { home: "Mon code", guide: "Guide terrain", demo: "Démo (exemples)" },

@@ -3,6 +3,7 @@
 import { territoryOfInsee, type ZoneMode } from "@menao/core";
 import { useActionState, useState } from "react";
 import { Autocomplete } from "@/components/autocomplete";
+import { FranceMap } from "@/components/france-map";
 import { TerritoryField } from "@/components/territory-field";
 import { Alert, Button, RadioGroup, SelectField } from "@/components/ui";
 import { ZoneMap } from "@/components/zone-map";
@@ -129,6 +130,7 @@ export function ZoneForm({
                 codes={territories}
                 onChange={setTerritories}
                 errors={errors.territories}
+                point={point}
                 labels={{
                   search: mode === "regions" ? t.regionSearch : t.departementSearch,
                   hint: mode === "regions" ? t.regionSearchHint : t.departementSearchHint,
@@ -138,6 +140,11 @@ export function ZoneForm({
               />
               <input type="hidden" name="territories" value={JSON.stringify(territories)} />
             </>
+          )}
+          {mode === "france" && (
+            <div className="mx-auto w-full max-w-sm">
+              <FranceMap mode="france" point={point} />
+            </div>
           )}
           {mode === "france" && <p className="text-sm text-muted-foreground">{t.franceNote}</p>}
           {(mode === "regions" || mode === "france") && (

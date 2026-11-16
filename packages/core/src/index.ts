@@ -110,6 +110,7 @@ export * from "./plan-verify";
 export * from "./plan-chat-calc";
 export * from "./materials";
 export * from "./plan-chat-tools";
+export * from "./france-map";
 export * from "./library";
 export * from "./plan-limits";
 export * from "./library-import";
