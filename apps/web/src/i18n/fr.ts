@@ -9503,15 +9503,6 @@ export const fr = {
           "Vous pouvez le déposer plus tard : MENAO vous rappelle par e-mail les pièces qui manquent.",
         laterTitle: "Vous ne l'avez pas sous la main ?",
         laterButton: "Je le déposerai plus tard",
-        prepare: {
-          title: "Avant de commencer",
-          intro:
-            "Préparez ces documents : l'inscription prend environ 10 minutes. Vous pouvez vous arrêter et reprendre plus tard.",
-          listTitle: "À préparer",
-          help: "Où le trouver",
-          missing:
-            "Il vous manque un document ? Commencez quand même : il se dépose plus tard, et MENAO vous le rappelle.",
-        },
         insurer: {
           title: "Votre assureur vous l'envoie",
           intro:
