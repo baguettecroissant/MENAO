@@ -1,7 +1,7 @@
 "use client";
 
 import { MAX_UPLOAD_BYTES } from "@menao/core";
-import { ImagePlus } from "lucide-react";
+import { Camera, ImagePlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Alert, buttonClasses } from "@/components/ui";
@@ -18,11 +18,21 @@ const PHOTO_MAX_SIDE = 2000;
  * Photos de réalisations : plusieurs à la fois, envoyées l'une après l'autre (comme dans
  * l'application), dans la limite des places restantes. Chaque photo passe par process-upload.
  */
-export function PortfolioUpload({ userId, remaining }: { userId: string; remaining: number }) {
+export function PortfolioUpload({
+  userId,
+  remaining,
+  empty = false,
+}: {
+  userId: string;
+  remaining: number;
+  /** Aucune photo encore : trois cases qui donnent des idées (maquette du lot 61). */
+  empty?: boolean;
+}) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<string | null>(null);
   const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   async function send(chosen: File[]) {
     setMessage(null);
@@ -66,8 +76,38 @@ export function PortfolioUpload({ userId, remaining }: { userId: string; remaini
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div
+      onDragOver={(event) => {
+        event.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(event) => {
+        event.preventDefault();
+        setDragging(false);
+        const files = Array.from(event.dataTransfer.files).filter((file) =>
+          ["image/jpeg", "image/png"].includes(file.type),
+        );
+        if (files.length && progress === null) void send(files);
+      }}
+      className={`flex flex-col gap-3 rounded-card ${dragging ? "outline-2 outline-offset-4 outline-primary" : ""}`}
+    >
       {message && <Alert tone={message.tone}>{message.text}</Alert>}
+      {empty && (
+        <ul className="grid grid-cols-3 gap-2.5">
+          {t.portfolioIdeas.map((idea) => (
+            <li key={idea}>
+              <label
+                htmlFor="portfolio-files"
+                className="flex aspect-4/3 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-input border-2 border-dashed border-border-strong px-2 text-center text-xs font-semibold text-muted-foreground hover:border-primary"
+              >
+                <Camera aria-hidden="true" className="size-5" />
+                {idea}
+              </label>
+            </li>
+          ))}
+        </ul>
+      )}
       <input
         ref={input}
         id="portfolio-files"

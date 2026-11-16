@@ -8770,6 +8770,9 @@ export const fr = {
         trade: (label: string, n: number) => `${label} : ${n}`,
       },
       dossier: {
+      nextLabel: "Prochaine étape",
+      nextHint: "Tout est enregistré : vous pouvez vous arrêter et reprendre quand vous voulez.",
+      nextButton: "Continuer",
         title: "Faire vérifier mon entreprise",
         lead: "Ajoutez chaque élément, dans l'ordre que vous voulez. Tout est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre plus tard.",
         back: "Mon dossier",
@@ -9579,6 +9582,7 @@ export const fr = {
         chooseFile: "Choisir un fichier",
         photoHint: "Une photo nette, à plat et bien éclairée, ou le PDF reçu de votre assureur.",
         chosen: (name: string) => `Fichier choisi : ${name}`,
+        position: (n: number, total: number) => `Document ${n} sur ${total}`,
         dropHere: "Glissez votre document ici",
         dropOr: "ou",
         // Lecture automatique du document (ADR 0176).
@@ -9633,6 +9637,7 @@ export const fr = {
           "Jusqu'à 12 photos de chantiers terminés (sans personne ni adresse visible). Vous pouvez en choisir plusieurs à la fois.",
         portfolioAlt: (n: number) => `Réalisation ${n}`,
         portfolioAdd: "Ajouter des photos",
+        portfolioIdeas: ["Un chantier terminé", "Un avant / après", "Un détail soigné"],
         portfolioSending: (done: number, total: number) =>
           `Envoi de la photo ${done} sur ${total}…`,
         portfolioDone: (n: number) => (n > 1 ? `${n} photos ajoutées.` : "Photo ajoutée."),

@@ -87,7 +87,7 @@ export function ChoiceGroup<T extends string | number | boolean>({
   legend: string;
   hint?: string;
   value: T | null;
-  options: { value: T; label: string }[];
+  options: { value: T; label: string; description?: string }[];
   onChange: (value: T) => void;
   columns?: 2 | 3;
 }) {
@@ -108,9 +108,16 @@ export function ChoiceGroup<T extends string | number | boolean>({
               className="peer absolute inset-0 z-10 m-0 size-full cursor-pointer opacity-0"
             />
             <span
-              className={`flex min-h-[3.25rem] cursor-pointer items-center justify-center rounded-input border-[1.5px] border-border-strong bg-surface px-3 text-center text-[0.9375rem] font-semibold transition-colors peer-checked:border-2 peer-checked:border-foreground peer-checked:bg-surface peer-checked:text-foreground peer-focus-visible:ring-4 peer-focus-visible:ring-primary/20 hover:border-primary`}
+              className={`flex min-h-[3.25rem] cursor-pointer items-center justify-center rounded-input border-[1.5px] border-border-strong bg-surface px-3 py-2 text-center text-[0.9375rem] font-semibold transition-colors peer-checked:border-2 peer-checked:border-foreground peer-checked:bg-surface peer-checked:text-foreground peer-focus-visible:ring-4 peer-focus-visible:ring-primary/20 hover:border-primary`}
             >
-              {option.label}
+              <span className="flex flex-col gap-0.5">
+                {option.label}
+                {option.description && (
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {option.description}
+                  </span>
+                )}
+              </span>
             </span>
           </label>
         ))}

@@ -20,7 +20,21 @@ remplissait déjà la date et le code dès le fichier choisi.
   n'est pas déposée (retour au dossier ; MENAO relance déjà par e-mail, ADR 0219). Une fois la
   pièce déposée, « Retour à mon dossier » comme avant.
 
+## Reste du lot 61, dans la même PR
+
+- **Zone** : les choix de l'inscription portent la même description que ceux du dossier ; dans le
+  dossier, le rayon se choisit avec les mêmes boutons qu'à l'inscription (plus de liste déroulante).
+- **Documents** : pastille « Document N sur M » sur l'écran d'une pièce.
+- **« Mon dossier »** : carte « Prochaine étape » avec un seul bouton « Continuer », qui ouvre la
+  première chose à faire dans l'ordre du dossier (entreprise, métiers, zone, charte, première pièce
+  manquante ou refusée, fiche publique).
+- **Fiche publique** : la partie « réalisations » n'apparaît plus côté client tant qu'il n'y a
+  aucune photo ; l'aperçu du dossier montre les initiales comme la vraie fiche (illustration par
+  défaut déjà en place, `ArtisanPhoto`) ; jauge sous la présentation ; trois cases d'idées de
+  photos et glisser-déposer des réalisations. Aucune photo par défaut dans les réalisations :
+  ce serait trompeur pour le client.
+
 ## Conséquences
 
-- « Un document par écran » avec son compteur et la fiche du fichier lu (maquette DocDepot) restent
-  à faire avec « Mon dossier ».
+- L'illustration par défaut reste celle de `ArtisanPhoto` (initiales) : pas d'image par métier,
+  qui demanderait des visuels à produire.

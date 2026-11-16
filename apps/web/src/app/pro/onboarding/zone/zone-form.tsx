@@ -5,7 +5,8 @@ import { useActionState, useState } from "react";
 import { Autocomplete } from "@/components/autocomplete";
 import { FranceMap } from "@/components/france-map";
 import { TerritoryField } from "@/components/territory-field";
-import { Alert, Button, RadioGroup, SelectField } from "@/components/ui";
+import { ChoiceGroup } from "@/components/pro/signup/signup-ui";
+import { Alert, Button, RadioGroup } from "@/components/ui";
 import { ZoneMap } from "@/components/zone-map";
 import { fr } from "@/i18n/fr";
 import { saveZone } from "@/lib/artisan/actions";
@@ -107,19 +108,16 @@ export function ZoneForm({
           {!address && initial.hasBaseLocation && <input type="hidden" name="keepBase" value="1" />}
           {mode === "rayon" && (
             <>
-              <SelectField
-                label={t.radius}
-                name="radiusKm"
+              {/* Mêmes boutons qu'à l'inscription (lot 61). */}
+              <ChoiceGroup<string>
+                legend={t.radius}
+                columns={3}
                 value={radiusKm}
-                onChange={(event) => setRadiusKm(event.target.value)}
-                errors={errors.radiusKm}
-              >
-                {radiusOptions.map((km) => (
-                  <option key={km} value={km}>
-                    {t.radiusOption(km)}
-                  </option>
-                ))}
-              </SelectField>
+                options={radiusOptions.map((km) => ({ value: String(km), label: t.radiusOption(km) }))}
+                onChange={setRadiusKm}
+              />
+              <input type="hidden" name="radiusKm" value={radiusKm} />
+              {errors.radiusKm && <p className="text-sm text-danger">{errors.radiusKm[0]}</p>}
               {point && <ZoneMap lon={point.lon} lat={point.lat} radiusKm={Number(radiusKm)} />}
             </>
           )}

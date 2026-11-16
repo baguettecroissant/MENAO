@@ -179,13 +179,12 @@ export function ProfileBody({
             )}
           </Section>
         )}
-        <Section title={t.recent}>
-          {photos.length ? (
+        {/* Sans photo, la partie n'apparaît pas (lot 61, ADR 0351). */}
+        {photos.length > 0 && (
+          <Section title={t.recent}>
             <PhotoGallery urls={photos} name={profile.display_name} />
-          ) : (
-            <p className="text-sm text-muted-foreground">{t.recentEmpty}</p>
-          )}
-        </Section>
+          </Section>
+        )}
         <Section title={t.reviews}>
           {reviews.length ? (
             <ReviewList
@@ -311,13 +310,12 @@ function PublicProfileBody({
             )}
           </Section>
         )}
-        <Section title={t.recent}>
-          {photos.length ? (
+        {/* Sans photo, la partie n'apparaît pas (lot 61, ADR 0351). */}
+        {photos.length > 0 && (
+          <Section title={t.recent}>
             <PhotoGallery urls={photos} name={profile.display_name} />
-          ) : (
-            <p className="text-sm text-muted-foreground">{t.recentEmpty}</p>
-          )}
-        </Section>
+          </Section>
+        )}
         {/* Avis en un seul bloc : Score MENAO, note des clients, avis, note Google. */}
         <Section title={t.clientReviews}>
           {profile.menao_score && (

@@ -51,6 +51,12 @@ export function PresentationForm({
           .join(" ")}
         className="rounded-input border border-border bg-surface p-3 aria-invalid:border-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       />
+      <span aria-hidden="true" className="h-1.5 overflow-hidden rounded-pill bg-border">
+        <span
+          className={`block h-full rounded-pill transition-[width] ${length >= PRESENTATION_MIN_LENGTH ? "bg-success" : "bg-primary"}`}
+          style={{ width: `${Math.min(100, (length / PRESENTATION_MIN_LENGTH) * 100)}%` }}
+        />
+      </span>
       <p
         id="presentation-count"
         className={`text-sm ${length >= PRESENTATION_MIN_LENGTH ? "text-success" : "text-muted-foreground"}`}

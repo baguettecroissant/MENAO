@@ -71,6 +71,28 @@ export default async function OnboardingIndexPage() {
   const total = dossierItemCount(snapshot);
   const done = total - left;
   const profileDone = progress.entreprise && progress.metiers && progress.zone;
+  // Prochaine chose à faire, dans l'ordre du dossier (lot 61) : un seul bouton « Continuer ».
+  const missingDocument = REQUIRED_DOCUMENT_TYPES.find(
+    (type) =>
+      !(type === "decennale" && snapshot.decennaleExempt) &&
+      ["missing", "refuse", "a_refaire"].includes(documentState(type, snapshot.documents[type])),
+  );
+  const next = !progress.entreprise
+    ? { href: "/pro/onboarding/entreprise", label: t.steps.entreprise }
+    : !progress.metiers
+      ? { href: "/pro/onboarding/metiers", label: t.steps.metiers }
+      : !progress.zone
+        ? { href: "/pro/onboarding/zone", label: t.steps.zone }
+        : !progress.charte
+          ? { href: "/pro/onboarding/charte", label: d.charterTitle }
+          : missingDocument
+            ? {
+                href: `/pro/onboarding/documents?type=${missingDocument}`,
+                label: t.documents.types[missingDocument],
+              }
+            : !progress.profil
+              ? { href: "/pro/onboarding/profil", label: d.profilTitle }
+              : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -124,6 +146,24 @@ export default async function OnboardingIndexPage() {
       {/* « Avant de commencer » (ADR 0347) : tant que l'artisan n'a déposé aucune pièce (le Kbis
           vérifié au registre, créé à l'inscription, ne compte pas). */}
       {editable && documents.every((doc) => doc.source === "registre") && <PrepareCard />}
+      {editable && next && (
+        <section
+          aria-label={d.nextLabel}
+          className="flex flex-col gap-3 rounded-card bg-foreground px-5 py-4 text-surface sm:flex-row sm:items-center sm:justify-between"
+        >
+          <span className="flex min-w-0 flex-col gap-0.5">
+            <span className="text-xs font-bold tracking-wider uppercase opacity-70">
+              {d.nextLabel}
+            </span>
+            <span className="text-lg font-semibold">{next.label}</span>
+            <span className="text-sm opacity-80">{d.nextHint}</span>
+          </span>
+          <ButtonLink href={next.href as Route} className="shrink-0">
+            {d.nextButton}
+            <ChevronRight aria-hidden="true" className="size-4" />
+          </ButtonLink>
+        </section>
+      )}
 
       {/* Refonte « Nette » (ADR 0254) : les éléments par groupe à gauche ; l'envoi et la suite à
           droite (en bas sur téléphone, l'envoi collé au bas de l'écran). */}

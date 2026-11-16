@@ -1,5 +1,5 @@
 import { PORTFOLIO_MAX_PHOTOS, parisToday, presentationDraft } from "@menao/core";
-import { Eye, UserRound } from "lucide-react";
+import { Eye } from "lucide-react";
 import Image from "next/image";
 import { ButtonLink, Card } from "@/components/ui";
 import { UploadForm } from "@/components/upload-form";
@@ -8,6 +8,7 @@ import { deletePortfolioPhoto } from "@/lib/artisan/actions";
 import { getOnboardingContext } from "@/lib/artisan/context";
 import { PortfolioUpload } from "./portfolio-upload";
 import { PresentationForm } from "./presentation-form";
+import { ArtisanPhoto } from "@/components/project/artisan-photo";
 
 const t = fr.pro.onboarding.profile;
 const MAX_PHOTOS = PORTFOLIO_MAX_PHOTOS;
@@ -98,9 +99,7 @@ export default async function ProfileStepPage() {
               {t.portfolio}
             </h2>
             <p className="text-sm text-muted-foreground">{t.portfolioHint}</p>
-            {photos.length === 0 ? (
-              <p className="text-muted-foreground">{t.portfolioEmpty}</p>
-            ) : (
+            {photos.length === 0 ? null : (
               <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {photos.map((photo, index) => (
                   <li key={photo.id} className="flex flex-col gap-1">
@@ -126,7 +125,11 @@ export default async function ProfileStepPage() {
               </ul>
             )}
             {photos.length < MAX_PHOTOS && (
-              <PortfolioUpload userId={userId} remaining={MAX_PHOTOS - photos.length} />
+              <PortfolioUpload
+                userId={userId}
+                remaining={MAX_PHOTOS - photos.length}
+                empty={photos.length === 0}
+              />
             )}
           </section>
         </Card>
@@ -147,12 +150,13 @@ export default async function ProfileStepPage() {
                 className="size-16 shrink-0 rounded-full object-cover"
               />
             ) : (
-              <span
-                aria-hidden="true"
-                className="flex size-16 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-strong"
-              >
-                <UserRound className="size-7" />
-              </span>
+              // Sans photo : les initiales, comme sur la fiche vue par les clients.
+              <ArtisanPhoto
+                url={null}
+                name={name}
+                className="size-16 shrink-0 rounded-full"
+                initialsClassName="text-xl"
+              />
             )}
             <span className="flex min-w-0 flex-col gap-0.5">
               <span className="font-display text-lg font-bold">{name}</span>
