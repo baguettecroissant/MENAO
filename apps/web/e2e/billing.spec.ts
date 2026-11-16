@@ -154,9 +154,11 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
     .toBe(true);
 });
 
-test("abonnement indisponible tant que le dossier n'est pas validé", async ({ page }) => {
+test("avant la validation, la formule se choisit sans paiement (ADR 0353)", async ({ page }) => {
   await signIn(page, "artisan@example.test");
   await page.goto("/pro/onboarding/formule");
-  await expect(page.getByText("dès que l'équipe MENAO aura validé votre dossier")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Choisir la formule/ })).toHaveCount(0);
+  await expect(page.getByText("Rien n'est prélevé aujourd'hui.")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Choisir la formule/ }).first()).toBeVisible();
+  // Aucun bouton de paiement tant que l'entreprise n'est pas validée.
+  await expect(page.getByRole("button", { name: /au mois|à l'année/ })).toHaveCount(0);
 });

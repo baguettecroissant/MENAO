@@ -6,6 +6,7 @@ import {
   connectRequirementGroups,
   parisToday,
 } from "@menao/core";
+import { Lock } from "lucide-react";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { loadConnectPrefill } from "@/lib/artisan/actions";
@@ -19,8 +20,8 @@ import { StripeChecklist } from "./stripe-checklist";
 const t = fr.pro.onboarding.connect;
 
 /**
- * Étape 6 — compte de paiement Stripe Connect (paiements directs, ADR 0011), ouverte dès l'envoi du
- * dossier (ADR 0215). Dit en clair ce que Stripe attend encore (rubriques lisibles, date limite)
+ * Étape 6 — compte de paiement Stripe Connect (paiements directs, ADR 0011), ouverte dès le début
+ * du dossier (ADR 0353). Dit en clair ce que Stripe attend encore (rubriques lisibles, date limite)
  * ou qu'il vérifie les informations.
  */
 export default async function PaymentsStepPage({
@@ -101,6 +102,13 @@ export default async function PaymentsStepPage({
             />
           </section>
         </Card>
+        {/* Ouvert dès le début du dossier (ADR 0353) : ce qui attend encore la validation. */}
+        {(artisan.status === "brouillon" || artisan.status === "en_verification") && (
+          <p className="flex items-start gap-3 rounded-card bg-primary-softer px-4 py-3.5 text-sm text-primary-strong">
+            <Lock aria-hidden="true" className="mt-0.5 size-[1.0625rem] shrink-0" />
+            {t.beforeValidation}
+          </p>
+        )}
         {money && (
           <Card>
             <ConnectOverviewPanel overview={money.overview} collected={money.collected} />

@@ -1716,6 +1716,7 @@ export type Database = {
           logo_path: string | null;
           nom_commercial: string | null;
           paused: boolean;
+          plan_choisi: string | null;
           planning_updated_at: string | null;
           presentation: string | null;
           radiated_at: string | null;
@@ -1783,6 +1784,7 @@ export type Database = {
           logo_path?: string | null;
           nom_commercial?: string | null;
           paused?: boolean;
+          plan_choisi?: string | null;
           planning_updated_at?: string | null;
           presentation?: string | null;
           radiated_at?: string | null;
@@ -1849,6 +1851,7 @@ export type Database = {
           logo_path?: string | null;
           nom_commercial?: string | null;
           paused?: boolean;
+          plan_choisi?: string | null;
           planning_updated_at?: string | null;
           presentation?: string | null;
           radiated_at?: string | null;
@@ -7288,6 +7291,7 @@ export type Database = {
         Args: { p_checked: boolean; p_tender_id: string };
         Returns: undefined;
       };
+      artisan_choose_plan: { Args: { p_plan: string }; Returns: undefined };
       artisan_claim_reward: {
         Args: {
           p_address: string;

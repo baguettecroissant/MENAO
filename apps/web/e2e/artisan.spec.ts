@@ -286,11 +286,19 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.goto("/pro/onboarding/documents");
   await expect(page.getByRole("button", { name: /Déposer|Remplacer/ })).toHaveCount(0);
 
-  // Paiements ouverts dès l'envoi du dossier, pendant la vérification (ADR 0215).
+  // Paiements et formule ouverts sans attendre la validation (ADR 0353) : la formule se choisit
+  // sans rien payer.
   await page.goto("/pro/onboarding");
+  await expect(page.getByRole("heading", { name: "À faire en attendant" })).toBeVisible();
   await expect(
-    page.getByText("Vous pouvez le faire dès maintenant, pendant la vérification"),
+    page.getByText("Vous pouvez le faire dès maintenant : Stripe vérifie pendant ce temps"),
   ).toBeVisible();
+  await page.goto("/pro/onboarding/formule");
+  await expect(page.getByText("Rien n'est prélevé aujourd'hui.")).toBeVisible();
+  await page.getByRole("button", { name: "Choisir la formule Premium" }).click();
+  await expect(page.getByText("Formule choisie")).toBeVisible();
+  await page.goto("/pro/onboarding");
+  await expect(page.getByRole("link", { name: /Choisir votre formule.*Choisie/ })).toBeVisible();
   await page.goto("/pro/onboarding/paiements");
   await expect(page.getByText("ne touche jamais l'argent de vos chantiers")).toBeVisible();
   await expect(

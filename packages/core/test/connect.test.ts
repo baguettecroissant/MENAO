@@ -4,17 +4,26 @@ import {
   connectAccountFromStripe,
   connectAccountStatus,
   connectOnboardingOpen,
+  planChoiceOpen,
   connectRequirementGroups,
 } from "../src/connect";
 
-describe("ouverture du compte de paiement (ADR 0215)", () => {
-  it("dès l'envoi du dossier, pas avant ; jamais pour un dossier refusé ou radié", () => {
+describe("ouverture du compte de paiement (ADR 0353)", () => {
+  it("dès le début du dossier ; jamais pour un dossier refusé ou radié", () => {
     expect(connectOnboardingOpen("en_verification")).toBe(true);
     expect(connectOnboardingOpen("valide")).toBe(true);
     expect(connectOnboardingOpen("suspendu")).toBe(true);
-    expect(connectOnboardingOpen("brouillon")).toBe(false);
+    expect(connectOnboardingOpen("brouillon")).toBe(true);
     expect(connectOnboardingOpen("refuse")).toBe(false);
     expect(connectOnboardingOpen("radie")).toBe(false);
+  });
+
+  it("formule choisie sans payer avant la validation, paiement ensuite", () => {
+    expect(planChoiceOpen("brouillon")).toBe(true);
+    expect(planChoiceOpen("en_verification")).toBe(true);
+    expect(planChoiceOpen("valide")).toBe(false);
+    expect(planChoiceOpen("refuse")).toBe(false);
+    expect(planChoiceOpen("radie")).toBe(false);
   });
 });
 

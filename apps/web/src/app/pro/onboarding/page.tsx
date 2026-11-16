@@ -5,6 +5,7 @@ import {
   dossierItemCount,
   dossierGroups,
   dossierItemsLeft,
+  planChoiceOpen,
   zoneDemandShown,
   type DocumentState,
 } from "@menao/core";
@@ -63,6 +64,19 @@ export default async function OnboardingIndexPage() {
     await getOnboardingContext();
   const editable = artisan.status === "brouillon" || artisan.status === "refuse";
   const validated = artisan.status === "valide" || artisan.status === "suspendu";
+  // Paiements et formule ouverts sans attendre l'envoi du dossier (ADR 0353).
+  const parallel = planChoiceOpen(artisan.status);
+  const chosenPlan =
+    parallel && artisan.plan_choisi
+      ? ((
+          await supabase
+            .from("plans")
+            .select("nom")
+            .eq("code", artisan.plan_choisi)
+            .eq("ouverte", true)
+            .maybeSingle()
+        ).data?.nom ?? null)
+      : null;
   // Demande de la zone (ADR 0182), une fois les métiers et la zone choisis, avant la validation.
   const zoneDemand =
     !validated && progress.metiers && progress.zone ? await loadZoneDemand(supabase) : null;
@@ -320,10 +334,17 @@ export default async function OnboardingIndexPage() {
 
           <section aria-labelledby="apres-verification" className={sheetCard}>
             <div className="flex flex-col gap-0.5">
-              <h2 id="apres-verification" className="text-lg">
-                {d.afterTitle}
-              </h2>
-              {!validated && <p className="text-sm text-muted-foreground">{d.afterLead}</p>}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 id="apres-verification" className="text-lg">
+                  {parallel ? d.parallelTitle : d.afterTitle}
+                </h2>
+                {parallel && (
+                  <span className="rounded-pill bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary-strong">
+                    {d.openNow}
+                  </span>
+                )}
+              </div>
+              {parallel && <p className="text-sm text-muted-foreground">{d.parallelLead}</p>}
             </div>
             <ul className="-mx-5 flex flex-col divide-y divide-border border-t border-border sm:-mx-6">
               <Row
@@ -331,10 +352,8 @@ export default async function OnboardingIndexPage() {
                 icon={<CreditCard aria-hidden="true" className="size-5" />}
                 title={d.paiementsTitle}
                 hint={
-                  // Ouvert dès l'envoi du dossier (ADR 0215).
-                  artisan.status === "en_verification" && !progress.paiements
-                    ? d.paiementsHintNow
-                    : d.paiementsHint
+                  // Ouvert dès le début du dossier (ADR 0353).
+                  parallel && !progress.paiements ? d.paiementsHintNow : d.paiementsHint
                 }
                 tone={progress.paiements ? "done" : "todo"}
                 status={progress.paiements ? d.states.done : d.states.todo}
@@ -343,9 +362,21 @@ export default async function OnboardingIndexPage() {
                 href="/pro/onboarding/formule"
                 icon={<Sparkles aria-hidden="true" className="size-5" />}
                 title={d.formuleTitle}
-                hint={d.formuleHint}
-                tone={progress.formule ? "done" : "todo"}
-                status={progress.formule ? d.states.done : d.states.todo}
+                hint={
+                  !parallel || progress.formule
+                    ? d.formuleHint
+                    : chosenPlan
+                      ? d.formuleHintChosen(chosenPlan)
+                      : d.formuleHintChoice
+                }
+                tone={progress.formule ? "done" : parallel && chosenPlan ? "pending" : "todo"}
+                status={
+                  progress.formule
+                    ? d.states.done
+                    : parallel && chosenPlan
+                      ? d.states.chosen
+                      : d.states.todo
+                }
               />
             </ul>
           </section>

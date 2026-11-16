@@ -480,7 +480,7 @@ export const fr = {
       "Vos clients vous paient directement sur votre compte, via Stripe (prestataire de paiement agréé). MENAO ne touche jamais l'argent de vos chantiers et ne prélève aucune commission.",
     fees: "Les frais de paiement Stripe sont déduits de chaque encaissement ; vous gérez vos paiements, remboursements et virements depuis votre propre tableau de bord Stripe.",
     notValidated:
-      "La configuration des paiements sera disponible dès l'envoi de votre dossier à l'équipe MENAO.",
+      "La configuration des paiements n'est pas disponible pour ce dossier. Une question ? Écrivez à l'équipe MENAO depuis l'aide.",
     start: "Configurer mes paiements avec Stripe",
     resume: "Reprendre la configuration Stripe",
     complete: "Compléter mes informations sur Stripe",

@@ -50,11 +50,25 @@ export function connectAccountFromStripe(input: unknown): ConnectAccountSnapshot
 }
 
 /**
- * Le compte de paiement s'ouvre dès l'envoi du dossier (ADR 0215) : Stripe vérifie pendant que
- * l'équipe MENAO valide. La visibilité exige toujours la validation (`artisanVisibility`).
+ * Le compte de paiement s'ouvre dès le début du dossier (ADR 0353, après ADR 0215) : un document
+ * qui manque ne bloque plus Stripe, qui vérifie de son côté pendant ce temps. La visibilité exige
+ * toujours la validation (`artisanVisibility`).
  */
 export function connectOnboardingOpen(status: string): boolean {
-  return status === "en_verification" || status === "valide" || status === "suspendu";
+  return (
+    status === "brouillon" ||
+    status === "en_verification" ||
+    status === "valide" ||
+    status === "suspendu"
+  );
+}
+
+/**
+ * Avant la validation, l'artisan choisit sa formule sans rien payer (ADR 0353) : le choix est
+ * gardé, le paiement n'est proposé qu'une fois l'entreprise validée.
+ */
+export function planChoiceOpen(status: string): boolean {
+  return status === "brouillon" || status === "en_verification";
 }
 
 export type VisibilityCondition = "validation" | "abonnement" | "paiements";
