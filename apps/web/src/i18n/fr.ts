@@ -9452,6 +9452,8 @@ export const fr = {
         askInsurer: "Demander mon attestation à mon assureur",
         later:
           "Vous pouvez le déposer plus tard : MENAO vous rappelle par e-mail les pièces qui manquent.",
+        laterTitle: "Vous ne l'avez pas sous la main ?",
+        laterButton: "Je le déposerai plus tard",
         prepare: {
           title: "Avant de commencer",
           intro:
@@ -9577,6 +9579,8 @@ export const fr = {
         chooseFile: "Choisir un fichier",
         photoHint: "Une photo nette, à plat et bien éclairée, ou le PDF reçu de votre assureur.",
         chosen: (name: string) => `Fichier choisi : ${name}`,
+        dropHere: "Glissez votre document ici",
+        dropOr: "ou",
         // Lecture automatique du document (ADR 0176).
         reading: {
           reading: "Lecture du document…",

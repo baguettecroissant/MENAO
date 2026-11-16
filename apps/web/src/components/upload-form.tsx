@@ -10,7 +10,7 @@ import {
   type ReadableDocumentType,
 } from "@menao/core";
 import { documentMetadataSchema, type UploadPurpose } from "@menao/validation";
-import { Camera, FileUp } from "lucide-react";
+import { Camera, FileCheck, FileUp } from "lucide-react";
 import { useActionState, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { z } from "zod";
 import { AvatarFramer } from "@/components/avatar-framer";
@@ -85,6 +85,24 @@ export function UploadForm({
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const [chosen, setChosen] = useState<string | null>(null);
+  // Glisser-déposer (maquette du lot 61) : fichier survolant la zone, ou type refusé.
+  const [dragging, setDragging] = useState(false);
+  const [dropError, setDropError] = useState(false);
+
+  /** Fichier glissé : posé dans le champ « Choisir un fichier », puis lu comme un fichier choisi. */
+  function drop(files: FileList) {
+    const file = files[0];
+    setDragging(false);
+    if (!file || !fileInput.current) return;
+    const accepted = accept.split(",").map((type) => type.trim());
+    if (!accepted.includes(file.type)) return setDropError(true);
+    setDropError(false);
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    fileInput.current.files = transfer.files;
+    if (cameraInput.current) cameraInput.current.value = "";
+    void read(file);
+  }
   // Document déposé pour sa lecture, réutilisé à l'envoi s'il n'a pas été remplacé.
   const upload = useRef<{ key: string; path: Promise<string | null> } | null>(null);
   const lastRead = useRef<DocumentPrefill>({});
@@ -219,7 +237,29 @@ export function UploadForm({
       {/* Document lu automatiquement : le fichier d'abord, puis les champs pré-remplis. */}
       {readAs ? null : fields}
       {camera ? (
-        <div className="flex flex-col gap-2">
+        <div
+          onDragOver={(event) => {
+            event.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(event) => {
+            event.preventDefault();
+            drop(event.dataTransfer.files);
+          }}
+          className={`flex flex-col gap-3 rounded-card border-2 border-dashed p-4 transition-colors sm:p-5 ${
+            dragging ? "border-primary bg-primary-softer" : "border-border-strong bg-background"
+          }`}
+        >
+          <p className="hidden flex-col items-center gap-1 text-center sm:flex">
+            <span className="flex size-11 items-center justify-center rounded-input bg-primary-soft text-primary-strong">
+              <FileUp aria-hidden="true" className="size-5" />
+            </span>
+            <span className="font-semibold">{fr.pro.onboarding.documents.dropHere}</span>
+            <span className="text-sm text-muted-foreground">
+              {fr.pro.onboarding.documents.dropOr}
+            </span>
+          </p>
           <div className="grid gap-2.5 sm:grid-cols-2">
             <CameraButton
               id={`${formId}-camera`}
@@ -249,9 +289,20 @@ export function UploadForm({
               }}
             />
           </div>
+          {dropError && (
+            <p className="text-sm text-danger" role="alert">
+              {t.status.invalid_type}
+            </p>
+          )}
           {chosen && (
-            <p className="text-sm font-medium text-success" aria-live="polite">
-              {fr.pro.onboarding.documents.chosen(chosen)}
+            <p
+              className="flex items-center gap-2.5 rounded-input border border-border bg-surface px-3 py-2.5 text-sm font-medium"
+              aria-live="polite"
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-input bg-success-soft text-success">
+                <FileCheck aria-hidden="true" className="size-4" />
+              </span>
+              <span className="min-w-0 truncate">{fr.pro.onboarding.documents.chosen(chosen)}</span>
             </p>
           )}
         </div>

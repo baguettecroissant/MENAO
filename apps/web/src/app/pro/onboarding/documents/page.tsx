@@ -7,7 +7,7 @@ import {
   type RequiredDocumentType,
 } from "@menao/core";
 import { Alert, ButtonLink, Card } from "@/components/ui";
-import { Check, Lock } from "lucide-react";
+import { Check, Clock, Lock } from "lucide-react";
 import { DocumentHelpDisclosure, DocumentHelpSteps } from "@/components/pro/document-help";
 import { HelpVideo } from "@/components/pro/help-video";
 import { sheetCard } from "@/components/pro/sheet";
@@ -261,11 +261,20 @@ export default async function DocumentsStepPage({
           <Lock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
           {fr.pro.onboarding.dossier.privacy}
         </p>
-        <ButtonLink href="/pro/onboarding" variant="outline" block>
-          {t.backToDossier}
-        </ButtonLink>
-        {onboarding && focusedType && stateOf(focusedType).help && (
-          <p className="px-1 text-sm text-muted-foreground">{fr.pro.onboarding.help.later}</p>
+        {onboarding && focusedType && stateOf(focusedType).help && !stateOf(focusedType).current ? (
+          // « Déposer plus tard » (maquette du lot 61) : un vrai bouton, MENAO relance par e-mail.
+          <div className={sheetCard}>
+            <h2 className="text-[1.0625rem]">{fr.pro.onboarding.help.laterTitle}</h2>
+            <p className="text-sm text-label">{fr.pro.onboarding.help.later}</p>
+            <ButtonLink href="/pro/onboarding" variant="outline" block>
+              <Clock aria-hidden="true" className="size-4" />
+              {fr.pro.onboarding.help.laterButton}
+            </ButtonLink>
+          </div>
+        ) : (
+          <ButtonLink href="/pro/onboarding" variant="outline" block>
+            {t.backToDossier}
+          </ButtonLink>
         )}
       </aside>
     </div>
