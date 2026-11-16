@@ -14,6 +14,7 @@ import { formatDay } from "@/lib/format";
 import { ConnectOverviewPanel } from "./connect-overview";
 import { ConnectStatusPanel } from "./connect-status";
 import { PaymentHow } from "./payment-how";
+import { StripeChecklist } from "./stripe-checklist";
 
 const t = fr.pro.onboarding.connect;
 
@@ -106,7 +107,11 @@ export default async function PaymentsStepPage({
           </Card>
         )}
       </div>
-      <PaymentHow />
+      <div className="flex flex-col gap-4">
+        {/* Avant le formulaire Stripe (ADR 0347) : ce qu'il demande, à garder sous la main. */}
+        {status === "a_demarrer" && <StripeChecklist />}
+        <PaymentHow />
+      </div>
     </div>
   );
 }

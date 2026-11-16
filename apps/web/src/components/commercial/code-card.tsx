@@ -1,7 +1,7 @@
 "use client";
 
 import { whatsAppShareUrl } from "@menao/core";
-import { Check, Copy, Maximize2, MessageCircle, Printer, X } from "lucide-react";
+import { Check, Copy, FileText, Maximize2, MessageCircle, Printer, X } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { QrSvg } from "@/components/pro/share-card";
@@ -104,6 +104,13 @@ export function CodeCard({
           >
             <Printer aria-hidden="true" className="size-4" />
             {t.cards}
+          </Link>
+          <Link
+            href="/commercial/memo"
+            className={buttonClasses({ variant: "secondary", block: false })}
+          >
+            <FileText aria-hidden="true" className="size-4" />
+            {t.memo}
           </Link>
         </div>
       </div>

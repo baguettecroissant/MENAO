@@ -174,6 +174,12 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(page).toHaveURL(/\/pro\/onboarding\/documents\?type=urssaf$/);
   await expect(page.getByRole("region")).toHaveCount(1);
   await expect(page.getByLabel("Prendre en photo")).toHaveAttribute("capture", "environment");
+  // Aide de l'inscription (ADR 0347) : où trouver la pièce, avec le lien officiel.
+  await expect(page.getByRole("heading", { name: "Où trouver ce document ?" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ouvrir mon espace URSSAF" })).toHaveAttribute(
+    "href",
+    "https://www.autoentrepreneur.urssaf.fr",
+  );
   const urssaf = page.getByRole("region", { name: "Attestation de vigilance URSSAF" });
   await urssaf.getByLabel("Date d'émission").fill(dates.recent);
   await urssaf.getByLabel("Code de sécurité").fill("URSSAF-0001");
@@ -204,6 +210,19 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await decennale.getByLabel("Fichier").setInputFiles(files.pdf);
   await decennale.getByRole("button", { name: "Déposer le document" }).click();
   await expect(decennale.getByText("Déposé, en attente de vérification")).toBeVisible();
+
+  // Message prêt pour l'assureur (ADR 0347) : décennale au modèle officiel et RC Pro.
+  await page.goto("/pro/onboarding/documents/assureur?type=decennale");
+  const message = page.getByLabel("Message");
+  await expect(message).toHaveValue(/arrêté du 5 janvier 2016/);
+  await expect(message).toHaveValue(/responsabilité civile professionnelle/);
+  await page.getByLabel(/Demander aussi la RC Pro/).uncheck();
+  await expect(message).not.toHaveValue(/civile professionnelle/);
+  await expect(page.getByRole("link", { name: "Envoyer avec ma messagerie" })).toHaveAttribute(
+    "href",
+    /^mailto:\?subject=Attestation%20d%C3%A9cennale/,
+  );
+  await page.goto("/pro/onboarding/documents");
 
   const rcPro = page.getByRole("region", {
     name: "Attestation de responsabilité civile professionnelle",
