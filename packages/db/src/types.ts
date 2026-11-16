@@ -5670,6 +5670,55 @@ export type Database = {
           },
         ];
       };
+      tender_chat_messages: {
+        Row: {
+          artisan_id: string;
+          author_id: string | null;
+          content: string;
+          created_at: string;
+          id: string;
+          result: Json | null;
+          role: string;
+          tender_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          artisan_id: string;
+          author_id?: string | null;
+          content: string;
+          created_at?: string;
+          id?: string;
+          result?: Json | null;
+          role: string;
+          tender_id: string;
+        };
+        Update: {
+          artisan_id?: string;
+          author_id?: string | null;
+          content?: string;
+          created_at?: string;
+          id?: string;
+          result?: Json | null;
+          role?: string;
+          tender_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tender_chat_messages_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tender_chat_messages_tender_id_fkey";
+            columns: ["tender_id"];
+            isOneToOne: false;
+            referencedRelation: "tenders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tender_lines: {
         Row: {
           architect_quantity_milli: number | null;
@@ -7348,6 +7397,7 @@ export type Database = {
         }[];
       };
       artisan_mark_badges_seen: { Args: Record<PropertyKey, never>; Returns: undefined };
+      artisan_plan_chat_quota: { Args: Record<PropertyKey, never>; Returns: Json };
       artisan_previous_lines: {
         Args: { p_query: string };
         Returns: {
@@ -7464,6 +7514,10 @@ export type Database = {
       };
       artisan_save_expense: {
         Args: { p_expense: Json; p_expense_id: string; p_lines: Json };
+        Returns: string;
+      };
+      artisan_save_plan_chat: {
+        Args: { p_answer: string; p_question: string; p_result?: Json; p_tender_id: string };
         Returns: string;
       };
       artisan_save_plan_finishes: {

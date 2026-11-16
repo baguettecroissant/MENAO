@@ -174,7 +174,8 @@ export type AiRun = {
     | "artisan-assistant"
     | "read-dpgf"
     | "read-plan"
-    | "read-catalog";
+    | "read-catalog"
+    | "plan-chat";
   model: string;
   outcome: "ok" | "invalide" | "peu_sur" | "refus" | "erreur";
   latency_ms: number;
