@@ -8788,7 +8788,7 @@ export const fr = {
         charterTitle: "Charte qualité MENAO",
         charterHint: (rules: number) =>
           `${rules} règles à cocher et votre engagement à certifier, puis une signature`,
-        profilTitle: "Votre photo et votre présentation",
+        profilTitle: "Votre présentation et votre image",
         profilHint: "Ce que les clients verront sur votre fiche",
         documentHints: {
           kbis: "De moins de 3 mois",
@@ -8808,8 +8808,8 @@ export const fr = {
           lead: "Facultatif. Rien de tout cela ne retarde votre dossier.",
           optional: "Facultatif",
           added: "Ajouté",
-          logoTitle: "Votre logo",
-          logoHint: "En haut de vos devis, factures et cartes de visite",
+          logoTitle: "Votre image",
+          logoHint: "Votre logo ou une photo, sur votre fiche et vos devis",
           skillsTitle: "Spécialités, diplôme, expérience",
           skillsHint: "Vos spécialités et vos années de métier comptent dans votre Score MENAO",
           certsTitle: "Certifications",
@@ -9685,8 +9685,31 @@ export const fr = {
         // Refonte « Nette » (ADR 0254) : aperçu de la fiche à côté du formulaire.
         previewTitle: "Ce que verront les clients",
         previewEmpty: "Votre présentation apparaîtra ici.",
+        // Une seule image, logo ou photo, facultative (ADR 0355).
+        image: {
+          title: "Votre image",
+          optional: "Facultatif",
+          lead: "Une seule image suffit. Choisissez ce que vous voulez montrer.",
+          choice: "Ce que vous voulez montrer",
+          kinds: {
+            logo: { label: "Mon logo", hint: "Le logo de mon entreprise" },
+            photo: { label: "Une photo", hint: "Mon visage, mon équipe, mon camion" },
+          },
+          logoFile: "Fichier du logo",
+          logoFormats: "PNG, JPEG ou WebP, 10 Mo maximum. Un PNG à fond transparent rend le mieux.",
+          logoSend: "Envoyer mon logo",
+          logoChange: "Changer mon logo",
+          logoAlt: "Votre logo",
+          logoWhere: [
+            "Sur votre fiche publique, en entier, sans recadrage",
+            "En haut de vos devis, factures et cartes de visite : rien d'autre à déposer",
+          ],
+          photoWhere: "Sur votre fiche publique, en rond",
+          noneTitle: "Vous ne voulez rien montrer ?",
+          none: "Ce n'est pas un problème : votre fiche affiche l'image de votre métier et vos initiales, et votre dossier part quand même.",
+        },
         avatar: "Photo de profil",
-        avatarHint: "Votre portrait ou votre logo. Elle apparaît sur votre fiche publique.",
+        avatarHint: "Votre visage ou votre équipe. Elle apparaît sur votre fiche publique.",
         avatarAlt: "Photo de profil",
         avatarChange: "Changer la photo",
         avatarSend: "Envoyer la photo",

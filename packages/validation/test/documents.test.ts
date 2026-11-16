@@ -101,7 +101,7 @@ describe("presentationSchema et usages", () => {
   });
 
   it("usages des fichiers déposés", () => {
-    expect(UPLOAD_PURPOSES).toEqual(["document", "avatar", "portfolio", "logo"]);
+    expect(UPLOAD_PURPOSES).toEqual(["document", "avatar", "portfolio", "logo", "image_logo"]);
   });
 });
 

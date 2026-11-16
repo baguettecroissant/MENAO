@@ -1073,6 +1073,7 @@ export function exampleProfile(name: string | null, now: Date = new Date()) {
     display_name: name ?? "Votre nom",
     company_name: "Votre entreprise",
     avatar_path: null,
+    image_logo: false,
     experience_years: 12,
     presentation:
       "Plombier chauffagiste depuis 12 ans à Nice et alentours : dépannage, remplacement de chauffe-eau, création et rénovation de salles de bains. Je me déplace pour une visite avant chaque devis, je vous explique les solutions possibles et je m'engage sur les délais annoncés. Chantier protégé et laissé propre, garantie décennale.",

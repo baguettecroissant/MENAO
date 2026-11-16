@@ -71,8 +71,9 @@ select results_eq(
   $$ update public.artisans set presentation = repeat('Peintre en bâtiment. ', 6) returning char_length(presentation) $$,
   $$ values (126) $$, 'présentation modifiable par l''artisan');
 
-select throws_ok($$ select public.submit_artisan_onboarding() $$, '22023', 'Étapes incomplètes : documents, profil',
-  'envoi refusé : documents et profil incomplets');
+-- Présentation écrite, sans image : le profil est complet (image facultative, ADR 0355).
+select throws_ok($$ select public.submit_artisan_onboarding() $$, '22023', 'Étapes incomplètes : documents',
+  'envoi refusé : documents incomplets (le profil ne demande plus d''image)');
 
 reset role;
 

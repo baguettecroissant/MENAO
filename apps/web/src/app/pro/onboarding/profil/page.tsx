@@ -2,7 +2,6 @@ import { PORTFOLIO_MAX_PHOTOS, parisToday, presentationDraft } from "@menao/core
 import { Eye } from "lucide-react";
 import Image from "next/image";
 import { ButtonLink, Card } from "@/components/ui";
-import { UploadForm } from "@/components/upload-form";
 import { fr } from "@/i18n/fr";
 import { deletePortfolioPhoto } from "@/lib/artisan/actions";
 import { getOnboardingContext } from "@/lib/artisan/context";
@@ -12,6 +11,7 @@ import { ArtisanPhoto } from "@/components/project/artisan-photo";
 import { TradeCover } from "@/components/trade-cover";
 import { TRADE_IMAGES } from "@/lib/site/images";
 import { documentLogoUrl } from "@/lib/documents/logo";
+import { ImageCard } from "./image-card";
 import { LogoCard } from "./logo-card";
 
 const t = fr.pro.onboarding.profile;
@@ -67,35 +67,23 @@ export default async function ProfileStepPage() {
             {fr.pro.reviews.seePublic}
           </ButtonLink>
         )}
-        <Card>
-          <section aria-labelledby="avatar-title" className="flex flex-col gap-4">
-            <h2 id="avatar-title" className="text-lg">
-              {t.avatar}
-            </h2>
-            <p className="text-sm text-muted-foreground">{t.avatarHint}</p>
-            {avatarPath && (
-              <Image
-                src={publicUrl("avatars", avatarPath)}
-                alt={t.avatarAlt}
-                width={128}
-                height={128}
-                className="size-32 rounded-full border border-border object-cover"
-              />
-            )}
-            <UploadForm
-              purpose="avatar"
-              userId={userId}
-              accept="image/jpeg,image/png"
-              hint={fr.pro.onboarding.upload.fileHintPhoto}
-              submitLabel={avatarPath ? t.avatarChange : t.avatarSend}
-              resizeTo={512}
-              square
-            />
-          </section>
-        </Card>
-
-        {/* Logo des documents (ADR 0038), rangé avec la photo et la présentation (ADR 0354). */}
-        <LogoCard userId={userId} logoUrl={logoUrl} hasLogo={artisan.logo_path !== null} />
+        {/* Une seule image, logo ou photo, facultative (lot 64, ADR 0355). */}
+        <ImageCard
+          userId={userId}
+          imageUrl={avatarPath ? publicUrl("avatars", avatarPath) : null}
+          isLogo={artisan.image_logo}
+          initial={
+            artisan.image_logo ||
+            (!avatarPath &&
+              !artisan.logo_path &&
+              (artisan.status === "brouillon" || artisan.status === "refuse"))
+              ? "logo"
+              : "photo"
+          }
+          logoCard={
+            <LogoCard userId={userId} logoUrl={logoUrl} hasLogo={artisan.logo_path !== null} />
+          }
+        />
 
         <Card>
           <PresentationForm presentation={artisan.presentation} draft={draft} />
@@ -161,7 +149,11 @@ export default async function ProfileStepPage() {
                 alt=""
                 width={64}
                 height={64}
-                className="size-16 shrink-0 rounded-full object-cover"
+                className={
+                  artisan.image_logo
+                    ? "h-16 w-24 shrink-0 rounded-input border border-border bg-surface object-contain p-1.5"
+                    : "size-16 shrink-0 rounded-full object-cover"
+                }
               />
             ) : (
               // Sans photo : les initiales, comme sur la fiche vue par les clients.

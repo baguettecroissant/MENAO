@@ -78,7 +78,13 @@ export function ProfileHeader({
       : r.zoneCommunes(profile.zone.communes);
   return (
     <div className="grid gap-6 md:grid-cols-[17.5rem_1fr] md:items-center">
-      {avatar || !TRADE_IMAGES[profile.trades[0]?.code ?? ""] ? (
+      {avatar && profile.image_logo ? (
+        // Logo de l'entreprise : affiché en entier, jamais recadré (ADR 0355).
+        <div className="flex aspect-[4/3] w-full items-center justify-center rounded-card border border-border bg-surface p-8">
+          {/* eslint-disable-next-line @next/next/no-img-element -- image publique, sans optimisation Vercel (spec §4.4) */}
+          <img src={avatar} alt="" className="max-h-full max-w-full object-contain" />
+        </div>
+      ) : avatar || !TRADE_IMAGES[profile.trades[0]?.code ?? ""] ? (
         <ArtisanPhoto
           url={avatar}
           name={profile.display_name}

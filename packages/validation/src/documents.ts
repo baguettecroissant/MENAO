@@ -2,7 +2,7 @@ import { PRESENTATION_MIN_LENGTH, documentIsValid } from "@menao/core";
 import { z } from "zod";
 import { messages } from "./messages";
 
-export const UPLOAD_PURPOSES = ["document", "avatar", "portfolio", "logo"] as const;
+export const UPLOAD_PURPOSES = ["document", "avatar", "portfolio", "logo", "image_logo"] as const;
 export type UploadPurpose = (typeof UPLOAD_PURPOSES)[number];
 
 const text = (max: number) =>

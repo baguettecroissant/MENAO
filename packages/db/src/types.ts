@@ -1711,6 +1711,7 @@ export type Database = {
           google_review_count: number | null;
           google_url: string | null;
           id: string;
+          image_logo: boolean;
           indexable: boolean;
           is_dirigeant: boolean | null;
           logo_path: string | null;
@@ -1779,6 +1780,7 @@ export type Database = {
           google_review_count?: number | null;
           google_url?: string | null;
           id?: string;
+          image_logo?: boolean;
           indexable?: boolean;
           is_dirigeant?: boolean | null;
           logo_path?: string | null;
@@ -1846,6 +1848,7 @@ export type Database = {
           google_review_count?: number | null;
           google_url?: string | null;
           id?: string;
+          image_logo?: boolean;
           indexable?: boolean;
           is_dirigeant?: boolean | null;
           logo_path?: string | null;
