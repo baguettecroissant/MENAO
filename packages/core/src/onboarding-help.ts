@@ -111,13 +111,13 @@ export const DOCUMENT_HELP: Record<RequiredDocumentType, DocumentHelp> = {
         label: "Micro-entrepreneur",
         steps: [
           "Connectez-vous à votre espace sur autoentrepreneur.urssaf.fr.",
-          "Ouvrez « Mon compte », puis « Mes documents » et « Mes attestations ».",
+          "Ouvrez «\u00a0Mon compte\u00a0», puis «\u00a0Mes documents\u00a0» et «\u00a0Mes attestations\u00a0».",
           "Téléchargez l’attestation de vigilance, puis revenez ici pour la déposer.",
         ],
         link: { label: "Ouvrir mon espace URSSAF", url: "https://www.autoentrepreneur.urssaf.fr" },
       },
       {
-        label: "Société ou autre statut",
+        label: "Autre statut",
         steps: [
           "Connectez-vous à votre espace en ligne sur urssaf.fr.",
           "Ouvrez la rubrique des attestations.",

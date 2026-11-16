@@ -26,13 +26,12 @@ describe("aide de l'inscription", () => {
 
   it("distingue micro-entrepreneur et société pour l'URSSAF, avec des liens officiels", () => {
     const urssaf = DOCUMENT_HELP.urssaf;
-    expect(urssaf.variants.map((v) => v.label)).toEqual([
-      "Micro-entrepreneur",
-      "Société ou autre statut",
-    ]);
+    expect(urssaf.variants.map((v) => v.label)).toEqual(["Micro-entrepreneur", "Autre statut"]);
     for (const v of urssaf.variants)
       expect(v.link?.url).toMatch(/^https:\/\/www\.[a-z.]*urssaf\.fr$/);
     expect(urssaf.note).toContain("6 mois");
+    // Guillemets français : espaces insécables, jamais de « seul en fin de ligne.
+    expect(urssaf.variants[0]?.steps[1]).toContain("«\u00a0Mon compte\u00a0»");
   });
 
   it("liste six éléments à préparer et quatre pour Stripe, sans doublon", () => {
