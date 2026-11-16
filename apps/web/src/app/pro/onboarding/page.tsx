@@ -35,7 +35,7 @@ import { sheetCard } from "@/components/pro/sheet";
 import { Alert, ButtonLink, Card, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
-import { PrepareCard } from "./prepare-card";
+import { HelpVideo } from "@/components/pro/help-video";
 import { SubmitOnboarding } from "./submit-onboarding";
 
 const t = fr.pro.onboarding;
@@ -181,7 +181,11 @@ export default async function OnboardingIndexPage() {
       {editable && <p className="max-w-3xl leading-relaxed text-label">{d.lead}</p>}
       {/* « Avant de commencer » (ADR 0347) : tant que l'artisan n'a déposé aucune pièce (le Kbis
           vérifié au registre, créé à l'inscription, ne compte pas). */}
-      {editable && documents.every((doc) => doc.source === "registre") && <PrepareCard />}
+      {/* Tant qu'aucun document n'est déposé : la vidéo de présentation (ADR 0349). La liste « Avant
+          de commencer » faisait doublon avec les étapes du dossier, juste en dessous. */}
+      {editable && documents.every((doc) => doc.source === "registre") && (
+        <HelpVideo id="v01-inscription" />
+      )}
       {editable && next && (
         <section
           aria-label={d.nextLabel}
