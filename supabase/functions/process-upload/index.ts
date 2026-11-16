@@ -26,6 +26,7 @@ const ALLOWED: Record<Purpose, DetectedFileType[]> = {
   avatar: ["jpeg", "png"],
   portfolio: ["jpeg", "png"],
   logo: ["jpeg", "png"],
+  image_logo: ["jpeg", "png"],
   project_photo: ["jpeg", "png"],
   chantier_photo: ["jpeg", "png"],
   message_attachment: ["pdf", "jpeg", "png"],
@@ -39,6 +40,7 @@ type Purpose =
   | "avatar"
   | "portfolio"
   | "logo"
+  | "image_logo"
   | "project_photo"
   | "chantier_photo"
   | "message_attachment"
@@ -135,7 +137,12 @@ Deno.serve(
       }
       const file = { bytes, type, name: `${crypto.randomUUID()}.${EXTENSIONS[type]}` };
 
-      if (purpose === "avatar") return await saveAvatar(admin, user.id, file);
+      if (purpose === "avatar") {
+        await saveAvatar(admin, user.id, file);
+        // Une photo remplace un logo affiché en entier (ADR 0355).
+        await admin.from("artisans").update({ image_logo: false }).eq("user_id", user.id);
+        return respond("ok");
+      }
       if (purpose === "project_photo") {
         return await saveProjectPhoto(admin, user.id, body?.projectId, file);
       }
@@ -164,7 +171,22 @@ Deno.serve(
         .maybeSingle();
       if (!artisan) return respond("forbidden", 403);
 
-      if (purpose === "logo") return await saveLogo(admin, artisan.id, file);
+      if (purpose === "logo") {
+        await saveLogo(admin, artisan.id, file);
+        return respond("ok");
+      }
+      // « Mon logo » comme image de la fiche (ADR 0355) : le même fichier sert sur la fiche
+      // publique, en entier, et en tête des documents.
+      if (purpose === "image_logo") {
+        await saveLogo(admin, artisan.id, file);
+        await saveAvatar(admin, user.id, file);
+        const { error } = await admin
+          .from("artisans")
+          .update({ image_logo: true })
+          .eq("id", artisan.id);
+        if (error) throw error;
+        return respond("ok");
+      }
       return purpose === "portfolio"
         ? await savePortfolioPhoto(admin, artisan.id, file)
         : await saveDocument(admin, artisan, file, body?.document);
@@ -200,7 +222,6 @@ async function saveAvatar(admin: SupabaseClient, userId: string, file: CleanFile
     .eq("user_id", userId);
   if (error) throw error;
   if (previous?.avatar_path) await admin.storage.from("avatars").remove([previous.avatar_path]);
-  return respond("ok");
 }
 
 // Logo des documents (ADR 0038). L'ancien logo n'est effacé que s'il n'est repris dans aucun devis
@@ -223,7 +244,6 @@ async function saveLogo(admin: SupabaseClient, artisanId: string, file: CleanFil
       .eq("document->issuer->>logo_path", previous.logo_path);
     if (count === 0) await admin.storage.from("artisan-logos").remove([previous.logo_path]);
   }
-  return respond("ok");
 }
 
 // Photos du projet d'un particulier (F-05, F-07), session anonyme comprise.

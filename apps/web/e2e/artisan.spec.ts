@@ -253,7 +253,10 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
 
   // Étape 6 — profil public
   await page.goto("/pro/onboarding/profil");
-  const avatar = page.getByRole("region", { name: "Photo de profil" });
+  // Une seule image, logo ou photo, au choix (ADR 0355) : ici une photo.
+  const avatar = page.getByRole("region", { name: "Votre image" });
+  await expect(avatar.getByRole("radio", { name: /Mon logo/ })).toBeChecked();
+  await avatar.getByRole("radio", { name: /Une photo/ }).click();
   await avatar.getByLabel("Fichier").setInputFiles(files.png);
   // Cadrage avant l'envoi (ADR 0202) : la fenêtre s'ouvre, le cadrage proposé est validé.
   const framer = page.getByRole("dialog", { name: "Cadrer votre photo" });
@@ -290,12 +293,8 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   // sans rien payer.
   await page.goto("/pro/onboarding");
   await expect(page.getByRole("heading", { name: "À faire en attendant" })).toBeVisible();
-  // Ce qui est facultatif est proposé dans le dossier (ADR 0354), le logo dans « Votre fiche ».
+  // Ce qui est facultatif est proposé dans le dossier (ADR 0354).
   await expect(page.getByRole("heading", { name: "Pour vous démarquer" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Votre logo.*Facultatif/ })).toHaveAttribute(
-    "href",
-    "/pro/onboarding/profil#logo",
-  );
   await expect(
     page.getByText("Vous pouvez le faire dès maintenant : Stripe vérifie pendant ce temps"),
   ).toBeVisible();

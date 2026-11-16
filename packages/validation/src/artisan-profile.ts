@@ -13,6 +13,8 @@ const profileSchema = z.object({
   display_name: z.string(),
   company_name: z.string().nullable(),
   avatar_path: z.string().nullable(),
+  // L'image est un logo, affiché en entier (ADR 0355).
+  image_logo: z.boolean().optional().default(false),
   experience_years: z.number().nullable(),
   presentation: z.string().nullable(),
   paused: z.boolean(),

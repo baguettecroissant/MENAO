@@ -132,7 +132,8 @@ export function onboardingProgress(
     zone,
     charte: a.charterAccepted,
     documents: requiredDocumentTypes(a).every((t) => documentIsValid(t, a.documents[t], today)),
-    profil: a.hasAvatar && a.presentationLength >= PRESENTATION_MIN_LENGTH,
+    // Image facultative (ADR 0355) : la présentation suffit. Miroir SQL : onboarding_missing_steps.
+    profil: a.presentationLength >= PRESENTATION_MIN_LENGTH,
     paiements: a.connectChargesEnabled,
     formule: a.subscriptionActive,
   };

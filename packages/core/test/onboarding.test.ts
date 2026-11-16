@@ -219,10 +219,10 @@ describe("profil public et envoi en vérification", () => {
     hasAvatar: true,
   };
 
-  it("profil : photo et présentation d'au moins 100 caractères", () => {
+  it("profil : présentation d'au moins 100 caractères, image facultative (ADR 0355)", () => {
     expect(onboardingProgress(complet, today).profil).toBe(true);
     expect(onboardingProgress({ ...complet, presentationLength: 99 }, today).profil).toBe(false);
-    expect(onboardingProgress({ ...complet, hasAvatar: false }, today).profil).toBe(false);
+    expect(onboardingProgress({ ...complet, hasAvatar: false }, today).profil).toBe(true);
   });
 
   it("envoi possible quand les étapes jusqu'au profil sont terminées, charte comprise", () => {

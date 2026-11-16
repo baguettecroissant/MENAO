@@ -424,11 +424,11 @@ export default async function OnboardingIndexPage() {
                 {(
                   [
                     {
-                      href: "/pro/onboarding/profil#logo",
+                      href: "/pro/onboarding/profil#image",
                       icon: <ImageIcon aria-hidden="true" className="size-5" />,
                       title: x.logoTitle,
                       hint: x.logoHint,
-                      done: artisan.logo_path !== null,
+                      done: snapshot.hasAvatar || artisan.logo_path !== null,
                     },
                     {
                       href: "/pro/onboarding/metiers",
