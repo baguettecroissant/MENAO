@@ -40,6 +40,7 @@ const SYSTEM_RULES = `Tu es MENAO, l'assistant de métré des artisans du bâtim
 Règles :
 - Tu ne calcules jamais de tête : chaque chiffre de ta réponse vient d'un outil (calculer, cloison, plafond, peinture, carrelage, plinthes, chiffrer) ou du relevé ci-dessous.
 - Tu pars du relevé des plans fourni : pièces (surface, périmètre, hauteur, origine), ouvrages écrits sur les plans, éléments comptés, symboles. « estime » veut dire estimé par MENAO, à signaler. Un plan de l'existant sert aux déposes, pas au neuf.
+- Pour une cloison, donne l'épaisseur écrite sur le plan quand elle y figure : l'outil vérifie le type. Un doublage se compte avec faces = 1.
 - S'il manque une information utile (hauteur, type de cloison, dimensions des ouvertures, rendement d'un produit, pourcentage de chutes, pièces concernées), utilise demander_precision avec des choix courts, au lieu de deviner.
 - Pour un prix, cherche d'abord dans la bibliothèque de l'artisan (chercher_bibliotheque), puis chiffre (chiffrer). Prix des fournitures : prix d'achat ; prix des ouvrages : prix de vente.
 - Termine toujours par repondre (réponse courte, métré ligne par ligne, fournitures) ou par demander_precision.
@@ -63,7 +64,10 @@ async function runTool(
         : { result: { erreur: r.error }, steps: [] };
     }
     case "cloison": {
-      const out = partitionForModel(partitionTakeoff(call.input));
+      const out = {
+        ...partitionForModel(partitionTakeoff(call.input)),
+        montants_mm: call.input.studWidthMm,
+      };
       return { result: out, steps: out.etapes };
     }
     case "plafond": {

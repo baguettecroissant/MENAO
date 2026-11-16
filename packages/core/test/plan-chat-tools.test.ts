@@ -31,7 +31,13 @@ describe("parseChatCall", () => {
       ok: true,
       call: {
         tool: "cloison",
-        input: { runsMm: [7580, 3000], heightMm: 2500, sides: 2, boardsPerFace: 1 },
+        input: {
+          runsMm: [7580, 3000],
+          heightMm: 2500,
+          sides: 2,
+          boardsPerFace: 1,
+          studWidthMm: 48,
+        },
       },
     });
     expect(parseChatCall("plafond", { surface_m2: 17.88, perimetre_m: 16.94 })).toEqual({
@@ -49,6 +55,41 @@ describe("parseChatCall", () => {
         lines: [{ label: "Enduit", quantityMilli: 32_670, unit: "kg", unitPriceCents: 74 }],
       },
     });
+  });
+
+  it("épaisseur écrite sur le plan : refusée si elle ne correspond pas au type compté", () => {
+    // 10 cm : ni une 72/48 ; 98/48 (deux plaques par face) ou 95/70 (une plaque par face).
+    const wrong = parseChatCall("cloison", {
+      longueurs_m: [3.4],
+      hauteur_m: 2.7,
+      epaisseur_cm: 10,
+    });
+    expect(wrong.ok).toBe(false);
+    expect(wrong.ok ? "" : wrong.error).toMatch(/98\/48.*95\/70|95\/70.*98\/48/);
+    expect(
+      parseChatCall("cloison", {
+        longueurs_m: [3.4],
+        hauteur_m: 2.7,
+        epaisseur_cm: 10,
+        plaques_par_face: 2,
+      }),
+    ).toMatchObject({ ok: true, call: { input: { boardsPerFace: 2, studWidthMm: 48 } } });
+    expect(
+      parseChatCall("cloison", {
+        longueurs_m: [3.4],
+        hauteur_m: 2.7,
+        epaisseur_cm: 9.5,
+        montants_mm: 70,
+      }),
+    ).toMatchObject({ ok: true, call: { input: { boardsPerFace: 1, studWidthMm: 70 } } });
+    expect(
+      parseChatCall("cloison", { longueurs_m: [3.4], hauteur_m: 2.7, epaisseur_cm: 7.2 }).ok,
+    ).toBe(true);
+    // Doublage : l'épaisseur comprend l'isolant, pas de contrôle.
+    expect(
+      parseChatCall("cloison", { longueurs_m: [4.2], hauteur_m: 2.7, faces: 1, epaisseur_cm: 14 })
+        .ok,
+    ).toBe(true);
   });
 
   it("refuse les entrées incohérentes au lieu de deviner", () => {
