@@ -7,7 +7,12 @@ import {
   type ArtisanSignupCompany,
   type ArtisanSignupDraft,
 } from "@menao/core";
-import { COMPANY_SEARCH_MIN_LENGTH, messages, type CompanySuggestion } from "@menao/validation";
+import {
+  COMPANY_SEARCH_MIN_LENGTH,
+  COMPANY_SEARCH_SLOW_MS,
+  messages,
+  type CompanySuggestion,
+} from "@menao/validation";
 import { ArrowLeftRight, ArrowRight, Building2, CircleCheck, ChevronRight } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
@@ -21,7 +26,7 @@ const t = fr.pro.signUp.company;
 
 type SearchState =
   | { status: "idle" }
-  | { status: "loading" }
+  | { status: "loading"; slow?: boolean }
   | { status: "done"; results: CompanySuggestion[] }
   | { status: "error" };
 
@@ -155,6 +160,8 @@ function CompanyFinder({
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState<SearchState>({ status: "idle" });
   const [manual, setManual] = useState(false);
+  // « Réessayer » : relance la même recherche.
+  const [retries, setRetries] = useState(0);
   const q = query.trim();
   const tooShort = q.length < COMPANY_SEARCH_MIN_LENGTH;
 
@@ -163,7 +170,13 @@ function CompanyFinder({
     const controller = new AbortController();
     const timer = setTimeout(() => {
       setSearch({ status: "loading" });
-      searchCompanies(q, controller.signal)
+      // Recherche longue : l'artisan est prévenu qu'on cherche toujours.
+      const slow = setTimeout(
+        () => setSearch({ status: "loading", slow: true }),
+        COMPANY_SEARCH_SLOW_MS,
+      );
+      searchCompanies(q, controller.signal, () => setSearch({ status: "loading", slow: true }))
+        .finally(() => clearTimeout(slow))
         .then((results) => setSearch({ status: "done", results }))
         .catch((error: unknown) => {
           if (!(error instanceof DOMException && error.name === "AbortError")) {
@@ -175,7 +188,7 @@ function CompanyFinder({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [q, tooShort]);
+  }, [q, tooShort, retries]);
 
   if (manual) return <ManualSiret onSubmit={onManual} onCancel={() => setManual(false)} />;
 
@@ -185,9 +198,22 @@ function CompanyFinder({
       <SearchInput label={t.search} value={query} onChange={setQuery} hint={t.searchHint} />
       <div aria-live="polite" className="flex flex-col gap-2">
         {!tooShort && search.status === "loading" && (
-          <p className="text-sm text-muted-foreground">{t.searching}</p>
+          <p className="text-sm text-muted-foreground">{search.slow ? t.slow : t.searching}</p>
         )}
-        {!tooShort && search.status === "error" && <Alert tone="info">{t.unavailable}</Alert>}
+        {!tooShort && search.status === "error" && (
+          <Alert tone="info">
+            <span className="flex flex-wrap items-center justify-between gap-2">
+              <span>{t.unavailable}</span>
+              <button
+                type="button"
+                onClick={() => setRetries((n) => n + 1)}
+                className="font-semibold underline underline-offset-2"
+              >
+                {t.retry}
+              </button>
+            </span>
+          </Alert>
+        )}
         {!tooShort && search.status === "done" && results.length === 0 && (
           <p className="rounded-input border border-border bg-surface p-4 text-[0.9375rem] leading-relaxed text-muted-foreground">
             {t.noResult}

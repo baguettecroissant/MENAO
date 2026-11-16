@@ -12,6 +12,24 @@ export const COMPANY_SEARCH_URL = "https://recherche-entreprises.api.gouv.fr/sea
 /** En dessous de 3 caractères, l'API répond 400. */
 export const COMPANY_SEARCH_MIN_LENGTH = 3;
 
+/**
+ * L'API est parfois très lente ou ne répond pas (essais du 16/11/2026 : réponses en 2 à 17 s, une
+ * sur trois sans réponse en 15 à 25 s ; sa passerelle coupe alors sans en-tête CORS, et le
+ * navigateur n'y voit qu'une erreur réseau). Trois essais, de plus en plus patients, avant de
+ * proposer la saisie du SIRET ; l'écran prévient dès que l'attente dépasse COMPANY_SEARCH_SLOW_MS.
+ */
+export const COMPANY_SEARCH_ATTEMPTS = [
+  { waitMs: 0, timeoutMs: 9000 },
+  { waitMs: 500, timeoutMs: 12_000 },
+  { waitMs: 1000, timeoutMs: 15_000 },
+] as const;
+export const COMPANY_SEARCH_SLOW_MS = 3000;
+
+/** Échec qui mérite un nouvel essai : délai dépassé, coupure, trop de requêtes, serveur en panne. */
+export function companySearchRetryable(failure: number | "timeout" | "network"): boolean {
+  return failure === "timeout" || failure === "network" || failure === 429 || failure >= 500;
+}
+
 export function companySearchUrl(query: string): string {
   const params = new URLSearchParams({
     q: query.trim(),
