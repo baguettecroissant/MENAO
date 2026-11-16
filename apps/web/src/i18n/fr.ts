@@ -8609,10 +8609,13 @@ export const fr = {
         search: "Nom de l'entreprise ou SIRET",
         searchHint: "3 caractères minimum.",
         searching: "Recherche en cours…",
+        slow: "L'annuaire de l'État est lent en ce moment, la recherche continue…",
+        retry: "Réessayer",
         results: "Entreprises trouvées",
         noResult:
           "Aucune entreprise trouvée. Vérifiez l'orthographe, ou tapez votre numéro SIRET (14 chiffres).",
-        unavailable: "La recherche ne répond pas pour le moment : saisissez votre SIRET.",
+        unavailable:
+          "La recherche de l'État ne répond pas pour le moment. Réessayez, ou saisissez votre SIRET.",
         closed: "Fermée",
         notListed: "Mon entreprise n'apparaît pas",
         manualLabel: "Numéro SIRET",

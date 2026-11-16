@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { companySearchUrl, parseCompanySearch, titleCaseFr } from "../src/company-search";
+import {
+  companySearchUrl,
+  parseCompanySearch,
+  titleCaseFr,
+  COMPANY_SEARCH_ATTEMPTS,
+  companySearchRetryable,
+} from "../src/company-search";
 
 // Entreprise et dirigeant fictifs.
 const result = {
@@ -96,5 +102,25 @@ describe("Recherche d'entreprises", () => {
     expect(titleCaseFr("LE CANNET")).toBe("Le Cannet");
     expect(titleCaseFr("L'ESCARENE")).toBe("L'Escarene");
     expect(titleCaseFr("SAINT-LAURENT-DU-VAR")).toBe("Saint-Laurent-du-Var");
+  });
+});
+
+describe("nouveaux essais de la recherche d'entreprises", () => {
+  it("trois essais, de plus en plus patients", () => {
+    expect(COMPANY_SEARCH_ATTEMPTS).toEqual([
+      { waitMs: 0, timeoutMs: 9000 },
+      { waitMs: 500, timeoutMs: 12_000 },
+      { waitMs: 1000, timeoutMs: 15_000 },
+    ]);
+  });
+
+  it("réessaie après un délai dépassé, une coupure, un 429 ou une erreur du serveur", () => {
+    expect(companySearchRetryable("timeout")).toBe(true);
+    expect(companySearchRetryable("network")).toBe(true);
+    expect(companySearchRetryable(429)).toBe(true);
+    expect(companySearchRetryable(502)).toBe(true);
+    expect(companySearchRetryable(504)).toBe(true);
+    expect(companySearchRetryable(400)).toBe(false);
+    expect(companySearchRetryable(404)).toBe(false);
   });
 });
