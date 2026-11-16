@@ -7,8 +7,9 @@ import {
   monthlyEquivalentCents,
   parseAiAgents,
   parseClientReminders,
+  planChoiceOpen,
 } from "@menao/core";
-import { CalendarDays, Check, Repeat, ShieldCheck } from "lucide-react";
+import { CalendarDays, Check, Lock, Repeat, ShieldCheck } from "lucide-react";
 import {
   AiAgentsCard,
   RecentCallsCard,
@@ -19,7 +20,7 @@ import { ClientRemindersCard } from "@/components/pro/client-reminders-card";
 import { Alert, ButtonLink, Card, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
-import { ChoosePlan, ManageSubscription } from "./plan-forms";
+import { ChoosePlan, ManageSubscription, PickPlan } from "./plan-forms";
 
 const t = fr.pro.onboarding.plans;
 const day = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" });
@@ -37,7 +38,9 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
     .select("code, nom, prix_mensuel_ht_centimes, avantages, ouverte, recommandee")
     .order("ordre");
 
-  if (artisan.status !== "valide") {
+  // Avant la validation (ADR 0353) : la formule se choisit, sans rien payer.
+  const choosing = planChoiceOpen(artisan.status) && !subscription;
+  if (artisan.status !== "valide" && !choosing) {
     return (
       <Card>
         <p>{t.notValidated}</p>
@@ -192,10 +195,25 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
   }
 
   const firstPayment = day.format(firstPaymentDate());
+  const chosenCode = plans?.some((p) => p.code === artisan.plan_choisi && p.ouverte)
+    ? artisan.plan_choisi
+    : null;
   return (
     <div className="flex flex-col gap-6">
       {params.paiement === "ok" && <Alert tone="success">{t.processing}</Alert>}
-      <p className="max-w-3xl text-label">{t.intro(firstPayment)}</p>
+      {choosing ? (
+        <>
+          <p className="max-w-3xl text-label">{t.choice.intro}</p>
+          <p className="flex items-start gap-3 rounded-card bg-primary-softer px-4 py-3.5 text-[0.9375rem] text-primary-strong">
+            <Lock aria-hidden="true" className="mt-0.5 size-[1.125rem] shrink-0" />
+            <span>
+              <b>{t.choice.freeTitle}</b> {t.choice.free}
+            </span>
+          </p>
+        </>
+      ) : (
+        <p className="max-w-3xl text-label">{t.intro(firstPayment)}</p>
+      )}
       {/* Refonte « Nette » (ADR 0254) : cartes de formule, la recommandée bordée de bleu nuit. */}
       <ul className="grid gap-5 pt-2 md:grid-cols-3">
         {(plans ?? []).map((plan) => (
@@ -203,13 +221,21 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
             <section
               aria-labelledby={`plan-${plan.code}`}
               className={`relative flex h-full flex-col gap-4 rounded-card bg-surface p-6 shadow-card ${
-                plan.recommandee ? "border-2 border-foreground" : "border border-border"
+                (chosenCode ? chosenCode === plan.code : plan.recommandee)
+                  ? "border-2 border-foreground"
+                  : "border border-border"
               }`}
             >
               {/* Formule mise en avant (ADR 0200). */}
               {plan.recommandee && (
                 <span className="absolute -top-3 left-5 rounded-chip bg-foreground px-2.5 py-1 text-xs font-bold text-white">
                   {t.recommended}
+                </span>
+              )}
+              {/* Formule choisie avant la validation (ADR 0353), rappelée au moment de payer. */}
+              {!choosing && chosenCode === plan.code && (
+                <span className="absolute -top-3 right-5 rounded-chip bg-success px-2.5 py-1 text-xs font-bold text-white">
+                  {t.choice.yours}
                 </span>
               )}
               <h2 id={`plan-${plan.code}`} className="text-[1.375rem]">
@@ -243,7 +269,11 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
                 ))}
               </ul>
               {plan.ouverte ? (
-                <ChoosePlan code={plan.code} nom={plan.nom} />
+                choosing ? (
+                  <PickPlan code={plan.code} nom={plan.nom} chosen={chosenCode === plan.code} />
+                ) : (
+                  <ChoosePlan code={plan.code} nom={plan.nom} />
+                )
               ) : (
                 <p className="text-center text-muted-foreground">{t.soon}</p>
               )}
@@ -268,6 +298,7 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
           )}
         </li>
       </ul>
+      {choosing && <p className="text-sm text-muted-foreground">{t.choice.period}</p>}
       <p className="text-sm text-muted-foreground">{t.vatNote}</p>
     </div>
   );

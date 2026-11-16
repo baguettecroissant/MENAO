@@ -8810,6 +8810,7 @@ export const fr = {
           done: "Fait",
           signed: "Signée",
           exempt: "Non soumis",
+          chosen: "Choisie",
         },
         exemptHint: "Vous avez déclaré vos métiers non soumis : l'équipe MENAO le vérifie.",
         privacy: "Vos documents restent privés : seule l'équipe MENAO les consulte.",
@@ -8819,13 +8820,19 @@ export const fr = {
           documents: "Vos documents",
           profile: "Votre fiche",
         },
-        afterTitle: "Après la vérification",
-        afterLead: "Pour recevoir des demandes, il faudra aussi :",
+        afterTitle: "Pour recevoir des demandes",
+        // Ouvert sans attendre l'envoi du dossier (ADR 0353).
+        parallelTitle: "À faire en attendant",
+        parallelLead: "Rien ne vous bloque : ces deux étapes sont ouvertes tout de suite.",
+        openNow: "Ouvert maintenant",
         paiementsTitle: "Recevoir les paiements de vos clients",
         paiementsHint: "Compte Stripe à votre nom : MENAO ne prend aucune commission",
-        paiementsHintNow: "Vous pouvez le faire dès maintenant, pendant la vérification",
+        paiementsHintNow: "Vous pouvez le faire dès maintenant : Stripe vérifie pendant ce temps",
         formuleTitle: "Choisir votre formule",
         formuleHint: "Vous pouvez le faire dès maintenant",
+        formuleHintChoice: "Choisissez maintenant, rien n'est prélevé avant la validation",
+        formuleHintChosen: (nom: string) =>
+          `${nom} · le paiement vous sera proposé à la validation`,
       },
       steps: {
         entreprise: "Entreprise",
@@ -8853,7 +8860,7 @@ export const fr = {
         },
         paiements: {
           title: "Recevoir les paiements de vos clients",
-          lead: "Un compte Stripe à votre nom. Vous pouvez le préparer dès maintenant, pendant la vérification.",
+          lead: "Un compte Stripe à votre nom. Vous pouvez le préparer dès maintenant, sans attendre l'envoi de votre dossier.",
         },
       } as Record<string, { title: string; lead: string }>,
       saveAndContinue: "Enregistrer et continuer",
@@ -9035,7 +9042,10 @@ export const fr = {
           "Vos clients vous paient directement sur votre compte, via Stripe (prestataire de paiement agréé). MENAO ne touche jamais l'argent de vos chantiers et ne prélève aucune commission.",
         fees: "Les frais de paiement Stripe sont déduits de chaque encaissement ; vous gérez vos paiements, remboursements et virements depuis votre propre tableau de bord Stripe.",
         notValidated:
-          "La configuration des paiements sera disponible dès l'envoi de votre dossier à l'équipe MENAO.",
+          "La configuration des paiements n'est pas disponible pour ce dossier. Une question ? Écrivez à l'équipe MENAO depuis l'aide.",
+        // Ouvert dès le début du dossier (ADR 0353) : ce qui attend encore la validation.
+        beforeValidation:
+          "Vous ne recevrez des demandes et des paiements qu'une fois votre entreprise validée par MENAO. Préparer le compte maintenant vous fait gagner plusieurs jours : Stripe vérifie de son côté pendant ce temps.",
         // Refonte « Nette » (ADR 0254) : à côté de la configuration.
         how: {
           title: "Comment vous êtes payé",
@@ -9357,7 +9367,19 @@ export const fr = {
         intro: (date: string) =>
           `Choisissez votre formule et votre mode de paiement. Les 2 premiers mois sont offerts : aucun prélèvement avant le ${date}, et vous pouvez arrêter à tout moment pendant l'essai.`,
         notValidated:
-          "Le choix de la formule sera disponible dès que l'équipe MENAO aura validé votre dossier.",
+          "Le choix de la formule n'est pas disponible pour ce dossier. Une question ? Écrivez à l'équipe MENAO depuis l'aide.",
+        // Avant la validation (ADR 0353) : la formule se choisit sans rien payer.
+        choice: {
+          intro: "Choisissez maintenant, pendant que votre dossier avance.",
+          freeTitle: "Rien n'est prélevé aujourd'hui.",
+          free: "Votre choix est enregistré. Le paiement vous sera proposé le jour où MENAO valide votre entreprise, et vous pourrez encore changer de formule à ce moment-là.",
+          choose: "Choisir cette formule",
+          chooseLabel: (nom: string) => `Choisir la formule ${nom}`,
+          chosen: "Formule choisie",
+          yours: "Votre choix",
+          period: "Le choix au mois ou à l'année se fait au moment du paiement.",
+          error: "Votre choix n'a pas pu être enregistré. Réessayez dans un instant.",
+        },
         perMonth: "HT / mois",
         priceHt: (euros: string) => `${euros} €`,
         trialBadge: "2 mois offerts",
