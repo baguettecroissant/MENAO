@@ -18,26 +18,31 @@ $$;
 select is((select count(*)::int from public.commercial_demo), 1, 'une seule ligne, créée par la migration');
 select is((select enabled from public.commercial_demo), false, 'désactivé au départ');
 
+-- Clé lue par le test avant chaque changement de rôle (la table est fermée aux rôles connectés).
+create temp table cle as select key from public.commercial_demo;
+grant select on cle to authenticated, anon;
+
 -- Visiteur : la clé ne sert à rien tant que le lien est désactivé ; la table lui est fermée.
 set local role anon;
-select is(public.commercial_demo_open((select key from public.commercial_demo)), false,
-  'lien désactivé : refusé');
+select is(public.commercial_demo_open((select key from cle)), false, 'lien désactivé : refusé');
 reset role;
 select is(public.commercial_demo_open(null), false, 'sans clé : refusé');
 
 -- Admin : nouveau lien, activé ; l'ancienne clé tombe.
-create temp table ancienne as select key from public.commercial_demo;
-grant select on ancienne to authenticated, anon;
 select pg_temp.connecter('e1640000-0000-4000-8000-000000000001', 'admin');
 set local role authenticated;
 select matches(public.admin_rotate_commercial_demo(), '^[a-f0-9]{32}$', 'admin : nouvelle clé');
 select is((select enabled from public.admin_commercial_demo()), true, 'admin : lien activé');
-select isnt((select key from public.admin_commercial_demo()), (select key from ancienne),
+select isnt((select key from public.admin_commercial_demo()), (select key from cle),
   'clé changée');
 reset role;
+create temp table nouvelle as select key from public.commercial_demo;
+grant select on nouvelle to authenticated, anon;
 
 set local role anon;
-select is(public.commercial_demo_open((select key from ancienne)), false, 'ancienne clé : refusée');
+select is(public.commercial_demo_open((select key from cle)), false, 'ancienne clé : refusée');
+select is(public.commercial_demo_open((select key from nouvelle)), true,
+  'visiteur : la nouvelle clé ouvre la démo');
 select throws_ok($$ select key from public.commercial_demo $$, '42501', null,
   'visiteur : table fermée');
 select throws_ok($$ select * from public.admin_commercial_demo() $$, '42501', null,
