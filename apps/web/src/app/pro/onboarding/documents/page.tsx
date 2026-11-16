@@ -7,7 +7,7 @@ import {
   type RequiredDocumentType,
 } from "@menao/core";
 import { Alert, ButtonLink, Card } from "@/components/ui";
-import { Check, Lock } from "lucide-react";
+import { Check, Clock, Lock } from "lucide-react";
 import { DocumentHelpDisclosure, DocumentHelpSteps } from "@/components/pro/document-help";
 import { HelpVideo } from "@/components/pro/help-video";
 import { sheetCard } from "@/components/pro/sheet";
@@ -84,6 +84,14 @@ export default async function DocumentsStepPage({
   // Refonte « Nette » (ADR 0254) : une pièce à gauche, ce que l'équipe vérifie à droite.
   const cards = (
     <div className="flex flex-col gap-6">
+      {focused && onboarding && types[0] && (
+        <span className="self-start rounded-pill bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary-strong">
+          {t.position(
+            REQUIRED_DOCUMENT_TYPES.indexOf(types[0]) + 1,
+            REQUIRED_DOCUMENT_TYPES.length,
+          )}
+        </span>
+      )}
       <p className="text-label">{focused ? fr.pro.onboarding.documents.photoHint : t.intro}</p>
       {/* « Bien photographier un document » (ADR 0349), pendant l'inscription. */}
       {onboarding && <HelpVideo id="v05-photo" />}
@@ -261,11 +269,20 @@ export default async function DocumentsStepPage({
           <Lock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
           {fr.pro.onboarding.dossier.privacy}
         </p>
-        <ButtonLink href="/pro/onboarding" variant="outline" block>
-          {t.backToDossier}
-        </ButtonLink>
-        {onboarding && focusedType && stateOf(focusedType).help && (
-          <p className="px-1 text-sm text-muted-foreground">{fr.pro.onboarding.help.later}</p>
+        {onboarding && focusedType && stateOf(focusedType).help && !stateOf(focusedType).current ? (
+          // « Déposer plus tard » (maquette du lot 61) : un vrai bouton, MENAO relance par e-mail.
+          <div className={sheetCard}>
+            <h2 className="text-[1.0625rem]">{fr.pro.onboarding.help.laterTitle}</h2>
+            <p className="text-sm text-label">{fr.pro.onboarding.help.later}</p>
+            <ButtonLink href="/pro/onboarding" variant="outline" block>
+              <Clock aria-hidden="true" className="size-4" />
+              {fr.pro.onboarding.help.laterButton}
+            </ButtonLink>
+          </div>
+        ) : (
+          <ButtonLink href="/pro/onboarding" variant="outline" block>
+            {t.backToDossier}
+          </ButtonLink>
         )}
       </aside>
     </div>

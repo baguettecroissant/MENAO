@@ -93,7 +93,11 @@ export function ZoneStep({
       <ChoiceGroup<SignupZoneMode>
         legend={t.mode}
         value={mode}
-        options={SIGNUP_ZONE_MODES.map((value) => ({ value, label: MODE_LABELS[value] }))}
+        options={SIGNUP_ZONE_MODES.map((value) => ({
+          value,
+          label: MODE_LABELS[value],
+          description: fr.pro.onboarding.zone.modeHints[value],
+        }))}
         onChange={chooseMode}
       />
 
