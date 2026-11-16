@@ -521,6 +521,10 @@ verify_jwt = false
 [functions.commercial-copilot]
 verify_jwt = true
 
+# « Demander à MENAO » (F-160, ADR 0346) : le chat sur les plans d'un appel d'offres.
+[functions.plan-chat]
+verify_jwt = true
+
 # Secrétaire vocale (ADR 0225) : appelée par Vapi, sans jeton Supabase ; secret partagé
 # (en-tête X-Vapi-Secret) vérifié dans la fonction.
 [functions.voice-assistant]
