@@ -14,6 +14,7 @@ import { Camera, FileCheck, FileUp } from "lucide-react";
 import { useActionState, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { z } from "zod";
 import { AvatarFramer } from "@/components/avatar-framer";
+import { AiWorking } from "@/components/ai-working";
 import { Alert, Button } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { processUpload, readDocument } from "@/lib/artisan/actions";
@@ -108,6 +109,8 @@ export function UploadForm({
   const lastRead = useRef<DocumentPrefill>({});
   const [reading, setReading] = useState<Reading | null>(null);
   const [readErrors, setReadErrors] = useState<Record<string, string[] | undefined>>({});
+  // Ce que MENAO a lu dans le document, montré champ par champ (maquette du lot 61).
+  const [readValues, setReadValues] = useState<DocumentPrefill>({});
   // Photo de profil (ADR 0202) : cadrée avant l'envoi ; l'image cadrée remplace le fichier choisi.
   const [framing, setFraming] = useState<File | null>(null);
   const framed = useRef<{ key: string; blob: Blob; url: string } | null>(null);
@@ -186,6 +189,7 @@ export function UploadForm({
     if (upload.current?.key !== key) return;
     if (result.status !== "ok") return setReading({ step: "failed" });
     fill(readAs, result.fields);
+    setReadValues(result.fields);
     setReading({
       step: "done",
       filled: Object.keys(result.fields).length > 0,
@@ -222,6 +226,7 @@ export function UploadForm({
       setFramedUrl(null);
     }
     setReading(null);
+    setReadValues({});
     return result;
   }, {});
 
@@ -379,7 +384,7 @@ export function UploadForm({
       {reading && (
         <div aria-live="polite">
           {reading.step === "reading" ? (
-            <Alert tone="info">{r.reading}</Alert>
+            <AiWorking label={r.reading} />
           ) : reading.step === "failed" ? (
             <Alert tone="info">{r.failed}</Alert>
           ) : (
@@ -390,7 +395,30 @@ export function UploadForm({
                 </Alert>
               ))}
               {reading.filled ? (
-                <Alert tone="success">{r.done}</Alert>
+                <div className="flex flex-col gap-2 rounded-input border border-success/25 bg-success-soft px-3.5 py-3 text-sm">
+                  <p className="font-medium text-success">{r.done}</p>
+                  <ul className="flex flex-col gap-1">
+                    {Object.entries(readValues).map(([field, value]) =>
+                      value ? (
+                        <li key={field} className="flex flex-wrap items-baseline gap-x-2">
+                          <span className="text-label">
+                            {readAs === "urssaf" && field === "numero"
+                              ? fr.pro.onboarding.documents.securityCode
+                              : (r.fields[field] ?? field)}
+                          </span>
+                          <b>
+                            {/^\d{4}-\d{2}-\d{2}$/.test(String(value))
+                              ? String(value).split("-").reverse().join("/")
+                              : String(value)}
+                          </b>
+                          <span className="rounded-pill bg-surface px-2 py-0.5 text-xs font-semibold text-success">
+                            {r.read}
+                          </span>
+                        </li>
+                      ) : null,
+                    )}
+                  </ul>
+                </div>
               ) : reading.warnings.length === 0 ? (
                 <Alert tone="info">{r.empty}</Alert>
               ) : null}

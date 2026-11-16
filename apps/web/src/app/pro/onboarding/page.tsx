@@ -172,7 +172,7 @@ export default async function OnboardingIndexPage() {
           <Group title={d.groups.company} progress={groups.company}>
             <li className="flex flex-col gap-1.5 px-4 py-3.5 sm:px-5">
               <div className="flex items-center gap-3">
-                <RowIcon done={profileDone}>
+                <RowIcon done={profileDone} step={1}>
                   <Building2 aria-hidden="true" className="size-5" />
                 </RowIcon>
                 <span className="min-w-0 flex-1 font-semibold">{d.profileTitle}</span>
@@ -194,6 +194,8 @@ export default async function OnboardingIndexPage() {
               </div>
             </li>
             <Row
+              step={2}
+              minutes={1}
               href="/pro/onboarding/charte"
               icon={<PenLine aria-hidden="true" className="size-5" />}
               title={d.charterTitle}
@@ -210,6 +212,8 @@ export default async function OnboardingIndexPage() {
                 return (
                   <Row
                     key={type}
+                    step={3 + REQUIRED_DOCUMENT_TYPES.indexOf(type)}
+                    minutes={2}
                     href={`/pro/onboarding/documents?type=${type}`}
                     icon={<FileText aria-hidden="true" className="size-5" />}
                     title={t.documents.types[type]}
@@ -233,6 +237,8 @@ export default async function OnboardingIndexPage() {
               return (
                 <Row
                   key={type}
+                  step={3 + REQUIRED_DOCUMENT_TYPES.indexOf(type)}
+                  minutes={2}
                   href={`/pro/onboarding/documents?type=${type}`}
                   icon={<FileText aria-hidden="true" className="size-5" />}
                   title={t.documents.types[type]}
@@ -254,6 +260,8 @@ export default async function OnboardingIndexPage() {
 
           <Group title={d.groups.profile} progress={groups.profile}>
             <Row
+              step={3 + REQUIRED_DOCUMENT_TYPES.length}
+              minutes={3}
               href="/pro/onboarding/profil"
               icon={<UserRound aria-hidden="true" className="size-5" />}
               title={d.profilTitle}
@@ -413,14 +421,24 @@ function Group({
   );
 }
 
-function RowIcon({ children, done = false }: { children: ReactNode; done?: boolean }) {
+/** Pastille d'une étape : son numéro tant qu'elle reste à faire, une coche une fois faite. */
+function RowIcon({
+  children,
+  done = false,
+  step,
+}: {
+  children: ReactNode;
+  done?: boolean;
+  step?: number;
+}) {
   return (
     <span
-      className={`flex size-10 shrink-0 items-center justify-center rounded-input ${
-        done ? "bg-success-soft text-success" : "bg-background text-label"
+      aria-hidden={step ? true : undefined}
+      className={`flex size-10 shrink-0 items-center justify-center rounded-full font-bold ${
+        done ? "bg-success text-white" : "bg-background text-label"
       }`}
     >
-      {children}
+      {step ? done ? <Check className="size-5" strokeWidth={3} /> : step : children}
     </span>
   );
 }
@@ -442,6 +460,8 @@ function Row({
   hint,
   tone,
   status,
+  step,
+  minutes,
 }: {
   href: string;
   icon: ReactNode;
@@ -449,6 +469,9 @@ function Row({
   hint: string;
   tone: Tone;
   status: string;
+  /** Numéro de l'étape et durée indicative (maquette du lot 61). */
+  step?: number;
+  minutes?: number;
 }) {
   return (
     <li>
@@ -456,11 +479,21 @@ function Row({
         href={href as Route}
         className={`flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-background sm:px-5 ${focusRing}`}
       >
-        <RowIcon done={tone === "done"}>{icon}</RowIcon>
+        <RowIcon done={tone === "done"} step={step}>
+          {icon}
+        </RowIcon>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="font-semibold">{title}</span>
           <span className="text-sm text-muted-foreground">{hint}</span>
         </span>
+        {minutes && tone === "todo" && (
+          <span
+            aria-hidden="true"
+            className="hidden shrink-0 text-xs text-muted-foreground sm:block"
+          >
+            {d.minutes(minutes)}
+          </span>
+        )}
         <Chip tone={tone}>{status}</Chip>
         <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
       </Link>

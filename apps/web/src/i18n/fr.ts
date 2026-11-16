@@ -187,6 +187,7 @@ export const fr = {
     },
   },
   // Carte de France de la zone d'intervention (F-162, ADR 0349).
+  tradeCover: { label: (trade: string) => `Image d'illustration · ${trade}` },
   franceMap: {
     label: {
       departements: "Carte des départements",
@@ -8773,6 +8774,7 @@ export const fr = {
         nextLabel: "Prochaine étape",
         nextHint: "Tout est enregistré : vous pouvez vous arrêter et reprendre quand vous voulez.",
         nextButton: "Continuer",
+        minutes: (n: number) => `≈ ${n} min`,
         title: "Faire vérifier mon entreprise",
         lead: "Ajoutez chaque élément, dans l'ordre que vous voulez. Tout est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre plus tard.",
         back: "Mon dossier",
@@ -9587,7 +9589,15 @@ export const fr = {
         dropOr: "ou",
         // Lecture automatique du document (ADR 0176).
         reading: {
-          reading: "Lecture du document…",
+          read: "Lu",
+          fields: {
+            dateEmission: "Date d'émission",
+            dateFin: "Date de fin de validité",
+            assureur: "Assureur",
+            numero: "Numéro",
+            couverture: "Couverture",
+          } as Record<string, string>,
+          reading: "MENAO lit votre document…",
           done: "Document lu automatiquement : vérifiez les informations ci-dessous avant de l'envoyer.",
           empty:
             "Nous n'avons pas trouvé ces informations sur le document : complétez les champs ci-dessous.",
@@ -9637,6 +9647,8 @@ export const fr = {
           "Jusqu'à 12 photos de chantiers terminés (sans personne ni adresse visible). Vous pouvez en choisir plusieurs à la fois.",
         portfolioAlt: (n: number) => `Réalisation ${n}`,
         portfolioAdd: "Ajouter des photos",
+        coverNote:
+          "Sans photo de vous, l'image de votre métier s'affiche, marquée « Image d'illustration ».",
         portfolioIdeas: ["Un chantier terminé", "Un avant / après", "Un détail soigné"],
         portfolioSending: (done: number, total: number) =>
           `Envoi de la photo ${done} sur ${total}…`,

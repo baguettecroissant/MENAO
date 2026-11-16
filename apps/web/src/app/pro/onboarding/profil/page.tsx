@@ -9,6 +9,8 @@ import { getOnboardingContext } from "@/lib/artisan/context";
 import { PortfolioUpload } from "./portfolio-upload";
 import { PresentationForm } from "./presentation-form";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
+import { TradeCover } from "@/components/trade-cover";
+import { TRADE_IMAGES } from "@/lib/site/images";
 
 const t = fr.pro.onboarding.profile;
 const MAX_PHOTOS = PORTFOLIO_MAX_PHOTOS;
@@ -139,7 +141,13 @@ export default async function ProfileStepPage() {
           <Eye aria-hidden="true" className="size-4" />
           {t.previewTitle}
         </p>
+        {!avatarPath && tradeCodes[0] && TRADE_IMAGES[tradeCodes[0]] && (
+          <TradeCover code={tradeCodes[0]} label={tradeLabels[0] ?? ""} className="h-28 w-full" />
+        )}
         <div className="flex flex-col gap-3.5 p-5">
+          {!avatarPath && tradeCodes[0] && TRADE_IMAGES[tradeCodes[0]] && (
+            <p className="text-xs text-muted-foreground">{t.coverNote}</p>
+          )}
           <div className="flex items-center gap-3.5">
             {avatarPath ? (
               <Image
