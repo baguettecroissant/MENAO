@@ -11,6 +11,7 @@ import {
 import { ArrowRight, MapPin } from "lucide-react";
 import { useState } from "react";
 import { Autocomplete } from "@/components/autocomplete";
+import { FranceMap } from "@/components/france-map";
 import { TerritoryField } from "@/components/territory-field";
 import { Button } from "@/components/ui";
 import { ZoneMap } from "@/components/zone-map";
@@ -119,6 +120,7 @@ export function ZoneStep({
           mode={mode}
           codes={draft.territories}
           onChange={(territories) => update({ territories })}
+          point={base}
           labels={{
             search: mode === "regions" ? t.regionSearch : t.departementSearch,
             hint: mode === "regions" ? t.regionSearchHint : t.departementSearchHint,
@@ -130,6 +132,11 @@ export function ZoneStep({
       {!base && <p className="text-sm text-muted-foreground">{t.noBase}</p>}
       {base && mode === "rayon" && (
         <p className="text-sm text-muted-foreground">{t.summary(draft.radiusKm, place)}</p>
+      )}
+      {mode === "france" && (
+        <div className="mx-auto w-full max-w-sm">
+          <FranceMap mode="france" point={base} />
+        </div>
       )}
       {mode === "france" && <p className="text-sm text-muted-foreground">{t.franceNote}</p>}
       {(mode === "regions" || mode === "france") && (

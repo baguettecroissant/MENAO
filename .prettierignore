@@ -8,3 +8,6 @@ supabase/.temp/
 *.md
 .claude/
 expo-env.d.ts
+
+# Contours IGN simplifiés (produits par scripts/contours-france.py)
+apps/web/src/data/france-*.json
