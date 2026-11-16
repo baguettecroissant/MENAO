@@ -37,7 +37,7 @@ export const CHAT_TOOLS: ChatTool[] = [
   {
     name: "cloison",
     description:
-      "Cloison (2 faces) ou doublage (1 face) en plaques de plâtre sur ossature : plaques, rails, montants, vis, bande, enduit. Une longueur par cloison.",
+      "Cloison (2 faces) ou doublage (1 face) en plaques de plâtre sur ossature : plaques, rails, montants, vis, bande, enduit. Une longueur par cloison. Donne l'épaisseur écrite sur le plan : si elle ne correspond pas au type compté, l'outil le refuse et propose les types possibles.",
     input_schema: {
       type: "object",
       properties: {
@@ -53,6 +53,12 @@ export const CHAT_TOOLS: ChatTool[] = [
           enum: [1, 2],
           description: "1 : parement simple ; 2 : double",
         },
+        montants_mm: {
+          type: "integer",
+          enum: [48, 70, 90],
+          description: "Largeur des montants (48 par défaut)",
+        },
+        epaisseur_cm: num("Épaisseur de la cloison écrite sur le plan (cm), si elle y figure"),
       },
       required: ["longueurs_m", "hauteur_m"],
     },
@@ -238,7 +244,13 @@ export type ChatCall =
   | { tool: "calculer"; expression: string; values: Record<string, number> }
   | {
       tool: "cloison";
-      input: { runsMm: number[]; heightMm: number; sides: 1 | 2; boardsPerFace: 1 | 2 };
+      input: {
+        runsMm: number[];
+        heightMm: number;
+        sides: 1 | 2;
+        boardsPerFace: 1 | 2;
+        studWidthMm: 48 | 70 | 90;
+      };
     }
   | { tool: "plafond"; input: { areaCm2: number; perimeterMm: number | null } }
   | {
@@ -324,6 +336,34 @@ export function parseChatCall(name: string, input: unknown): Parsed {
       if (height === null) return fail("hauteur invalide (entre 1,5 et 10 m)");
       const sides = v.faces === 1 ? 1 : 2;
       const boardsPerFace = v.plaques_par_face === 2 ? 2 : 1;
+      const studWidthMm = v.montants_mm === 70 ? 70 : v.montants_mm === 90 ? 90 : 48;
+      // Épaisseur écrite sur le plan d'une cloison : montants + plaques de 12,5 mm (une ou deux par
+      // face). Plus de 6 mm d'écart : le type compté n'est pas le bon. Pas pour un doublage, dont
+      // l'épaisseur comprend l'isolant et le vide derrière l'ossature.
+      const thickness =
+        sides === 1 || v.epaisseur_cm === undefined || v.epaisseur_cm === null
+          ? null
+          : n(v.epaisseur_cm, 3, 40);
+      if (thickness !== null) {
+        const typeMm = (stud: number, per: number) => stud + 12.5 * per * sides;
+        const written = thickness * 10;
+        if (Math.abs(typeMm(studWidthMm, boardsPerFace) - written) > 6) {
+          const fits = [48, 70, 90].flatMap((stud) =>
+            [1, 2].flatMap((per) =>
+              Math.abs(typeMm(stud, per) - written) <= 6
+                ? [
+                    `${Math.round(typeMm(stud, per))}/${stud} (${per === 1 ? "une plaque" : "deux plaques"} par face)`,
+                  ]
+                : [],
+            ),
+          );
+          return fail(
+            `épaisseur ${thickness.toLocaleString("fr-FR")} cm : ce n'est pas une ${Math.round(typeMm(studWidthMm, boardsPerFace))}/${studWidthMm}. ` +
+              (fits.length ? `Types possibles : ${fits.join(", ")}. ` : "") +
+              "Demande le type exact à l'artisan, ou précise plaques_par_face et montants_mm.",
+          );
+        }
+      }
       return {
         ok: true,
         call: {
@@ -333,6 +373,7 @@ export function parseChatCall(name: string, input: unknown): Parsed {
             heightMm: mm(height),
             sides,
             boardsPerFace,
+            studWidthMm,
           },
         },
       };

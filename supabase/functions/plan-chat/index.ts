@@ -5,7 +5,7 @@
 // par mois vérifiés par la base (jeton de l'utilisateur). Journal : métriques seules (ai_runs).
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { llmConfig, logAiRuns, planModel } from "../_shared/ai.ts";
+import { llmConfig, logAiRuns, planChatModel } from "../_shared/ai.ts";
 import { adminClient, json } from "../_shared/artisan.ts";
 import { withCors } from "../_shared/cors.ts";
 import { env } from "../_shared/env.ts";
@@ -146,7 +146,7 @@ Deno.serve(
     const llm = llmConfig();
     if (!llm) return json({ status: "unavailable" }, 503);
 
-    const model = planModel();
+    const model = planChatModel();
     const usage: ChatUsage = { inputTokens: 0, outputTokens: 0 };
     const started = Date.now();
     let outcome: Awaited<ReturnType<typeof askPlanChat>>;

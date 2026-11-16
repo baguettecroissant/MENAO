@@ -99,6 +99,18 @@ export function planModel(): string {
 }
 
 /**
+ * Modèle du chat « Demander à MENAO » (F-160, ADR 0348) : Sonnet 5.5, retenu après évaluation sur
+ * de vrais plans (28 réponses justes sur 28, comme Opus à un cas près, deux fois moins cher et plus
+ * rapide). `AI_PLAN_CHAT_MODEL` le change sans code (par exemple pour revenir à Opus).
+ */
+export function planChatModel(): string {
+  return (
+    env("AI_PLAN_CHAT_MODEL") ||
+    (env("ANTHROPIC_API_KEY") ? "claude-sonnet-5-5" : "anthropic/claude-sonnet-5.5")
+  );
+}
+
+/**
  * Raisonnement selon le modèle. Haiku 5.5 l'accepte désactivé (réponse la plus rapide) ;
  * Sonnet 5.5 l'impose (« disabled » renvoie une 400 « Reasoning is mandatory ») : raisonnement
  * adaptatif à effort bas, suffisant pour une extraction en sortie structurée.
