@@ -25,6 +25,8 @@ const ROUTES: readonly [RegExp, (id: string) => Href][] = [
   [/^\/pro\/onboarding$/, () => "/pro"],
   // Documents (relances avant échéance) et fiche de l'artisan (ADR 0123).
   [/^\/pro\/onboarding\/documents$/, () => "/pro-documents"],
+  // Message prêt pour l'assureur (ADR 0348).
+  [/^\/pro\/onboarding\/documents\/assureur$/, () => "/pro-assureur"],
   [/^\/pro\/onboarding\/profil$/, () => "/pro-profil-public"],
   [/^\/pro\/onboarding\/paiements$/, () => "/pro-paiements"],
   // Entreprise, métiers et zone (ADR 0125).

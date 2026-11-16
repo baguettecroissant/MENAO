@@ -15,6 +15,7 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
 import { PageHead, PrivacyNote, SoftBanner } from "@/components/pro/dossier-kit";
+import { DocumentHelpButton } from "@/components/pro/onboarding-help";
 import { CardHeading, FicheButton, FicheCard, FicheScreen } from "@/components/pro/fiche-kit";
 import { CheckRow, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
@@ -123,6 +124,8 @@ function DocumentScreen() {
         trades={type === "decennale" ? dossier.trades : []}
         intro={intro}
         after={exemptChoice}
+        // « Où trouver ce document ? » (ADR 0348) ; le Kbis, seulement si le registre a échoué.
+        help={type !== "kbis" || registryFailed !== null}
       />
     );
   }
@@ -192,6 +195,7 @@ function DocumentForm({
   trades,
   intro,
   after,
+  help,
 }: {
   type: RequiredDocumentType;
   trades: { code: string; label: string }[];
@@ -199,6 +203,8 @@ function DocumentForm({
   intro: ReactNode;
   /** Sous le formulaire (« non soumis » à la décennale). */
   after: ReactNode;
+  /** Ligne « Où trouver ce document ? » sous le titre. */
+  help: boolean;
 }) {
   // Décennale : métiers couverts, tous cochés au départ (ADR 0116).
   const [covered, setCovered] = useState(() => new Set(trades.map((trade) => trade.code)));
@@ -330,6 +336,7 @@ function DocumentForm({
       }
     >
       {intro}
+      {help ? <DocumentHelpButton type={type} /> : null}
       <View style={styles.photoBlock}>
         {photo ? (
           <View style={styles.stage}>

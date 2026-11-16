@@ -37,6 +37,7 @@ import {
   type DossierTone,
 } from "./dossier-kit";
 import { FicheButton } from "./fiche-kit";
+import { PrepareCard } from "./onboarding-help";
 import { ProgressBar } from "./tools-kit";
 
 const t = fr.proDossier;
@@ -168,6 +169,10 @@ export function DossierScreen() {
           <Text style={styles.demandNext}>{t.zoneDemand.next}</Text>
         </SoftBanner>
       ) : null}
+
+      {/* « Avant de commencer » (ADR 0348) : tant que l'artisan n'a déposé aucune pièce (le Kbis
+          vérifié au registre, créé à l'inscription, ne compte pas). */}
+      {editable && dossier.documents.every((d) => d.source === "registre") ? <PrepareCard /> : null}
 
       <DossierGroup title={t.groups.company} count={count(groups.company)}>
         <DossierRow

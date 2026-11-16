@@ -6,6 +6,7 @@ import { PageHead } from "@/components/pro/dossier-kit";
 import { FicheCard, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
 import { MoneyPanel } from "@/components/pro/money-panel";
 import { PaymentsPanel } from "@/components/pro/payments-panel";
+import { StripeChecklist } from "@/components/pro/onboarding-help";
 import { StripeOnboarding } from "@/components/pro/stripe-onboarding";
 import { fr } from "@/i18n/fr";
 import { openHostedPage } from "@/lib/hosted";
@@ -112,6 +113,8 @@ function PaymentsScreen() {
           </FicheCard>
         ) : (
           <>
+            {/* Avant le formulaire Stripe (ADR 0348) : ce qu'il demande, à garder sous la main. */}
+            {data.status === "a_demarrer" ? <StripeChecklist /> : null}
             <PaymentsPanel
               data={data}
               busy={busy}
