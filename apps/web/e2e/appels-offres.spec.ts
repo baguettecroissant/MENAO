@@ -384,6 +384,32 @@ test("appels d'offres : ouvrages écrits sur le plan, rangés par lot, démoliti
   const partition = works.getByRole("row", { name: /Cloison BA13 de 7 cm/ });
   await expect(partition).toContainText("À compléter");
   await expect(partition.getByRole("link", { name: /^Mesurer Cloison BA13/ })).toBeVisible();
+
+  // « À vérifier » puis vérification point par point (ADR 0343) : la cloison du WC, longueur
+  // saisie × hauteur de la pièce, validée ; le compteur descend.
+  const verify = page.getByRole("region", { name: "À vérifier" });
+  await expect(verify.getByText(/^0 fait sur \d+$/)).toBeVisible();
+  await verify.getByRole("link", { name: "Vérifier point par point" }).click();
+  await expect(page).toHaveURL(/etape=verifier/);
+  const step = page.getByRole("region", { name: "Cloison BA13 de 7 cm" });
+  for (let i = 0; i < 12 && !(await step.isVisible()); i++) {
+    await page.getByRole("button", { name: "Je le ferai plus tard" }).click();
+  }
+  await expect(step).toContainText("Plaquiste · WC");
+  await step.getByLabel("Longueur tracée (ml)").fill("3,42");
+  await step.getByLabel("Hauteur de la pièce (m) : WC").fill("2,7");
+  await expect(step).toContainText("9,23 m²");
+  await step.getByRole("button", { name: "Valider et suivant" }).click();
+  await expect(page.getByRole("region", { name: "Cloison BA13 de 7 cm" })).toHaveCount(0);
+  await expect(page.getByRole("status").getByText("Enregistré automatiquement")).toBeVisible();
+  await page.getByRole("link", { name: "Fermer la vérification" }).click();
+  await expect(page).toHaveURL(/etape=ouvrages/);
+  await expect(verify.getByText(/^1 fait sur \d+$/)).toBeVisible();
+  await tabs.getByRole("tab", { name: /Plaquiste/ }).click();
+  await expect(works.getByRole("row", { name: /Cloison BA13 de 7 cm/ })).toContainText("9,23 m²");
+  await expect(works.getByRole("row", { name: /Cloison BA13 de 7 cm/ })).toContainText(
+    "Votre valeur",
+  );
   // L'ouvrage existant conservé n'est pas repris.
   await expect(page.getByText("Radiateur existant")).toHaveCount(0);
 

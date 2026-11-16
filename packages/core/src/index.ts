@@ -105,6 +105,7 @@ export * from "./plan-symbols";
 export * from "./plan-tiles";
 export * from "./plan-measure";
 export * from "./plan-takeoff";
+export * from "./plan-verify";
 export * from "./library";
 export * from "./plan-limits";
 export * from "./library-import";

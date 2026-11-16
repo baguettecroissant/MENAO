@@ -106,6 +106,7 @@ export function PlanWorks({
   summary,
   withViewer,
   hasDpgf,
+  verify,
 }: {
   tenderId: string;
   works: TenderWork[];
@@ -129,6 +130,8 @@ export function PlanWorks({
   summary: ReactNode;
   withViewer: boolean;
   hasDpgf: boolean;
+  /** Carte « À vérifier » du parcours guidé (lot 56, rendue par la page). */
+  verify?: ReactNode;
 }) {
   const [state, formAction, pending] = useActionState(savePlanWorks, initialFormState);
   const [drafts, setDrafts] = useState<Draft[]>(() => works.map(toDraft));
@@ -752,6 +755,7 @@ export function PlanWorks({
           table
         )}
         <aside className={side}>
+          {guided && verify}
           {lotsCard}
           {joineryCard}
           {!guided && (

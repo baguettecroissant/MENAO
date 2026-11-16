@@ -5874,6 +5874,7 @@ export type Database = {
           id: string;
           imported_at: string | null;
           name: string;
+          plan_checks: NonNullable<Json>;
           plan_counts: NonNullable<Json>;
           plan_files: NonNullable<Json>;
           plan_levels: NonNullable<Json>;
@@ -5904,6 +5905,7 @@ export type Database = {
           id?: string;
           imported_at?: string | null;
           name: string;
+          plan_checks?: NonNullable<Json>;
           plan_counts?: NonNullable<Json>;
           plan_files?: NonNullable<Json>;
           plan_levels?: NonNullable<Json>;
@@ -5933,6 +5935,7 @@ export type Database = {
           id?: string;
           imported_at?: string | null;
           name?: string;
+          plan_checks?: NonNullable<Json>;
           plan_counts?: NonNullable<Json>;
           plan_files?: NonNullable<Json>;
           plan_levels?: NonNullable<Json>;
@@ -7189,6 +7192,16 @@ export type Database = {
           title: string;
           ville_nom: string;
         }[];
+      };
+      artisan_check_plan_point: {
+        Args: {
+          p_height_mm?: number;
+          p_key: string;
+          p_target?: string;
+          p_tender_id: string;
+          p_value?: number;
+        };
+        Returns: undefined;
       };
       artisan_check_tender_quantities: {
         Args: { p_checked: boolean; p_tender_id: string };

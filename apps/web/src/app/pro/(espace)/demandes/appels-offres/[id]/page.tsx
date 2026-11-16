@@ -12,8 +12,10 @@ import {
   noteLots,
   planNoteFigures,
   planReadingFigures,
+  planVerifyPoints,
   planWorksFigures,
   symbolCounts,
+  verifyProgress,
   traceControl,
   type PlanPage,
   type PlanTrace,
@@ -27,6 +29,7 @@ import { PlanReleve } from "@/components/pro/plan-releve";
 import type { PlanFileLink } from "@/components/pro/plan-viewer";
 import { GuideBar, GuideFigures, GuidePoints } from "@/components/pro/plan-guide";
 import { PlanSymbols } from "@/components/pro/plan-symbols";
+import { PlanVerifier, VerifyCard } from "@/components/pro/plan-verify";
 import { PlanWorks } from "@/components/pro/plan-works";
 import { PlanSteps, type PlanStep } from "@/components/pro/plan-steps";
 import { QuantitiesCheck } from "@/components/pro/quantities-check";
@@ -111,6 +114,10 @@ export default async function TenderPage({
           : "dpgf";
   // Métré à la main (F-159 lot 3) : un écran du relevé, sur les photos de plans.
   const measuring = !!plan && asked === "mesure";
+  // Vérifier point par point (lot 56, ADR 0343) : un écran à part, sans les étapes.
+  const verifying = !!plan && asked === "verifier";
+  const base = `/pro/demandes/appels-offres/${tender.id}`;
+  const verifyHref = `${base}?etape=verifier`;
   const reachable: PlanStep[] = [
     ...(withRooms ? (["releve"] as const) : []),
     "ouvrages",
@@ -191,12 +198,12 @@ export default async function TenderPage({
             <h1 className="text-[1.75rem] leading-[1.05] sm:text-[2.25rem]">{tender.name}</h1>
           </div>
           {plan ? (
-            <GuidePoints count={plan.points} />
+            <GuidePoints count={plan.points} href={verifying ? undefined : verifyHref} />
           ) : (
             <StatusBadge tone="primary">{t.plan.planBadge}</StatusBadge>
           )}
         </div>
-        {plan && step && (
+        {plan && step && !verifying && (
           <PlanSteps
             tenderId={tender.id}
             current={step}
@@ -242,6 +249,21 @@ export default async function TenderPage({
           </Alert>
         ))}
 
+        {plan && verifying && (
+          <PlanVerifier
+            tenderId={tender.id}
+            points={plan.verifyPoints}
+            rooms={plan.rooms}
+            works={plan.works}
+            files={plan.files}
+            traces={plan.traces}
+            symbols={plan.symbols}
+            symbolPages={plan.symbolPages}
+            lotLabels={plan.lotLabels}
+            closeHref={`${base}?etape=${withRooms && plan.works.length === 0 ? "releve" : "ouvrages"}`}
+            electricityHref={`${base}?etape=ouvrages`}
+          />
+        )}
         {plan && measuring && (
           <PlanMeasure
             tenderId={tender.id}
@@ -251,7 +273,7 @@ export default async function TenderPage({
             trades={plan.trades.filter((tr) => tr.code !== DEMOLITION_LOT)}
           />
         )}
-        {plan && (step === "releve" || step === "ouvrages") && !measuring && (
+        {plan && (step === "releve" || step === "ouvrages") && !measuring && !verifying && (
           <GuideFigures
             rooms={plan.rooms.length}
             areaM2={plan.areaM2}
@@ -260,7 +282,7 @@ export default async function TenderPage({
             points={plan.points}
           />
         )}
-        {plan && step === "releve" && !measuring && (
+        {plan && step === "releve" && !measuring && !verifying && (
           <>
             {withRooms ? (
               <PlanReleve
@@ -269,6 +291,7 @@ export default async function TenderPage({
                 counts={plan.counts}
                 files={plan.files}
                 traces={plan.traces}
+                verifyHref={plan.points > 0 ? verifyHref : undefined}
                 canMeasure={plan.files.some((f) =>
                   f.kind === "pdf" ? (f.pages ?? []).some((p) => p.url) : !!f.url,
                 )}
@@ -319,7 +342,7 @@ export default async function TenderPage({
             )}
           </>
         )}
-        {plan && step === "ouvrages" && !measuring && (
+        {plan && step === "ouvrages" && !measuring && !verifying && (
           <>
             {plan.works.length === 0 && plan.symbols.length === 0 && (
               <div className="max-w-xl">{summaryCard}</div>
@@ -347,6 +370,13 @@ export default async function TenderPage({
                 summary={summaryCard}
                 withViewer={!withRooms}
                 hasDpgf={lines.length > 0}
+                verify={
+                  <VerifyCard
+                    points={plan.verifyPoints}
+                    lotLabels={plan.lotLabels}
+                    href={verifyHref}
+                  />
+                }
               />
             )}
             {plan.works.length === 0 && electricity?.node}
@@ -518,6 +548,7 @@ async function planData(
     plan_symbols: unknown;
     plan_symbol_legend: unknown;
     plan_page_labels: unknown;
+    plan_checks: unknown;
     plan_counts: unknown;
     plan_scale: string | null;
     plan_pages: unknown;
@@ -714,6 +745,19 @@ async function planData(
   labels.set(DEMOLITION_LOT, tw.notes.demolition);
   const lot = (code: string) => ({ code, label: labels.get(code) ?? code });
   // Lots à cocher : ceux de l'appel d'offres, puis ceux que les ouvrages écrits demandent.
+  // Points à vérifier (lot 56, ADR 0343) : calculés par packages/core, validés en base.
+  const verifyPoints = planVerifyPoints({
+    rooms,
+    works,
+    symbols: symbolTotals,
+    checks:
+      tender.plan_checks &&
+      typeof tender.plan_checks === "object" &&
+      !Array.isArray(tender.plan_checks)
+        ? (tender.plan_checks as Record<string, number | null>)
+        : {},
+    lotOrder: tender.plan_trades,
+  });
   const lotChoices = [
     ...new Set([...tender.plan_trades, ...writtenLots, ...tender.plan_lots_idle]),
   ].map((code) => ({
@@ -736,12 +780,9 @@ async function planData(
       Math.round(rooms.reduce((sum, r) => sum + (r.area_cm2 ?? 0), 0) / 10),
     ),
     worksMissing: works.filter((w) => w.quantity_milli === null && w.trade_code).length,
-    points:
-      rooms.filter(
-        (r) => r.area_cm2 === null || r.source === "estime" || r.source === "photo" || r.uncertain,
-      ).length +
-      works.filter((w) => w.quantity_milli === null && w.trade_code).length +
-      Object.values(symbolTotals).filter((c) => c?.doubt).length,
+    verifyPoints,
+    points: verifyProgress(verifyPoints).open,
+    lotLabels: Object.fromEntries(labels),
     symbolTotals: Object.fromEntries(
       Object.entries(symbolTotals).map(([kind, c]) => [kind, c?.total ?? 0]),
     ) as Record<string, number>,
