@@ -17,7 +17,7 @@ import {
   VoiceMinutesCard,
 } from "@/components/pro/ai-agents-card";
 import { ClientRemindersCard } from "@/components/pro/client-reminders-card";
-import { Alert, ButtonLink, Card, StatusBadge } from "@/components/ui";
+import { Alert, Card, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
 import { ChoosePlan, ManageSubscription, PickPlan } from "./plan-forms";

@@ -13,7 +13,7 @@ const dateFormat = new Intl.DateTimeFormat("fr-FR", {
 });
 
 export default async function CompanyStepPage() {
-  const { supabase, userId, artisan } = await getOnboardingContext();
+  const { artisan } = await getOnboardingContext();
   const verified = artisan.sirene_checked_at !== null;
   const editable = artisan.status === "brouillon";
 
