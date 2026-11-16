@@ -13,6 +13,7 @@ import { Alert, Button, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { PlanChatMessage, PlanChatResult } from "@/lib/artisan/plan-chat";
 import { askPlanChat } from "@/lib/artisan/plan-chat-actions";
+import { AiWorking } from "@/components/ai-working";
 
 const c = fr.pro.tenders.plan.chat;
 const quantity = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
@@ -248,13 +249,9 @@ export function PlanChat({
             <p className="max-w-[18rem] self-end rounded-[1rem] rounded-br-md bg-foreground px-3.5 py-2.5 text-[0.9063rem] text-surface">
               {asking}
             </p>
-            <p
-              role="status"
-              className="flex items-center gap-2 self-start text-sm text-muted-foreground"
-            >
-              <Sparkles aria-hidden="true" className="size-4 animate-pulse" />
-              {c.pending}
-            </p>
+            <div className="self-start">
+              <AiWorking kind="calcul" label={c.pending} />
+            </div>
           </>
         )}
         {messages.length > 0 && <p className="text-xs text-muted-foreground">{c.disclaimer}</p>}

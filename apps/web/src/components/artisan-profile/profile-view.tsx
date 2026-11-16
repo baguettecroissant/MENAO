@@ -22,6 +22,8 @@ import { fr } from "@/i18n/fr";
 import type { ArtisanProfile } from "@/lib/project/artisans";
 import { MenaoScore } from "./menao-score";
 import { PhotoGallery } from "./photo-gallery";
+import { TradeCover } from "@/components/trade-cover";
+import { TRADE_IMAGES } from "@/lib/site/images";
 
 const t = fr.search.profile;
 const r = fr.search.results;
@@ -76,11 +78,20 @@ export function ProfileHeader({
       : r.zoneCommunes(profile.zone.communes);
   return (
     <div className="grid gap-6 md:grid-cols-[17.5rem_1fr] md:items-center">
-      <ArtisanPhoto
-        url={avatar}
-        name={profile.display_name}
-        className="aspect-[4/3] w-full rounded-card"
-      />
+      {avatar || !TRADE_IMAGES[profile.trades[0]?.code ?? ""] ? (
+        <ArtisanPhoto
+          url={avatar}
+          name={profile.display_name}
+          className="aspect-[4/3] w-full rounded-card"
+        />
+      ) : (
+        // Sans photo : l'image de son métier, marquée comme une illustration (lot 61).
+        <TradeCover
+          code={profile.trades[0]?.code ?? ""}
+          label={profile.trades[0]?.label ?? ""}
+          className="aspect-[4/3] w-full rounded-card"
+        />
+      )}
       <div className="flex min-w-0 flex-col gap-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Title className="text-2xl font-medium tracking-tight sm:text-[1.75rem]">{title}</Title>

@@ -16,6 +16,7 @@ import {
 import { ArrowLeftRight, ArrowRight, Building2, CircleCheck, ChevronRight } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { AiWorking } from "@/components/ai-working";
 import { Alert, Button, Field } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { searchCompanies } from "@/lib/artisan/company-search";
@@ -198,7 +199,7 @@ function CompanyFinder({
       <SearchInput label={t.search} value={query} onChange={setQuery} hint={t.searchHint} />
       <div aria-live="polite" className="flex flex-col gap-2">
         {!tooShort && search.status === "loading" && (
-          <p className="text-sm text-muted-foreground">{search.slow ? t.slow : t.searching}</p>
+          <AiWorking kind="calcul" label={search.slow ? t.slow : t.searching} />
         )}
         {!tooShort && search.status === "error" && (
           <Alert tone="info">
