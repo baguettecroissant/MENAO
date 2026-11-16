@@ -247,3 +247,28 @@ export async function cancelCommercialBonus(
   if (UUID.test(commercial)) backToCommercial(commercial, "annulation");
   return { success: tr.detail.cancelled };
 }
+
+// Lien de démo de l'espace commercial (F-65, lot 57, ADR 0344).
+const td = fr.commercialDemo.admin;
+
+/** « Changer le lien » : nouvelle clé, démo activée ; l'ancien lien ne marche plus. */
+export async function rotateCommercialDemo(_prev: FormState): Promise<FormState> {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_rotate_commercial_demo");
+  if (error) return { error: td.error };
+  revalidatePath(PATH);
+  return { success: td.rotated };
+}
+
+/** Activer ou désactiver le lien actuel. */
+export async function setCommercialDemo(_prev: FormState, formData: FormData): Promise<FormState> {
+  const enabled = text(formData, "enabled");
+  if (enabled !== "true" && enabled !== "false") return { error: td.error };
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_set_commercial_demo", {
+    p_enabled: enabled === "true",
+  });
+  if (error) return { error: td.error };
+  revalidatePath(PATH);
+  return { success: td.saved };
+}

@@ -2574,6 +2574,28 @@ export type Database = {
           },
         ];
       };
+      commercial_demo: {
+        Row: {
+          enabled: boolean;
+          id: boolean;
+          key: string;
+          rotated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          enabled?: boolean;
+          id?: boolean;
+          key: string;
+          rotated_at?: string;
+        };
+        Update: {
+          enabled?: boolean;
+          id?: boolean;
+          key?: string;
+          rotated_at?: string;
+        };
+        Relationships: [];
+      };
       commercial_trainings: {
         Row: {
           commercial_id: string;
@@ -6684,6 +6706,14 @@ export type Database = {
         }[];
       };
       admin_commercial_code_available: { Args: { p_code: string }; Returns: boolean };
+      admin_commercial_demo: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          enabled: boolean;
+          key: string;
+          rotated_at: string;
+        }[];
+      };
       admin_commercial_detail: { Args: { p_id: string }; Returns: Json };
       admin_commercials: {
         Args: Record<PropertyKey, never>;
@@ -6911,6 +6941,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_rotate_commercial_demo: { Args: Record<PropertyKey, never>; Returns: string };
       admin_save_acquisition_code: {
         Args: {
           p_active?: boolean;
@@ -7012,6 +7043,7 @@ export type Database = {
           tag: string;
         }[];
       };
+      admin_set_commercial_demo: { Args: { p_enabled: boolean }; Returns: undefined };
       admin_set_commercial_status: {
         Args: { p_id: string; p_status: Database["public"]["Enums"]["commercial_status"] };
         Returns: undefined;
@@ -7636,6 +7668,7 @@ export type Database = {
           status: Database["public"]["Enums"]["prospect_status"];
         }[];
       };
+      commercial_demo_open: { Args: { p_key: string }; Returns: boolean };
       commercial_do_not_contact: { Args: { p_id: string }; Returns: undefined };
       commercial_follow_prospect: { Args: { p_id: string }; Returns: undefined };
       commercial_prospect: {

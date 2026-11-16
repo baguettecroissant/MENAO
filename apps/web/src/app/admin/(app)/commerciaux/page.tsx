@@ -3,9 +3,11 @@ import Link from "next/link";
 import { z } from "zod";
 import { CommercialInviteForm, CommercialStatusForm } from "@/components/admin/commercial-forms";
 import { AdminSectionHeader } from "@/components/admin/admin-tabs";
+import { CommercialDemoCard } from "@/components/admin/commercial-demo-card";
 import { SettingsLink, settingEuros } from "@/components/admin/settings";
 import { ProspectImport } from "@/components/admin/prospect-import";
 import { Alert, Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
+import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
 import { formatDayTimeInline } from "@/lib/format";
@@ -36,7 +38,7 @@ export const metadata: Metadata = { title: `${t.title} — ${fr.admin.title}` };
  */
 export default async function AdminCommercialsPage() {
   const { supabase } = await requireAdmin();
-  const [{ data }, { data: summaryData }, { data: settings }] = await Promise.all([
+  const [{ data }, { data: summaryData }, { data: settings }, { data: demo }] = await Promise.all([
     supabase.rpc("admin_commercials_dashboard"),
     supabase.rpc("admin_prospects_summary"),
     supabase
@@ -45,8 +47,11 @@ export default async function AdminCommercialsPage() {
         "prime_validation_centimes, prime_abonnement_centimes, delai_validation_jours, objectif_valides_mois",
       )
       .maybeSingle(),
+    // Lien de démo de l'espace commercial (ADR 0344).
+    supabase.rpc("admin_commercial_demo"),
   ]);
   const commercials = data ?? [];
+  const demoLink = demo?.[0] ?? null;
   const parsedSummary = prospectsSummarySchema.safeParse(summaryData);
   const summary = parsedSummary.success ? parsedSummary.data : null;
   // Montants non décidés (règle 15) : aucune prime ne devient payable.
@@ -66,6 +71,12 @@ export default async function AdminCommercialsPage() {
         lead={t.intro}
       />
       {amountsNotSet && <Alert tone="info">{tr.settings.notSet}</Alert>}
+      {demoLink && (
+        <CommercialDemoCard
+          url={`${env.NEXT_PUBLIC_SITE_URL}/commercial/demo/${demoLink.key}`}
+          enabled={demoLink.enabled}
+        />
+      )}
 
       <Card className="flex flex-col gap-4 overflow-x-auto">
         <CardTitle

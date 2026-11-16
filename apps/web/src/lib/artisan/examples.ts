@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { teamContext } from "./space";
+import { commercialDemoActive, DEMO_ACCOUNT } from "@/lib/commercial/demo";
 
 /** Pages d'exemples de l'espace pro (ADR 0184). */
 export const EXAMPLES_BASE = "/pro/decouvrir";
@@ -31,6 +32,15 @@ export function examplePhotoUrl(path: string): string | null {
  * Aucune donnée de la base n'est montrée, seulement le compte (coque) et l'état du dossier.
  */
 export const requireExampleViewer = cache(async () => {
+  // Démo de l'espace commercial (ADR 0344) : la conseillère fictive montre aussi l'espace pro.
+  if (await commercialDemoActive()) {
+    return {
+      firstName: DEMO_ACCOUNT.firstName,
+      account: DEMO_ACCOUNT,
+      commercial: true,
+      validated: false,
+    };
+  }
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth || auth.claims.is_anonymous) redirect("/connexion?next=/pro/decouvrir");

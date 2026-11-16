@@ -6,6 +6,7 @@ import { cache } from "react";
 import { avatarUrl } from "@/lib/chantier/storage";
 import type { ShellAccount } from "@/lib/client/shell";
 import { createClient } from "@/lib/supabase/server";
+import { commercialDemoActive, demoCommercialSpace } from "./demo";
 
 /**
  * Espace commercial (F-65, ADR 0205) : réservé au rôle « commercial » (les autres rôles retournent
@@ -13,6 +14,8 @@ import { createClient } from "@/lib/supabase/server";
  * coque. Mis en cache pour la durée de la requête.
  */
 export const getCommercialSpace = cache(async (next = "/commercial") => {
+  // Démo par lien (ADR 0344) : une conseillère fictive, sans compte ni base.
+  if (await commercialDemoActive()) return demoCommercialSpace();
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth || auth.claims.is_anonymous) {
@@ -49,5 +52,6 @@ export const getCommercialSpace = cache(async (next = "/commercial") => {
     active: commercial?.status === "actif",
     /** Débuts de code postal de sa zone (ADR 0207) ; vide : pas de zone. */
     zone: commercial?.zone_codes_postaux ?? [],
+    demo: false,
   };
 });
