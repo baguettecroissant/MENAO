@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   DOCUMENT_HELP,
+  DOCUMENT_HELP_VIDEO,
+  HELP_VIDEOS,
+  helpVideoUrls,
   PREPARE_ITEMS,
   STRIPE_CHECKLIST,
   buildInsurerRequest,
@@ -124,5 +127,30 @@ describe("insurerMailto", () => {
 
   it("laisse l'adresse vide si l'artisan ne la connaît pas", () => {
     expect(insurerMailto("", "Objet", "Texte")).toBe("mailto:?subject=Objet&body=Texte");
+  });
+});
+
+describe("vidéos de l'aide", () => {
+  it("onze vidéos de 10 à 40 secondes", () => {
+    const videos = Object.values(HELP_VIDEOS);
+    expect(videos).toHaveLength(11);
+    for (const v of videos) {
+      expect(v.seconds).toBeGreaterThanOrEqual(10);
+      expect(v.seconds).toBeLessThanOrEqual(40);
+    }
+  });
+
+  it("une vidéo par pièce, sauf le Kbis", () => {
+    expect(DOCUMENT_HELP_VIDEO.kbis).toBeNull();
+    expect(DOCUMENT_HELP_VIDEO.urssaf).toBe("v08-urssaf");
+    for (const id of Object.values(DOCUMENT_HELP_VIDEO))
+      if (id) expect(HELP_VIDEOS[id]).toBeDefined();
+  });
+
+  it("adresses publiques du stockage, barre finale tolérée", () => {
+    expect(helpVideoUrls("https://exemple.supabase.co/", "v08-urssaf")).toEqual({
+      video: "https://exemple.supabase.co/storage/v1/object/public/aide-videos/v08-urssaf.mp4",
+      poster: "https://exemple.supabase.co/storage/v1/object/public/aide-videos/v08-urssaf.jpg",
+    });
   });
 });

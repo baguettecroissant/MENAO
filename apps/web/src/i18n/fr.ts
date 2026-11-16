@@ -9468,6 +9468,11 @@ export const fr = {
           title: "Gardez sous la main",
           intro: "Le formulaire Stripe prend environ 3 minutes.",
         },
+        video: {
+          label: (seconds: number) => `Vidéo · ${seconds} s`,
+          hint: "Les vrais écrans, avec des sous-titres",
+          close: "Fermer la vidéo",
+        },
       },
       documents: {
         intro:

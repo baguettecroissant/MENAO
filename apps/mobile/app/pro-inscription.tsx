@@ -15,6 +15,7 @@ import { CompanyStep } from "@/components/pro-signup/company-step";
 import { Progress } from "@/components/pro-signup/signup-parts";
 import { TradesStep } from "@/components/pro-signup/trades-step";
 import { ZoneStep } from "@/components/pro-signup/zone-step";
+import { HelpVideoCard } from "@/components/pro/onboarding-help";
 import { FicheButton, FicheTag } from "@/components/pro/fiche-kit";
 import { IconSquare } from "@/components/pro/tools-kit";
 import { TopBar } from "@/components/top-bar";
@@ -184,6 +185,8 @@ export default function ArtisanSignupScreen() {
         />
       ) : null}
       {step === "intro" ? <Intro /> : null}
+      {step === "metiers" || step === "zone" ? <HelpVideoCard id="v03-metiers-zone" /> : null}
+      {step === "entreprise" ? <HelpVideoCard id="v02-entreprise" /> : null}
       {step === "metiers" ? (
         <TradesStep
           trades={trades}

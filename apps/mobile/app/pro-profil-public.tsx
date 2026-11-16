@@ -3,6 +3,7 @@ import { Camera, ImagePlus, Sparkles, X } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { PageHead } from "@/components/pro/dossier-kit";
+import { HelpVideoCard } from "@/components/pro/onboarding-help";
 import {
   CardHeading,
   FicheButton,
@@ -79,6 +80,7 @@ function PublicProfileContent({
       footer={<FicheButton label={t.save} tall onPress={() => void save()} loading={sending} />}
     >
       <PageHead title={t.title} lead={fr.proDossier.profilHint} />
+      <HelpVideoCard id="v10-profil" />
       <PhotoCard avatarPath={dossier?.avatarPath ?? null} onSaved={() => void onSaved()} />
       <FicheCard padding={4.5} gap={3}>
         <ToolField

@@ -176,6 +176,10 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(page.getByLabel("Prendre en photo")).toHaveAttribute("capture", "environment");
   // Aide de l'inscription (ADR 0347) : où trouver la pièce, avec le lien officiel.
   await expect(page.getByRole("heading", { name: "Où trouver ce document ?" })).toBeVisible();
+  // Vidéo de la pièce (ADR 0349), lue depuis le stockage public.
+  await expect(
+    page.getByRole("button", { name: /Trouver votre attestation URSSAF/ }),
+  ).toBeVisible();
   await expect(page.getByRole("link", { name: "Ouvrir mon espace URSSAF" })).toHaveAttribute(
     "href",
     "https://www.autoentrepreneur.urssaf.fr",

@@ -1,5 +1,6 @@
 import { STRIPE_CHECKLIST } from "@menao/core";
 import { Calendar, IdCard, Landmark, Smartphone } from "lucide-react";
+import { HelpVideo } from "@/components/pro/help-video";
 import { sheetCard } from "@/components/pro/sheet";
 import { fr } from "@/i18n/fr";
 
@@ -32,6 +33,7 @@ export function StripeChecklist() {
           );
         })}
       </ul>
+      <HelpVideo id="v11-stripe" />
     </section>
   );
 }

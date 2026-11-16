@@ -9,6 +9,7 @@ import {
 import { Alert, ButtonLink, Card } from "@/components/ui";
 import { Check, Lock } from "lucide-react";
 import { DocumentHelpDisclosure, DocumentHelpSteps } from "@/components/pro/document-help";
+import { HelpVideo } from "@/components/pro/help-video";
 import { sheetCard } from "@/components/pro/sheet";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
@@ -84,6 +85,8 @@ export default async function DocumentsStepPage({
   const cards = (
     <div className="flex flex-col gap-6">
       <p className="text-label">{focused ? fr.pro.onboarding.documents.photoHint : t.intro}</p>
+      {/* « Bien photographier un document » (ADR 0349), pendant l'inscription. */}
+      {onboarding && <HelpVideo id="v05-photo" />}
       {artisan.status === "en_verification" && (
         <Alert tone="success">{fr.pro.onboarding.upload.status.locked}</Alert>
       )}
