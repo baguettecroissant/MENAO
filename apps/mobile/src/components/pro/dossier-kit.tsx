@@ -47,7 +47,8 @@ export function DossierGroup({
   children,
 }: {
   title: string;
-  count: string;
+  /** « 3 sur 5 » ; absent pour un groupe sans décompte (facultatif, à faire en attendant). */
+  count?: string;
   children: ReactNode;
 }) {
   return (
@@ -56,7 +57,7 @@ export function DossierGroup({
         <Text role="heading" style={styles.groupTitle}>
           {title}
         </Text>
-        <Text style={styles.groupCount}>{count}</Text>
+        {count ? <Text style={styles.groupCount}>{count}</Text> : null}
       </View>
       {children}
     </View>

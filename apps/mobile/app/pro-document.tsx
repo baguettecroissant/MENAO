@@ -110,6 +110,10 @@ function DocumentScreen() {
       {!blocked && registryFailed ? (
         <RegistryRecheck reason={registryFailed} onDone={reload} />
       ) : null}
+      {/* Contrôle au registre en cours (ADR 0354) : le Kbis reste déposable, sans obligation. */}
+      {!blocked && type === "kbis" && dossier?.registryPending ? (
+        <Notice tone="info">{d.registryPendingHint}</Notice>
+      ) : null}
     </>
   );
   // « Non soumis » à la décennale : sous le formulaire, comme la colonne de la maquette.

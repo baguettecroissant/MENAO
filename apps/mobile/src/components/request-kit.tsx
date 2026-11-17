@@ -75,12 +75,25 @@ export function ArtisanAvatar({
   name,
   uri,
   size = 52,
+  logo = false,
 }: {
   name: string;
   uri: string | null;
   size?: number;
+  /** L'image est un logo (ADR 0355) : montré en entier dans un carré arrondi, jamais rogné. */
+  logo?: boolean;
 }) {
   const shape = { width: size, height: size, borderRadius: size / 2 };
+  if (uri && logo) {
+    return (
+      <Image
+        source={{ uri }}
+        resizeMode="contain"
+        style={[styles.avatar, shape, styles.avatarLogo]}
+        alt=""
+      />
+    );
+  }
   if (uri) return <Image source={{ uri }} style={[styles.avatar, shape]} alt="" />;
   return (
     <View aria-hidden style={[styles.avatar, styles.avatarEmpty, shape]}>
@@ -166,6 +179,12 @@ const styles = StyleSheet.create({
   },
   dotOn: { borderWidth: 0, backgroundColor: colors.foreground },
   avatar: { flexShrink: 0, backgroundColor: colors["primary-soft"] },
+  avatarLogo: {
+    borderRadius: theme.radius.input,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
   avatarEmpty: {
     alignItems: "center",
     justifyContent: "center",

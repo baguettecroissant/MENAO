@@ -1,6 +1,7 @@
 import {
   CHARTER_RULE_COUNT,
   REQUIRED_DOCUMENT_TYPES,
+  connectOnboardingOpen,
   documentState,
   dossierGroups,
   dossierItemCount,
@@ -12,17 +13,18 @@ import {
   Building2,
   Camera,
   FileText,
+  ImageIcon,
   PenLine,
   ShieldCheck,
   Users,
   Wallet,
   type LucideIcon,
 } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
-import { loadDossier, loadZoneDemand, submitDossier } from "@/lib/artisan-dossier";
+import { loadDossier, loadZoneDemand, retryRegistry, submitDossier } from "@/lib/artisan-dossier";
 import { useTrades } from "@/lib/trades";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Notice, Screen, ScreenSkeleton } from "@/ui";
@@ -37,7 +39,7 @@ import {
   type DossierTone,
 } from "./dossier-kit";
 import { FicheButton } from "./fiche-kit";
-import { PrepareCard } from "./onboarding-help";
+import { HelpVideoCard } from "./onboarding-help";
 import { ProgressBar } from "./tools-kit";
 
 const t = fr.proDossier;
@@ -66,6 +68,8 @@ const documentIcon: Record<RequiredDocumentType, LucideIcon> = {
  * formule ni l'abonnement (règle 10) : MENAO écrit à l'artisan une fois son entreprise vérifiée.
  * Refonte « Nette » (lot 9, maquette « DossierApp ») : carte d'avancement, trois groupes en cartes
  * avec leur compteur (entreprise, documents, fiche), barre du bas avec ce qu'il reste et l'envoi.
+ * Comme sur le site (ADR 0353 à 0355) : les paiements s'ouvrent dès le début, le Kbis est relancé
+ * au registre tout seul, et l'image de la fiche est facultative, dans « Pour vous démarquer ».
  */
 export function DossierScreen() {
   const [dossier, reload] = useFocusData(loadDossier);
@@ -74,6 +78,13 @@ export function DossierScreen() {
   const trades = useTrades();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Contrôle au registre jamais abouti (ADR 0354) : relancé tout seul, puis le dossier est relu.
+  const registryPending = dossier?.registryPending === true;
+  useEffect(() => {
+    if (!registryPending) return;
+    void retryRegistry().then((retried) => (retried ? reload() : undefined));
+  }, [registryPending, reload]);
 
   if (dossier === undefined) return <ScreenSkeleton />;
   if (dossier === null) {
@@ -170,9 +181,11 @@ export function DossierScreen() {
         </SoftBanner>
       ) : null}
 
-      {/* « Avant de commencer » (ADR 0348) : tant que l'artisan n'a déposé aucune pièce (le Kbis
-          vérifié au registre, créé à l'inscription, ne compte pas). */}
-      {editable && dossier.documents.every((d) => d.source === "registre") ? <PrepareCard /> : null}
+      {/* Vidéo de présentation, tant que l'artisan n'a déposé aucune pièce (le Kbis vérifié au
+          registre, créé à l'inscription, ne compte pas). */}
+      {editable && dossier.documents.every((d) => d.source === "registre") ? (
+        <HelpVideoCard id="v01-inscription" />
+      ) : null}
 
       <DossierGroup title={t.groups.company} count={count(groups.company)}>
         <DossierRow
@@ -239,12 +252,14 @@ export function DossierScreen() {
                   ? t.refusedBecause(refused.refusal_reason)
                   : registry && state === "valide"
                     ? t.registryHint
-                    : registryFailed
-                      ? t.registryFailedHint
-                      : t.documentHints[type]
+                    : type === "kbis" && registryPending
+                      ? t.registryPendingHint
+                      : registryFailed
+                        ? t.registryFailedHint
+                        : t.documentHints[type]
               }
-              tone={documentTone[state]}
-              status={t.states[state]}
+              tone={type === "kbis" && registryPending ? "pending" : documentTone[state]}
+              status={type === "kbis" && registryPending ? t.states.checking : t.states[state]}
               href={{ pathname: "/pro-document", params: { type } }}
             />
           );
@@ -260,17 +275,33 @@ export function DossierScreen() {
           status={progress.profil ? t.states.done : t.states.todo}
           href="/pro-profil-public"
         />
-        {/* Paiements ouverts dès l'envoi du dossier, comme sur le site (ADR 0215). */}
-        {dossier.status === "en_verification" ? (
+      </DossierGroup>
+
+      {/* Paiements ouverts dès le début du dossier, comme sur le site (ADR 0353) : un document
+          qui manque ne bloque plus Stripe. Rien sur la formule dans l'application (règle 10). */}
+      {connectOnboardingOpen(dossier.status) ? (
+        <DossierGroup title={t.groups.parallel}>
           <DossierRow
             icon={Wallet}
             title={t.paiementsTitle}
             hint={t.paiementsHintNow}
             tone={progress.paiements ? "done" : "todo"}
-            status={progress.paiements ? t.states.done : t.states.todo}
+            status={progress.paiements ? t.states.done : t.states.openNow}
             href="/pro-paiements"
           />
-        ) : null}
+        </DossierGroup>
+      ) : null}
+
+      {/* Facultatif, rendu visible (ADR 0354, 0355) : rien ici ne retarde le dossier. */}
+      <DossierGroup title={t.groups.extras}>
+        <DossierRow
+          icon={ImageIcon}
+          title={t.imageTitle}
+          hint={t.imageHint}
+          tone={dossier.avatarPath ? "done" : "todo"}
+          status={dossier.avatarPath ? t.states.added : t.states.optional}
+          href="/pro-profil-public"
+        />
       </DossierGroup>
 
       <PrivacyNote text={t.privacy} />

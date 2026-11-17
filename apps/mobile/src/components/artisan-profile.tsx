@@ -57,7 +57,12 @@ export function ArtisanProfileView({ page }: { page: ArtisanPage }) {
     <>
       <View style={styles.identity}>
         <View style={styles.identityRow}>
-          <ArtisanAvatar name={profile.display_name} uri={page.avatarUrl} size={72} />
+          <ArtisanAvatar
+            name={profile.display_name}
+            uri={page.avatarUrl}
+            size={72}
+            logo={profile.image_logo}
+          />
           <View style={styles.identityText}>
             <View style={styles.nameRow}>
               <Text role="heading" aria-level={1} style={styles.name}>

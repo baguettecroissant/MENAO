@@ -5,6 +5,7 @@ import {
   dossierItemsLeft,
   onboardingProgress,
   parisToday,
+  registryCheckPending,
   presentationDraft,
   subscriptionGrantsAccess,
   type ArtisanOnboardingSnapshot,
@@ -47,6 +48,10 @@ export type Dossier = {
   registryStatus: string | null;
   presentation: string;
   avatarPath: string | null;
+  /** L'image de la fiche est un logo, montré en entier (ADR 0355). */
+  imageLogo: boolean;
+  /** Contrôle au registre jamais abouti : MENAO le relance tout seul (ADR 0354). */
+  registryPending: boolean;
   /** Fiche proposée par Google (ADR 0144), cochée par défaut. */
   indexable: boolean;
   itemsLeft: number;
@@ -60,7 +65,7 @@ export async function loadDossier(): Promise<Dossier | null> {
   const { data: artisan } = await supabase
     .from("artisans")
     .select(
-      "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, nom_commercial, forme_juridique_code, adresse_commune, date_creation_entreprise, experience_years, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled, decennale_non_soumis, indexable, registre_statut",
+      "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, nom_commercial, forme_juridique_code, adresse_commune, date_creation_entreprise, experience_years, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled, decennale_non_soumis, indexable, registre_statut, image_logo",
     )
     .eq("id", await myArtisanKey())
     .maybeSingle();
@@ -173,11 +178,35 @@ export async function loadDossier(): Promise<Dossier | null> {
       Number(parisToday().slice(0, 4)),
     ),
     avatarPath,
+    imageLogo: artisan.image_logo,
+    registryPending: registryCheckPending({
+      status: artisan.status,
+      sireneActive: artisan.sirene_active,
+      registryStatus: artisan.registre_statut,
+      hasKbis: rows.some((d) => d.type === "kbis"),
+    }),
     indexable: artisan.indexable,
     itemsLeft: dossierItemsLeft(snapshot),
     canSubmit: canSubmitOnboarding(snapshot),
     progress: onboardingProgress(snapshot),
   };
+}
+
+/** Une relance du registre au plus par quart d'heure : l'annuaire de l'État est fragile. */
+const REGISTRY_PAUSE_MS = 15 * 60 * 1000;
+let registryRetriedAt = 0;
+
+/**
+ * Relance du seul contrôle au registre (ADR 0354), comme sur le site : plusieurs essais patients
+ * côté serveur, sans refaire la vérification du SIRET. Vrai si une relance vient d'être faite.
+ */
+export async function retryRegistry(): Promise<boolean> {
+  if (Date.now() - registryRetriedAt < REGISTRY_PAUSE_MS) return false;
+  registryRetriedAt = Date.now();
+  await supabase.functions
+    .invoke("sirene-check", { method: "POST", body: { registre: true } })
+    .catch(() => null);
+  return true;
 }
 
 /** Envoi du dossier en vérification (la base refait les contrôles). Message d'erreur, ou null. */
