@@ -98,10 +98,17 @@ export function planFeatureValue(
 }
 
 export type PlanContents = {
-  /** Ce que la formule comprend, par catégorie, dans l'ordre du comparatif. */
-  groups: { title: string; features: { label: string; value: string | null }[] }[];
+  /**
+   * Ce que la formule comprend, par catégorie, dans l'ordre du comparatif. `plus` : la ligne
+   * manque à Base ou y est moindre (repère « En plus », lot 71, ADR 0369) ; jamais pour Base.
+   */
+  groups: { title: string; features: { label: string; value: string | null; plus: boolean }[] }[];
   /** Ce qu'elle ne comprend pas. */
   excluded: string[];
+  /** Nombre de lignes comprises. */
+  included: number;
+  /** Nombre de lignes « en plus » de Base. */
+  added: number;
 };
 
 /**
@@ -111,16 +118,44 @@ export type PlanContents = {
 export function planContents(rows: readonly PlanContentRow[], plan: PlanCode): PlanContents {
   const groups: PlanContents["groups"] = [];
   const excluded: string[] = [];
+  let added = 0;
   for (const row of rows) {
     const { included, value } = planFeatureValue(row.valeurs, plan);
     if (!included) {
       excluded.push(row.libelle);
       continue;
     }
+    const base = planFeatureValue(row.valeurs, "base");
+    const plus = plan !== "base" && (!base.included || base.value !== value);
+    if (plus) added += 1;
     const group = groups.find((g) => g.title === row.categorie);
-    const feature = { label: row.libelle, value };
+    const feature = { label: row.libelle, value, plus };
     if (group) group.features.push(feature);
     else groups.push({ title: row.categorie, features: [feature] });
   }
-  return { groups, excluded };
+  const included = groups.reduce((n, g) => n + g.features.length, 0);
+  return { groups, excluded, included, added };
+}
+
+/** Cartes de la bande « Ce que votre formule fait pour vous » (lot 71, ADR 0369). */
+export type PlanHighlightKey =
+  | "secretary"
+  | "requests"
+  | "quote"
+  | "quotes"
+  | "payments"
+  | "money"
+  | "margin"
+  | "tenders"
+  | "team";
+
+/**
+ * Cartes mises en avant selon la formule, dans l'ordre d'affichage. Chacune ne parle que de ce que
+ * la formule comprend : l'application montre ce que l'artisan a, jamais ce qu'il pourrait acheter
+ * (CLAUDE.md règle 10).
+ */
+export function planHighlights(plan: PlanCode): readonly PlanHighlightKey[] {
+  if (plan === "base") return ["requests", "quotes", "payments"];
+  if (plan === "premium") return ["secretary", "requests", "quote", "money", "margin", "team"];
+  return ["secretary", "requests", "tenders", "quote", "money", "team"];
 }
