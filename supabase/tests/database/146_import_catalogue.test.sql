@@ -12,6 +12,11 @@ insert into auth.users (id, email, is_anonymous, email_confirmed_at, raw_app_met
 insert into public.artisans (id, user_id, status, raison_sociale, zone_mode) values
   ('e1461000-0000-4000-8000-000000000001', 'e1460000-0000-4000-8000-000000000001', 'valide', 'PLATRERIE 146', 'communes'),
   ('e1461000-0000-4000-8000-000000000002', 'e1460000-0000-4000-8000-000000000002', 'valide', 'AUTRE 146', 'communes');
+-- Formule Premium en cours : la fonction lui est réservée (ADR 0363).
+insert into public.subscriptions (artisan_id, plan_code, stripe_customer_id, stripe_subscription_id, status, trial_end)
+select ('e1461000-0000-4000-8000-00000000000' || n)::uuid, 'premium', 'cus_l146_' || n, 'sub_l146_' || n,
+  'trialing', now() + interval '30 days'
+from generate_series(1, 2) n;
 -- Déjà dans sa bibliothèque : une cloison au m² (prix 30 €) et une fourniture.
 insert into public.artisan_works (artisan_id, designation, unit, manual_price_cents, source) values
   ('e1461000-0000-4000-8000-000000000001', 'Cloison placo 72/48', 'm2', 3000, 'manuel');

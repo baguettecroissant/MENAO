@@ -1,4 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { SEED_ARTISANS, setArtisanPlan } from "./plan";
+
+// Hausse des prix : fonction des formules Premium et Entreprise (ADR 0363). L'artisan du seed, en
+// formule Base, passe en Premium le temps du test.
+test.beforeAll(() => setArtisanPlan(SEED_ARTISANS.plombierNice, "premium"));
+test.afterAll(() => setArtisanPlan(SEED_ARTISANS.plombierNice, "base"));
 
 // Augmenter ses prix en un geste (F-149, ADR 0312) : le plombier de Nice du seed augmente ses
 // ouvrages à prix fixé de 5 % aux 10 centimes, vérifie le nouveau prix, puis annule la hausse

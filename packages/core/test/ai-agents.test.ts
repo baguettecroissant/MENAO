@@ -12,6 +12,8 @@ describe("agents IA des formules (ADR 0231)", () => {
       rappels: "sms",
       lignes: 1,
       recharges: true,
+      import_catalogue: true,
+      prix_a_jour: true,
     },
     mois: "2026-11-01",
     secondes_incluses: 18000,
@@ -34,7 +36,13 @@ describe("agents IA des formules (ADR 0231)", () => {
       topUps: true,
       // Appels d'offres : formule Entreprise seulement (ADR 0287).
       tenders: false,
+      // Import de catalogue et prix à jour : Premium et Entreprise (ADR 0363).
+      catalogImport: true,
+      priceUpdates: true,
     });
+    // Formule Base, ou réponse sans ces droits : rien n'est accordé par défaut.
+    expect(parseAiAgents({ agents: {} }).agents.catalogImport).toBe(false);
+    expect(parseAiAgents({ agents: {} }).agents.priceUpdates).toBe(false);
     expect(parseAiAgents({ agents: { appels_offres: true } }).agents.tenders).toBe(true);
     expect(state.calls).toEqual([
       { agent: "secretaire", seconds: 125, at: "2026-11-06T10:00:00+00:00" },

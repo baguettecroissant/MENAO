@@ -26,6 +26,10 @@ export type AiAgentsRights = {
   topUps: boolean;
   /** Appels d'offres et DPGF (ADR 0287) : formule Entreprise. */
   tenders: boolean;
+  /** Import de catalogue dans la bibliothèque (ADR 0363) : Premium et Entreprise. */
+  catalogImport: boolean;
+  /** Prix à jour d'après les factures et hausse des prix (ADR 0363) : Premium et Entreprise. */
+  priceUpdates: boolean;
 };
 
 export type AiAgentsCall = { agent: string; seconds: number; at: string };
@@ -72,6 +76,8 @@ export function parseAiAgents(raw: unknown): AiAgentsState {
       lines: int(a.lignes),
       topUps: bool(a.recharges),
       tenders: bool(a.appels_offres),
+      catalogImport: bool(a.import_catalogue),
+      priceUpdates: bool(a.prix_a_jour),
     },
     month: typeof r.mois === "string" ? r.mois : null,
     includedSeconds: int(r.secondes_incluses),
