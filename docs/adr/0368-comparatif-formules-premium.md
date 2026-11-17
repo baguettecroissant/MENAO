@@ -31,3 +31,9 @@ ressortir ce que Premium (500 € HT / mois, formule recommandée) apporte de pl
 - L'écran « Ma formule » de l'application et l'assistant des pages Pro lisent les nouvelles
   rubriques sans changement de code.
 - Aucun chiffre inventé : tous les nombres affichés viennent de la base.
+
+## Mise à jour du 17/11/2026
+
+Sur ordinateur, le mode « Ce qui change » et la ligne de pastilles « Incluses dans toutes les
+formules » sont retirés : la colonne Premium traversait les pastilles. Le tableau montre toutes les
+lignes par rubrique. Le téléphone garde ses onglets et son bloc commun.

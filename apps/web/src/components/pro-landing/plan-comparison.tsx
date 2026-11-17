@@ -75,7 +75,6 @@ export function PlanComparisonTable({
   comparison: PlanComparison;
   facts: PlanFacts;
 }) {
-  const [showAll, setShowAll] = useState(false);
   const split = splitPlanComparison(comparison);
   const recIndex = plans.findIndex((plan) => plan.recommandee);
   const rec = recIndex >= 0 ? plans[recIndex] : undefined;
@@ -104,38 +103,13 @@ export function PlanComparisonTable({
 
       {/* Ordinateur : le tableau complet. */}
       <div className="hidden flex-col gap-6 lg:flex">
-        <div className="flex items-center justify-between gap-4">
-          <h3 className="text-[1.75rem] font-bold tracking-tight">{c.detailTitle}</h3>
-          <div
-            role="group"
-            aria-label={c.rowsLabel}
-            className="inline-flex gap-1 rounded-pill bg-[#ece9df] p-1"
-          >
-            {[false, true].map((all) => (
-              <button
-                key={String(all)}
-                type="button"
-                aria-pressed={showAll === all}
-                onClick={() => setShowAll(all)}
-                className={`min-h-11 rounded-pill px-4 text-sm transition-colors ${
-                  showAll === all
-                    ? "bg-surface font-semibold text-foreground shadow-card"
-                    : "font-medium text-label hover:text-foreground"
-                }`}
-              >
-                {all ? c.showAll(split.total) : c.showDiff(diffCount)}
-              </button>
-            ))}
-          </div>
-        </div>
+        <h3 className="text-[1.75rem] font-bold tracking-tight">{c.detailTitle}</h3>
         <DesktopTable
           plans={plans}
           recIndex={recIndex}
-          groups={showAll ? comparison : split.differences}
-          common={showAll ? [] : split.common}
+          groups={comparison}
           diffCount={diffCount}
           commonCount={split.common.length}
-          onShowAll={() => setShowAll(true)}
         />
       </div>
 
@@ -322,23 +296,22 @@ function PlanButton({ plan, strong }: { plan: Plan; strong: boolean }) {
   );
 }
 
-/** Tableau pour ordinateur, colonne recommandée surlignée de haut en bas (ADR 0368). */
+/**
+ * Tableau pour ordinateur, colonne recommandée surlignée de haut en bas (ADR 0368) : toutes les
+ * lignes, par rubrique (le mode « Ce qui change » et ses pastilles ont été retirés).
+ */
 function DesktopTable({
   plans,
   recIndex,
   groups,
-  common,
   diffCount,
   commonCount,
-  onShowAll,
 }: {
   plans: Plan[];
   recIndex: number;
   groups: PlanComparison;
-  common: { libelle: string; detail: string | null }[];
   diffCount: number;
   commonCount: number;
-  onShowAll: () => void;
 }) {
   // Colonne recommandée : fond bleuté et bordure continue, coins arrondis en haut et en bas.
   const col = (i: number, edge?: "top" | "bottom") =>
@@ -479,54 +452,6 @@ function DesktopTable({
           );
         })}
         <tbody>
-          {common.length > 0 && (
-            <tr>
-              <th
-                scope="row"
-                className="border-b border-border px-7 py-5.5 text-left align-top font-normal"
-              >
-                <span className="flex items-center gap-2.5">
-                  <span className="inline-flex size-8 items-center justify-center rounded-[0.625rem] bg-success-soft text-success">
-                    <ShieldCheck aria-hidden="true" className="size-[1.0625rem]" />
-                  </span>
-                  <b className="text-lg font-bold tracking-tight">{c.commonTitle}</b>
-                </span>
-                <span className="mt-3 block text-sm text-label">{c.commonLead(common.length)}</span>
-                <button
-                  type="button"
-                  onClick={onShowAll}
-                  className="mt-1 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary-strong hover:underline"
-                >
-                  {c.commonShow}
-                  <ChevronDown aria-hidden="true" className="size-4" strokeWidth={2.2} />
-                </button>
-              </th>
-              <td colSpan={plans.length} className="relative border-b border-border p-0 align-top">
-                {/* La colonne recommandée continue sous les pastilles. */}
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0 grid"
-                  style={gridOf(plans, recIndex)}
-                >
-                  {plans.map((plan, i) => (
-                    <span key={plan.code} className={col(i)} />
-                  ))}
-                </div>
-                <ul className="relative flex flex-wrap gap-2 py-5.5 pr-7 pl-3">
-                  {common.map((item) => (
-                    <li
-                      key={item.libelle}
-                      title={item.detail ?? undefined}
-                      className="inline-flex items-center gap-1.5 rounded-pill border border-border bg-surface py-1.5 pr-3 pl-2 text-[0.8125rem]"
-                    >
-                      <Check aria-hidden="true" className="size-3.5 text-success" strokeWidth={3} />
-                      {item.libelle}
-                    </li>
-                  ))}
-                </ul>
-              </td>
-            </tr>
-          )}
           <tr>
             <td className="px-7 py-6.5 text-sm text-label">{c.footer}</td>
             {plans.map((plan, i) => (
@@ -539,13 +464,6 @@ function DesktopTable({
       </table>
     </div>
   );
-}
-
-/** Mêmes largeurs que les colonnes du tableau, pour prolonger la colonne recommandée. */
-function gridOf(plans: Plan[], recIndex: number) {
-  return {
-    gridTemplateColumns: plans.map((_, i) => (i === recIndex ? "17rem" : "14.5rem")).join(" "),
-  };
 }
 
 /** Téléphone : onglets par formule (la recommandée d'office), ce qui change, puis le commun. */
