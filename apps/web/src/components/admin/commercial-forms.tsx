@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { COMMERCIAL_SECTORS, formatZoneCodes, parseZoneCodes, sectorOfZone } from "@menao/core";
+import { useActionState, useRef, useState } from "react";
 import { Alert, Button, Field, FieldError, Hint, SelectField, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import {
@@ -207,8 +208,10 @@ export function CommercialZoneForm({
   zone: string;
 }) {
   const [state, action, pending] = useActionState(setCommercialZone, initialFormState);
+  const [value, setValue] = useState(state.values?.zone ?? zone);
   const d = tr.detail;
   const error = state.fieldErrors?.zone?.[0];
+  const current = sectorOfZone(parseZoneCodes(zone).codes);
   return (
     <form action={action} noValidate className="flex flex-col gap-3">
       <input type="hidden" name="commercial" value={commercialId} />
@@ -222,7 +225,8 @@ export function CommercialZoneForm({
           id="zone"
           name="zone"
           rows={3}
-          defaultValue={state.values?.zone ?? zone}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
           inputMode="numeric"
           autoComplete="off"
           aria-invalid={error ? true : undefined}
@@ -231,6 +235,23 @@ export function CommercialZoneForm({
         />
         {error && <FieldError id="zone-erreur">{error}</FieldError>}
         <Hint id="zone-aide">{d.zoneHint}</Hint>
+      </div>
+      {current && <p className="text-sm">{d.sectorCurrent(current.number, current.name)}</p>}
+      <div role="group" aria-label={d.sectorsLabel} className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium">{d.sectorsLabel}</span>
+        <div className="flex flex-wrap gap-2">
+          {COMMERCIAL_SECTORS.map((sector) => (
+            <button
+              key={sector.number}
+              type="button"
+              title={sector.communes}
+              onClick={() => setValue(formatZoneCodes(sector.postalCodes))}
+              className="min-h-9 rounded-pill border border-border bg-surface px-3.5 text-sm font-medium hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+            >
+              {d.sector(sector.number, sector.name)}
+            </button>
+          ))}
+        </div>
       </div>
       <Button
         type="submit"

@@ -1,3 +1,9 @@
+import {
+  COMMERCIAL_MONTHLY_TARGET,
+  COMMERCIAL_TRADE_TARGETS,
+  formatZoneCodes,
+  sectorOfZone,
+} from "@menao/core";
 import type { Metadata } from "next";
 import { z } from "zod";
 import { EmptyState } from "@/components/empty-state";
@@ -197,6 +203,7 @@ export default async function CommercialResultsPage() {
                 </section>
               </div>
               <div className="flex flex-col gap-6">
+                <SectorCard zone={space.zone} />
                 {target !== null && (
                   <Card className="flex flex-col gap-3">
                     <p className="text-[0.9375rem] font-medium">
@@ -302,5 +309,56 @@ export default async function CommercialResultsPage() {
         )}
       </div>
     </main>
+  );
+}
+
+/** Mon secteur et l'objectif par métier (ADR 0367). */
+function SectorCard({ zone }: { zone: readonly string[] }) {
+  const sector = sectorOfZone(zone);
+  return (
+    <Card className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-lg">{t.sector.title}</h2>
+        <p className="text-[0.9375rem] font-semibold">
+          {sector
+            ? t.sector.named(sector.number, sector.name)
+            : zone.length
+              ? t.sector.custom(formatZoneCodes(zone))
+              : t.sector.none}
+        </p>
+        {sector && <p className="text-sm text-muted-foreground">{sector.communes}</p>}
+        <p className="text-sm text-muted-foreground">{t.sector.balance}</p>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <h3 className="text-[0.9375rem] font-semibold">{t.trades.title}</h3>
+        <p className="text-[0.8125rem] text-muted-foreground">{t.trades.lead}</p>
+        <table className="w-full text-sm">
+          <thead className="sr-only">
+            <tr>
+              <th scope="col">{t.trades.trade}</th>
+              <th scope="col">{t.trades.perMonth}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {COMMERCIAL_TRADE_TARGETS.map((row) => (
+              <tr key={row.trade}>
+                <th scope="row" className="py-1.5 pr-2 text-left font-normal">
+                  {row.trade}
+                </th>
+                <td className="py-1.5 text-right font-semibold tabular-nums">{row.perMonth}</td>
+              </tr>
+            ))}
+            <tr>
+              <th scope="row" className="py-1.5 pr-2 text-left font-semibold">
+                {t.trades.total}
+              </th>
+              <td className="py-1.5 text-right font-bold tabular-nums">
+                {COMMERCIAL_MONTHLY_TARGET}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 }
