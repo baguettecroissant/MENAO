@@ -79,6 +79,7 @@ export function ImageCard({
                 userId={userId}
                 accept="image/png,image/jpeg,image/webp"
                 fileLabel={i.logoFile}
+                dropLabel={i.logoDrop}
                 hint={i.logoFormats}
                 submitLabel={imageUrl && isLogo ? i.logoChange : i.logoSend}
                 resizeTo={600}
@@ -107,6 +108,7 @@ export function ImageCard({
               <UploadForm
                 purpose="avatar"
                 userId={userId}
+                dropLabel={i.photoDrop}
                 accept="image/jpeg,image/png"
                 hint={fr.pro.onboarding.upload.fileHintPhoto}
                 submitLabel={imageUrl && !isLogo ? t.avatarChange : t.avatarSend}

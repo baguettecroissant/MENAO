@@ -10,7 +10,7 @@ import {
   type ReadableDocumentType,
 } from "@menao/core";
 import { documentMetadataSchema, type UploadPurpose } from "@menao/validation";
-import { Camera, FileCheck, FileUp } from "lucide-react";
+import { Camera, FileCheck, FileUp, ImageUp } from "lucide-react";
 import { useActionState, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { z } from "zod";
 import { AvatarFramer } from "@/components/avatar-framer";
@@ -60,6 +60,11 @@ type UploadFormProps = {
    * pré-remplis ; l'artisan les vérifie avant l'envoi.
    */
   readAs?: ReadableDocumentType;
+  /**
+   * Image (logo, photo) : zone où glisser le fichier, avec son aperçu, à la place du champ fichier.
+   * Le texte de la zone, par exemple « Glissez votre logo ici ».
+   */
+  dropLabel?: string;
 };
 
 /**
@@ -81,6 +86,7 @@ export function UploadForm({
   formId = purpose,
   camera = false,
   readAs,
+  dropLabel,
 }: UploadFormProps) {
   const form = useRef<HTMLFormElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -89,6 +95,22 @@ export function UploadForm({
   // Glisser-déposer (maquette du lot 61) : fichier survolant la zone, ou type refusé.
   const [dragging, setDragging] = useState(false);
   const [dropError, setDropError] = useState(false);
+  // Aperçu local de l'image choisie (zone de dépôt d'une image).
+  const [preview, setPreview] = useState<string | null>(null);
+  useEffect(
+    () => () => {
+      if (preview) URL.revokeObjectURL(preview);
+    },
+    [preview],
+  );
+
+  /** Image choisie ou glissée : son aperçu, puis son cadrage s'il s'agit d'une photo de profil. */
+  function pickImage(file: File) {
+    setDropError(false);
+    setChosen(file.name);
+    setPreview(square ? null : URL.createObjectURL(file));
+    if (square) setFraming(file);
+  }
 
   /** Fichier glissé : posé dans le champ « Choisir un fichier », puis lu comme un fichier choisi. */
   function drop(files: FileList) {
@@ -102,6 +124,7 @@ export function UploadForm({
     transfer.items.add(file);
     fileInput.current.files = transfer.files;
     if (cameraInput.current) cameraInput.current.value = "";
+    if (dropLabel) return pickImage(file);
     void read(file);
   }
   // Document déposé pour sa lecture, réutilisé à l'envoi s'il n'a pas été remplacé.
@@ -225,6 +248,11 @@ export function UploadForm({
       framed.current = null;
       setFramedUrl(null);
     }
+    // Le champ fichier est vidé après l'envoi : l'aperçu de la zone de dépôt aussi.
+    if (dropLabel) {
+      setChosen(null);
+      setPreview(null);
+    }
     setReading(null);
     setReadValues({});
     return result;
@@ -308,6 +336,63 @@ export function UploadForm({
                 <FileCheck aria-hidden="true" className="size-4" />
               </span>
               <span className="min-w-0 truncate">{fr.pro.onboarding.documents.chosen(chosen)}</span>
+            </p>
+          )}
+        </div>
+      ) : dropLabel ? (
+        <div
+          onDragOver={(event) => {
+            event.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(event) => {
+            event.preventDefault();
+            drop(event.dataTransfer.files);
+          }}
+          className={`flex flex-col items-center gap-3 rounded-card border-2 border-dashed p-4 text-center transition-colors sm:p-5 ${
+            dragging ? "border-primary bg-primary-softer" : "border-border-strong bg-background"
+          }`}
+        >
+          {preview ? (
+            // eslint-disable-next-line @next/next/no-img-element -- aperçu local de l'image choisie
+            <img
+              src={preview}
+              alt={t.previewAlt}
+              className="h-auto max-h-28 w-auto max-w-full rounded-input border border-border bg-surface object-contain p-2"
+            />
+          ) : (
+            <span className="hidden size-11 items-center justify-center rounded-input bg-primary-soft text-primary-strong sm:flex">
+              <ImageUp aria-hidden="true" className="size-5" />
+            </span>
+          )}
+          <p className="hidden flex-col gap-1 sm:flex">
+            <span className="font-semibold">{dropLabel}</span>
+            <span className="text-sm text-muted-foreground">
+              {fr.pro.onboarding.documents.dropOr}
+            </span>
+          </p>
+          <div className="w-full sm:w-auto sm:min-w-56">
+            <CameraButton
+              id={`${formId}-file`}
+              inputRef={fileInput}
+              label={chosen ? t.chooseOther : fr.pro.onboarding.documents.chooseFile}
+              ariaLabel={fileLabel}
+              icon={<FileUp aria-hidden="true" className="size-5" />}
+              accept={accept}
+              describedBy={[`${formId}-file-hint`, fileErrorId].filter(Boolean).join(" ")}
+              invalid={Boolean(errors.file)}
+              onPick={pickImage}
+            />
+          </div>
+          {dropError && (
+            <p className="text-sm text-danger" role="alert">
+              {t.status.invalid_type}
+            </p>
+          )}
+          {chosen && (
+            <p className="max-w-full truncate text-sm font-medium" aria-live="polite">
+              {fr.pro.onboarding.documents.chosen(chosen)}
             </p>
           )}
         </div>
@@ -442,6 +527,7 @@ function CameraButton({
   id,
   inputRef,
   label,
+  ariaLabel = label,
   icon,
   accept,
   capture = false,
@@ -453,6 +539,8 @@ function CameraButton({
   id: string;
   inputRef: RefObject<HTMLInputElement | null>;
   label: string;
+  /** Nom du champ pour les lecteurs d'écran, s'il diffère du texte du bouton. */
+  ariaLabel?: string;
   icon: ReactNode;
   accept: string;
   capture?: boolean;
@@ -470,7 +558,7 @@ function CameraButton({
         type="file"
         accept={accept}
         capture={capture ? "environment" : undefined}
-        aria-label={label}
+        aria-label={ariaLabel}
         aria-invalid={invalid ? true : undefined}
         aria-describedby={describedBy}
         onChange={(e) => {
