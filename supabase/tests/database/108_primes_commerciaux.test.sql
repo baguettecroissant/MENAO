@@ -336,6 +336,7 @@ select is((select count(*)::int from public.commercial_prospects('c108', 'zone')
 reset role;
 
 -- ---------- « Mes résultats » ----------
+-- Primes Premium et Entreprise non réglées : celle de Base (ADR 0366).
 select pg_temp.connecter('c1080000-0000-4000-8000-000000000002', 'commercial');
 set local role authenticated;
 select is(
@@ -343,7 +344,9 @@ select is(
   '{"signups": 5, "validated": 3, "subscribed": 2, "signups_month": 4, "validated_month": 3, "subscribed_month": 2,
     "pipeline": {"followed": 2, "a_contacter": 1, "rdv_pris": 1, "demo_faite": 0, "pas_interesse": 0},
     "bonuses": {"pending": 1, "validated_cents": 1, "paid_cents": 1},
-    "prime_validation_centimes": 1, "prime_abonnement_centimes": 2, "objectif_valides_mois": 3}'::jsonb,
+    "prime_validation_centimes": 1, "prime_abonnement_centimes": 2,
+    "prime_abonnement_premium_centimes": 2, "prime_abonnement_entreprise_centimes": 2,
+    "objectif_valides_mois": 3}'::jsonb,
   'résultats : totaux, mois en cours, prospects, primes et réglages');
 select results_eq(
   $$ select e ->> 'month', (e ->> 'signups')::int, (e ->> 'validated')::int, (e ->> 'subscribed')::int

@@ -107,7 +107,7 @@ export const fr = {
     welcome: {
       eyebrow: "Bienvenue dans la démo",
       title: "Voici ce qu'un conseiller MENAO a en main, une journée de novembre.",
-      text: "Sarah démarche les artisans du bâtiment des Alpes-Maritimes. Chaque artisan inscrit avec son code est rattaché à son nom : 110 € quand son dossier est validé, 30 € de plus quand il s'abonne.",
+      text: "Sarah démarche les artisans du bâtiment des Alpes-Maritimes. Chaque artisan inscrit avec son code est rattaché à son nom : 110 € quand son dossier est validé, puis 30, 100 ou 200 € selon l'offre qu'il choisit quand il devient abonné payant.",
       start: "Commencer par ma journée",
       results: "Voir mes résultats",
       figures: [
@@ -678,6 +678,13 @@ export const fr = {
         ]
           .filter(Boolean)
           .join(" · "),
+      // Barème par formule (ADR 0366) : prime d'abonnement selon l'offre choisie par l'artisan.
+      scale: {
+        validation: (amount: string) => `${amount} par artisan validé, réglé en fin de mois.`,
+        subscription:
+          "Puis, quand il devient abonné payant après ses 2 mois offerts, selon son offre :",
+        plans: { base: "Offre 150 €", premium: "Offre 500 €", entreprise: "Offre 1 500 €" },
+      },
       pending: (n: number) =>
         n === 0
           ? "Aucune prime en attente"
@@ -9866,8 +9873,8 @@ export const fr = {
       saved: "Réglages enregistrés.",
       summaries: {
         leads: (n: number) => `${n} demande${n > 1 ? "s" : ""} par mois`,
-        commercials: (validation: string, subscription: string, days: number) =>
-          `${validation} à la validation · ${subscription} à l'abonnement · après ${days} jours`,
+        commercials: (validation: string, subscriptions: [string, string, string], days: number) =>
+          `${validation} à la validation · ${subscriptions.join(" / ")} à l'abonnement · après ${days} jours`,
         partners: (request: string, subscriber: string, days: number) =>
           `${request} par demande qualifiée · ${subscriber} par abonné · après ${days} jours`,
         notSet: "montants non fixés",
@@ -10877,7 +10884,10 @@ export const fr = {
         title: "Primes des commerciaux",
         lead: "Montants décidés par les associés. Vides : aucune prime n'est calculée. Une prime est vérifiée après le délai (dossier toujours validé, abonnement toujours actif) avant d'être à payer.",
         validation: "Prime par artisan validé (€)",
-        subscription: "Prime par artisan abonné (€)",
+        subscription: "Prime d'abonnement, offre 150 € (€)",
+        subscriptionPremium: "Prime d'abonnement, offre 500 € (€)",
+        subscriptionEnterprise: "Prime d'abonnement, offre 1 500 € (€)",
+        subscriptionHint: "Vide : même prime que l'offre 150 €.",
         delay: "Délai de vérification (jours)",
         objective: "Objectif mensuel d'artisans validés par commercial",
         objectiveHint: "Facultatif : affiché au commercial dans « Mes résultats ».",
