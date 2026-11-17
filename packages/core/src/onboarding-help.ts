@@ -243,17 +243,17 @@ export type HelpVideoId =
   | "v11-stripe";
 
 export const HELP_VIDEOS: Record<HelpVideoId, { title: string; seconds: number }> = {
-  "v01-inscription": { title: "Votre inscription en quelques étapes", seconds: 27 },
-  "v02-entreprise": { title: "Retrouver votre entreprise avec le SIRET", seconds: 16 },
-  "v03-metiers-zone": { title: "Choisir vos métiers et votre zone", seconds: 17 },
+  "v01-inscription": { title: "Votre inscription en quelques étapes", seconds: 36 },
+  "v02-entreprise": { title: "Retrouver votre entreprise avec le SIRET", seconds: 18 },
+  "v03-metiers-zone": { title: "Choisir vos métiers et votre zone", seconds: 18 },
   "v04-charte": { title: "Signer la charte qualité", seconds: 12 },
-  "v05-photo": { title: "Bien photographier un document", seconds: 17 },
+  "v05-photo": { title: "Bien photographier un document", seconds: 22 },
   "v06-decennale": { title: "Demander votre attestation décennale", seconds: 29 },
   "v07-rc-pro": { title: "Trouver votre attestation de RC Pro", seconds: 19 },
   "v08-urssaf": { title: "Trouver votre attestation URSSAF", seconds: 39 },
   "v09-identite": { title: "Déposer votre pièce d’identité", seconds: 18 },
-  "v10-profil": { title: "Rédiger votre présentation", seconds: 18 },
-  "v11-stripe": { title: "Le formulaire Stripe, case par case", seconds: 21 },
+  "v10-profil": { title: "Rédiger votre présentation", seconds: 21 },
+  "v11-stripe": { title: "Le formulaire Stripe, case par case", seconds: 27 },
 };
 
 /** Vidéo de chaque pièce dans « Où trouver ce document ? » (pas de vidéo pour le Kbis). */
