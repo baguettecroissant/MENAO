@@ -14,10 +14,12 @@ import { router, type Href } from "expo-router";
 import { CircleHelp, Send, TrendingDown, TrendingUp } from "lucide-react-native";
 import { Fragment, useState, type ReactNode } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { ExampleLock } from "@/components/examples";
 import { CardHeading, FicheButton, FicheTag, type FicheTone } from "@/components/pro/fiche-kit";
 import { ToolSwitch } from "@/components/pro/tools-kit";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
+import { useExamplesActive } from "@/lib/examples";
 import {
   formatCents,
   formatCentsWhole,
@@ -56,6 +58,7 @@ export function MoneyOverviewScreen({
   const header = <TabHeader title={fr.tabs.money}>{switcher}</TabHeader>;
   const [auto, setAuto] = useState(overview?.autoReminders ?? false);
   const [savingAuto, setSavingAuto] = useState(false);
+  const examples = useExamplesActive();
 
   /** « Relancer » : relancer le client ou ouvrir le chantier (ADR 0238), 3 jours entre deux relances. */
   function actions(item: OpenItem) {
@@ -162,6 +165,7 @@ export function MoneyOverviewScreen({
               now={now}
               auto={auto}
               onRemind={() => actions(item)}
+              locked={examples}
             />
           ))
         )}
@@ -172,7 +176,13 @@ export function MoneyOverviewScreen({
           <View style={styles.flex}>
             <CardHeading title={t.autoTitle} size={17} />
           </View>
-          <ToolSwitch label={t.autoLabel} value={auto} onChange={(next) => void toggleAuto(next)} />
+          <ExampleLock locked={examples}>
+            <ToolSwitch
+              label={t.autoLabel}
+              value={auto}
+              onChange={(next) => void toggleAuto(next)}
+            />
+          </ExampleLock>
         </View>
         <Text style={styles.text}>{t.autoText}</Text>
         <View style={styles.autoSteps}>
@@ -279,11 +289,14 @@ function OpenRow({
   now,
   auto,
   onRemind,
+  locked,
 }: {
   item: OpenItem;
   now: Date;
   auto: boolean;
   onRemind: () => void;
+  /** Mode exemples : « Relancer » visible mais inactif. */
+  locked: boolean;
 }) {
   const days = daysSince(item.since, now);
   const next = auto && !item.lastReminder ? nextAutoReminder(item.since, now) : null;
@@ -316,7 +329,9 @@ function OpenRow({
       ) : null}
       <View style={styles.remindRow}>
         <ReminderTrack sent={Math.min(item.reminders, MONEY_REMINDER_DAYS.length)} />
-        <FicheButton label={t.remindShort} icon={Send} variant="secondary" onPress={onRemind} />
+        <ExampleLock locked={locked}>
+          <FicheButton label={t.remindShort} icon={Send} variant="secondary" onPress={onRemind} />
+        </ExampleLock>
       </View>
       {info ? <Text style={styles.info}>{info}</Text> : null}
     </View>

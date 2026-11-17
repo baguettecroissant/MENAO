@@ -27,7 +27,9 @@ import { SecretaryTestCall } from "@/components/pro/secretary-test-call";
 import { ProgressBar, SwitchCard, ToolField } from "@/components/pro/tools-kit";
 import { Segmented } from "@/components/segmented";
 import { withTeamPermission } from "@/components/team-gate";
+import { ExampleLock } from "@/components/examples";
 import { fr } from "@/i18n/fr";
+import { useExamplesActive } from "@/lib/examples";
 import { formatDayLabel, formatTime, formatWeekdayDay, parisDateTime } from "@/lib/format";
 import { haptic } from "@/lib/haptics";
 import {
@@ -148,6 +150,7 @@ function Tabs({
 /** Un appel : qui, pourquoi, quand, puis « Appeler », « Agenda » et « Traité ». */
 function CallCard({ call, onChanged }: { call: SecretaryCall; onChanged: () => Promise<void> }) {
   const [busy, setBusy] = useState(false);
+  const examples = useExamplesActive();
   const appointment = call.appointmentAt;
   const done = call.doneAt !== null;
   const Icon = appointment ? CalendarCheck : MessageSquareText;
@@ -205,23 +208,25 @@ function CallCard({ call, onChanged }: { call: SecretaryCall; onChanged: () => P
           </Text>
         </View>
       </View>
-      <View style={styles.actions}>
-        {action(
-          Phone,
-          t.call,
-          () => void Linking.openURL(`tel:${call.callerPhone.replace(/[^\d+]/g, "")}`),
-          true,
-        )}
-        {appointment
-          ? action(CalendarDays, t.agenda, () =>
-              router.push({
-                pathname: "/pro-agenda",
-                params: { semaine: parisDateTime(appointment).date },
-              }),
-            )
-          : null}
-        {action(done ? RotateCcw : Check, done ? t.markTodo : t.markDone, () => void toggle())}
-      </View>
+      <ExampleLock locked={examples}>
+        <View style={styles.actions}>
+          {action(
+            Phone,
+            t.call,
+            () => void Linking.openURL(`tel:${call.callerPhone.replace(/[^\d+]/g, "")}`),
+            true,
+          )}
+          {appointment
+            ? action(CalendarDays, t.agenda, () =>
+                router.push({
+                  pathname: "/pro-agenda",
+                  params: { semaine: parisDateTime(appointment).date },
+                }),
+              )
+            : null}
+          {action(done ? RotateCcw : Check, done ? t.markTodo : t.markDone, () => void toggle())}
+        </View>
+      </ExampleLock>
     </View>
   );
 }
@@ -242,6 +247,7 @@ function Settings({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [calling, setCalling] = useState(false);
+  const examples = useExamplesActive();
   const { gauge } = secretary;
   const total = gauge.includedMinutes + gauge.topUpMinutes;
   const exhausted = gauge.level === "epuise";
@@ -261,7 +267,9 @@ function Settings({
       keyboard
       onRefresh={onSaved}
       footer={
-        <FicheButton label={t.settings.save} tall onPress={() => void save()} loading={saving} />
+        <ExampleLock locked={examples} note>
+          <FicheButton label={t.settings.save} tall onPress={() => void save()} loading={saving} />
+        </ExampleLock>
       }
     >
       <PageHead title={t.title} />
@@ -311,7 +319,7 @@ function Settings({
               label={t.test.start}
               icon={Play}
               variant="dark"
-              disabled={exhausted}
+              disabled={exhausted || examples}
               onPress={() => setCalling(true)}
             />
             <Text style={styles.soft}>{exhausted ? t.test.noMinutes : t.test.hint}</Text>

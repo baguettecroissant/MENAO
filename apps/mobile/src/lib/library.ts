@@ -1,5 +1,6 @@
 import {
   DEFAULT_LIBRARY_SETTINGS,
+  exampleLibrary,
   isExampleId,
   type LibraryQuoteLine,
   type LibrarySettings,
@@ -11,6 +12,7 @@ import {
   workQuoteLines,
 } from "@menao/core";
 import { fr } from "@/i18n/fr";
+import { examplesActive } from "./examples";
 import { supabase } from "./supabase";
 import { myArtisanKey } from "./team";
 
@@ -60,6 +62,7 @@ const plain = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").to
 export async function loadLibrary({
   seed = false,
 }: { seed?: boolean } = {}): Promise<AppLibrary | null> {
+  if (examplesActive()) return exampleAppLibrary();
   const { data: seeded } = seed ? await supabase.rpc("artisan_seed_library") : { data: null };
   const [settingsRes, suppliesRes, worksRes, componentsRes] = await Promise.all([
     supabase
@@ -180,6 +183,74 @@ export async function loadLibrary({
     works,
     trades: trades.filter((tr) => codes.has(tr.code)),
     publicPricesOn: works.some((w) => w.range) ? (publicDates.sort().at(-1) ?? null) : null,
+  };
+}
+
+/**
+ * Bibliothèque d'exemple (ADR 0364) : les ouvrages fictifs du site, chiffrés par @menao/core.
+ * Rien n'est lu ni écrit en base.
+ */
+function exampleAppLibrary(): AppLibrary {
+  const example = exampleLibrary();
+  const supplies = new Map<string, LibrarySupply>(
+    example.supplies.map((x) => [
+      x.id,
+      {
+        id: x.id,
+        purchasePriceCents: x.purchase_price_cents,
+        wasteBp: x.waste_bp,
+        publicRange: null,
+      },
+    ]),
+  );
+  const labels = {
+    supplies: fr.proQuote.library.suppliesSuffix,
+    labor: fr.proQuote.library.laborSuffix,
+  };
+  return {
+    settings: example.settings,
+    onboarded: true,
+    seeded: null,
+    trades: [],
+    publicPricesOn: null,
+    works: example.works.map((w): AppWork => {
+      const parts = example.components.filter((c) => c.work_id === w.id);
+      const pricing = workPricing(
+        w.manual_price_cents,
+        parts.map((c) => ({
+          kind: c.kind,
+          supplyId: c.supply_id,
+          quantityMilli: c.quantity_milli,
+          costCents: c.cost_cents,
+        })),
+        example.settings,
+        supplies,
+      );
+      return {
+        id: w.id,
+        designation: w.designation,
+        unit: w.unit,
+        detailed: w.detailed,
+        composed: parts.length > 0,
+        source: w.source,
+        tradeCode: null,
+        pricing,
+        range: null,
+        lines: workQuoteLines(
+          {
+            id: w.id,
+            designation: w.designation,
+            description: w.description,
+            unit: w.unit,
+            lineType: w.line_type,
+            vatRateBp: w.vat_rate_bp,
+            detailed: w.detailed,
+          },
+          pricing,
+          labels,
+        ),
+      };
+    }),
   };
 }
 

@@ -1,5 +1,6 @@
 import {
   belowMarginAlert,
+  exampleMoneyOverview,
   lineCostCents,
   parseAiAgents,
   parseMoneyOverview,
@@ -26,6 +27,7 @@ import {
 } from "@menao/validation";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { fr } from "@/i18n/fr";
+import { examplesActive } from "./examples";
 import { supabase } from "./supabase";
 import { myArtisanKey } from "./team";
 import { isExampleId } from "@menao/core";
@@ -397,6 +399,8 @@ export async function sendQuote(
 
 /** Suivi de l'artisan connecté ; null si illisible. */
 export async function loadMoneyOverview(): Promise<MoneyOverview | null> {
+  // Mode exemples (ADR 0364) : le suivi fictif du site, sur les chantiers d'exemple.
+  if (examplesActive()) return exampleMoneyOverview();
   const { data, error } = await supabase.rpc("my_money_overview");
   return error ? null : parseMoneyOverview(data);
 }
