@@ -1,6 +1,6 @@
 import { CHANTIER_STEPS } from "@menao/core";
 import { Check, ChevronLeft, type LucideIcon } from "lucide-react-native";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -11,6 +11,7 @@ import {
   StyleSheet,
   Text,
   View,
+  type ScrollViewInstance,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { fr } from "@/i18n/fr";
@@ -468,43 +469,94 @@ export function NextStepCard({
   );
 }
 
-/** Onglets en pilule pleine largeur : actif en bleu nuit, pastille de non-lus facultative. */
+/**
+ * Onglets en pilule pleine largeur : actif en bleu nuit, pastille de non-lus facultative.
+ * `scrollable` (quatre onglets ou plus, « Argent ») : chaque onglet garde la largeur de son texte
+ * et la rangée défile, au lieu de serrer les libellés jusqu'à les couper ; l'onglet actif est
+ * ramené à l'écran.
+ */
 export function PillTabs<V extends string>({
   label,
   options,
   value,
   onChange,
+  scrollable = false,
 }: {
   label: string;
   options: { value: V; label: string; badge?: number }[];
   value: V;
   onChange: (value: V) => void;
+  scrollable?: boolean;
 }) {
+  const scroller = useRef<ScrollViewInstance>(null);
+  const offsets = useRef(new Map<V, number>());
+  const reveal = (key: V) => {
+    const x = offsets.current.get(key);
+    if (x !== undefined) scroller.current?.scrollTo({ x: Math.max(0, x - 24), animated: true });
+  };
+  // L'onglet actif change (ou l'écran s'ouvre) : il est ramené à l'écran une fois mesuré.
+  useEffect(() => {
+    if (!scrollable) return;
+    const timer = setTimeout(() => reveal(value), 80);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `reveal` ne lit que des références
+  }, [scrollable, value]);
+  const tabs = options.map((o) => {
+    const on = o.value === value;
+    return (
+      <Pressable
+        key={o.value}
+        role="tab"
+        aria-selected={on}
+        aria-label={o.badge ? `${o.label}, ${fr.messages.card.unread(o.badge)}` : o.label}
+        onPress={() => {
+          if (!on) haptic.select();
+          onChange(o.value);
+          if (scrollable) reveal(o.value);
+        }}
+        onLayout={
+          scrollable
+            ? (event) => {
+                offsets.current.set(o.value, event.nativeEvent.layout.x);
+                // À l'ouverture : l'onglet actif, s'il est hors de l'écran.
+                if (on) reveal(o.value);
+              }
+            : undefined
+        }
+        style={[styles.tab, scrollable && styles.tabFree, on && styles.tabOn]}
+      >
+        <Text numberOfLines={1} style={[styles.tabText, on && styles.tabTextOn]}>
+          {o.label}
+        </Text>
+        {o.badge ? (
+          <View style={styles.tabBadge}>
+            <Text style={styles.tabBadgeText}>{o.badge > 9 ? "9+" : o.badge}</Text>
+          </View>
+        ) : null}
+      </Pressable>
+    );
+  });
+  if (scrollable) {
+    return (
+      <View style={styles.tabsFrame}>
+        <ScrollView
+          ref={scroller}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          role="tablist"
+          aria-label={label}
+          contentContainerStyle={styles.tabsContent}
+          // Une fois la rangée mesurée : l'onglet actif est ramené à l'écran.
+          onContentSizeChange={() => reveal(value)}
+        >
+          {tabs}
+        </ScrollView>
+      </View>
+    );
+  }
   return (
     <View role="tablist" aria-label={label} style={styles.tabs}>
-      {options.map((o) => {
-        const on = o.value === value;
-        return (
-          <Pressable
-            key={o.value}
-            role="tab"
-            aria-selected={on}
-            aria-label={o.badge ? `${o.label}, ${fr.messages.card.unread(o.badge)}` : o.label}
-            onPress={() => {
-              if (!on) haptic.select();
-              onChange(o.value);
-            }}
-            style={[styles.tab, on && styles.tabOn]}
-          >
-            <Text style={[styles.tabText, on && styles.tabTextOn]}>{o.label}</Text>
-            {o.badge ? (
-              <View style={styles.tabBadge}>
-                <Text style={styles.tabBadgeText}>{o.badge > 9 ? "9+" : o.badge}</Text>
-              </View>
-            ) : null}
-          </Pressable>
-        );
-      })}
+      {tabs}
     </View>
   );
 }
@@ -710,6 +762,17 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
   },
+  // Rangée qui défile : le cadre arrondi reste fixe, les onglets glissent dedans.
+  tabsFrame: {
+    overflow: "hidden",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 24,
+  },
+  tabsContent: { flexGrow: 1, gap: spacing(1), padding: spacing(1) },
+  // Largeur du libellé, jamais rétrécie : c'est la rangée qui défile.
+  tabFree: { flexGrow: 1, flexShrink: 0, flexBasis: "auto", paddingHorizontal: spacing(4) },
   tabOn: { backgroundColor: colors.foreground },
   tabText: { fontFamily: font.medium, fontSize: 15, color: colors.foreground },
   tabTextOn: { fontFamily: font.semibold, color: colors["primary-foreground"] },
