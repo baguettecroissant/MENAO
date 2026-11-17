@@ -3,7 +3,10 @@ import { artisanTodo } from "../src/artisan-todo";
 import { requestsAwaitingAnswer } from "../src/requests";
 import { upcomingAgenda } from "../src/appointment";
 import { clientsAwaitingQuote } from "../src/chantier-state";
+import { workPricing } from "../src/library";
+import { lateOpenCount } from "../src/money-overview";
 import { monthToDateRevenue } from "../src/payment";
+import { secretaryFigures } from "../src/secretary-figures";
 import { profileHubStatuses } from "../src/profile-hub";
 import { parisToday } from "../src/project";
 import { quoteTotals } from "../src/quote";
@@ -19,7 +22,9 @@ import {
   exampleHubFacts,
   exampleInbox,
   exampleInvoices,
+  exampleLibrary,
   exampleMessages,
+  exampleMoneyOverview,
   examplePayments,
   examplePhotoKey,
   exampleProfile,
@@ -28,6 +33,7 @@ import {
   exampleRequest,
   exampleReviews,
   exampleScore,
+  exampleSecretary,
   exampleSentQuote,
   isExampleId,
   spaceExamplesShown,
@@ -209,6 +215,88 @@ describe("exemples de l'espace artisan (ADR 0184)", () => {
     expect(statuses.reviews).toEqual({ code: "toAnswer", n: 1, tone: "danger" });
     expect(exampleProfile("Alex", SUMMER).display_name).toBe("Alex");
     expect(exampleProfile(null, SUMMER).display_name).toBe("Votre nom");
+  });
+
+  it("secrétaire : appels à traiter (dont un urgent), historique, chiffres du mois", () => {
+    const example = exampleSecretary(SUMMER);
+    expect(example.todo.length).toBeGreaterThanOrEqual(3);
+    expect(example.todo.every((m) => m.done_at === null)).toBe(true);
+    expect(example.done.every((m) => m.done_at !== null)).toBe(true);
+    // Un urgent à rappeler, et au moins un rendez-vous pris, à venir.
+    expect(example.todo.filter((m) => m.urgent)).toHaveLength(1);
+    const booked = example.todo.find((m) => m.kind === "rendez_vous");
+    expect(new Date(booked?.appointment_at ?? 0).getTime()).toBeGreaterThan(SUMMER.getTime());
+    const figures = secretaryFigures(example.todo, example.month, SUMMER);
+    expect(figures.toHandle).toBe(example.todo.length);
+    expect(figures.urgent).toBe(1);
+    expect(figures.monthAppointments).toBeGreaterThan(0);
+    // La jauge des minutes : des minutes restantes, sans dépassement.
+    expect(example.gauge.level).toBe("ok");
+    expect(example.gauge.remainingMinutes).toBeLessThan(example.gauge.includedMinutes);
+    // Personnes fictives : numéros en +336000000.
+    for (const m of [...example.todo, ...example.done]) {
+      expect(m.caller_phone).toMatch(/^\+3360000000\d$/);
+    }
+  });
+
+  it("bibliothèque : ouvrages chiffrés avec marge, fournitures dont un prix ancien", () => {
+    const library = exampleLibrary(SUMMER);
+    expect(library.works.length).toBeGreaterThanOrEqual(6);
+    expect(library.supplies.length).toBeGreaterThanOrEqual(6);
+    const supplies = new Map(
+      library.supplies.map((s) => [
+        s.id,
+        {
+          id: s.id,
+          purchasePriceCents: s.purchase_price_cents,
+          wasteBp: s.waste_bp,
+          publicRange: null,
+        },
+      ]),
+    );
+    const ids = new Set(library.works.map((w) => w.id));
+    for (const c of library.components) {
+      expect(ids.has(c.work_id)).toBe(true);
+      if (c.kind === "fourniture") expect(supplies.has(c.supply_id ?? "")).toBe(true);
+    }
+    const priced = library.works.map((w) =>
+      workPricing(
+        w.manual_price_cents,
+        library.components
+          .filter((c) => c.work_id === w.id)
+          .map((c) => ({
+            kind: c.kind,
+            supplyId: c.supply_id,
+            quantityMilli: c.quantity_milli,
+            costCents: c.cost_cents,
+          })),
+        library.settings,
+        supplies,
+      ),
+    );
+    // Chaque ouvrage a un prix ; la plupart ont une marge positive, un seul est à perte.
+    expect(priced.every((p) => p.priceCents !== null && p.priceCents > 0)).toBe(true);
+    expect(priced.filter((p) => (p.marginCents ?? 0) > 0).length).toBeGreaterThanOrEqual(4);
+    expect(priced.filter((p) => (p.marginCents ?? 0) < 0)).toHaveLength(1);
+    // Un prix d'achat de plus de six mois, à vérifier.
+    expect(library.supplies.some((s) => s.price_on !== null && s.price_on < "2026-01-01")).toBe(
+      true,
+    );
+    expect([...ids, ...supplies.keys()].every(isExampleId)).toBe(true);
+  });
+
+  it("suivi : un mois en cours et le précédent, des tranches dues, des retards", () => {
+    const overview = exampleMoneyOverview(SUMMER);
+    expect(overview.included).toBe(true);
+    expect(overview.current.month).toBe("2026-07");
+    expect(overview.previous.month).toBe("2026-06");
+    expect(overview.current.collectedCents).toBeGreaterThan(0);
+    expect(overview.open.length).toBeGreaterThanOrEqual(2);
+    expect(lateOpenCount(overview.open, SUMMER)).toBeGreaterThan(0);
+    // Les tranches renvoient aux chantiers d'exemple.
+    for (const item of [...overview.open, ...overview.withoutInvoice]) {
+      expect(isExampleId(item.chantierId)).toBe(true);
+    }
   });
 
   it("personnes et coordonnées fictives (numéros en +336000000, adresses « de l'Exemple »)", () => {

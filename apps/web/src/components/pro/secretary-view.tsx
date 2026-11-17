@@ -9,6 +9,7 @@ import {
 import type { Route } from "next";
 import Link from "next/link";
 import { EmptyState } from "@/components/empty-state";
+import { ExampleLock } from "@/components/pro/examples";
 import { ListFilters, ListPanel } from "@/components/list-kit";
 import { MoneyFigures } from "@/components/pro/money-figures";
 import type { SecretaryMessage } from "@/components/pro/secretary-message";
@@ -44,6 +45,8 @@ export function SecretaryView({
   todo,
   done,
   month,
+  base = "/pro",
+  example = false,
 }: {
   view: SecretaryViewName;
   name: string;
@@ -62,6 +65,10 @@ export function SecretaryView({
   done: SecretaryMessage[];
   /** Appels du mois (kind, created_at). */
   month: { kind: string; created_at: string }[];
+  /** Racine des liens : `/pro`, ou les pages d'exemples (ADR 0364). */
+  base?: string;
+  /** Exemple : boutons visibles mais inactifs. */
+  example?: boolean;
 }) {
   const toHandle = todo;
   const handled = done;
@@ -119,19 +126,19 @@ export function SecretaryView({
               label={t.filters}
               items={[
                 {
-                  href: "/pro/secretaire",
+                  href: `${base}/secretaire`,
                   label: t.todo,
                   detail: toHandle.length > 0 ? String(toHandle.length) : undefined,
                   tone: toHandle.some((m) => m.urgent) ? "danger" : "primary",
                   active: view === "a-traiter",
                 },
                 {
-                  href: "/pro/secretaire?vue=traites",
+                  href: `${base}/secretaire?vue=traites`,
                   label: t.history,
                   active: view === "traites",
                 },
                 {
-                  href: "/pro/secretaire?vue=reglages",
+                  href: `${base}/secretaire?vue=reglages`,
                   label: t.settings,
                   active: view === "reglages",
                 },
@@ -142,18 +149,22 @@ export function SecretaryView({
                 <section className={sheetCard}>
                   <h2 className="text-lg">{t.tryTitle}</h2>
                   <p className="text-sm text-muted-foreground">{ts.testText}</p>
-                  <SecretaryTestCall />
+                  <ExampleLock locked={example}>
+                    <SecretaryTestCall />
+                  </ExampleLock>
                 </section>
                 <section className={sheetCard}>
                   <h2 className="text-lg">{ts.settingsTitle}</h2>
                   {!hours && <p className="text-sm text-warning">{ts.noHours}</p>}
-                  <SecretarySettingsForm
-                    displayName={settings?.display_name ?? null}
-                    fallbackName={company}
-                    canBook={settings?.can_book ?? true}
-                    visitMinutes={settings?.visit_minutes ?? 60}
-                    instructions={settings?.instructions ?? null}
-                  />
+                  <ExampleLock locked={example} note>
+                    <SecretarySettingsForm
+                      displayName={settings?.display_name ?? null}
+                      fallbackName={company}
+                      canBook={settings?.can_book ?? true}
+                      visitMinutes={settings?.visit_minutes ?? 60}
+                      instructions={settings?.instructions ?? null}
+                    />
+                  </ExampleLock>
                 </section>
               </div>
             ) : rows.length === 0 ? (
@@ -161,12 +172,12 @@ export function SecretaryView({
                 <EmptyState illustration="messages">
                   {view === "traites" ? t.historyEmpty : t.todoEmpty}
                 </EmptyState>
-                {view === "a-traiter" && <SecretaryTestCall />}
+                {view === "a-traiter" && !example && <SecretaryTestCall />}
               </>
             ) : (
               <ListPanel label={view === "traites" ? t.history : t.todo}>
                 {rows.map((m) => (
-                  <CallRow key={m.id} message={m} />
+                  <CallRow key={m.id} message={m} base={base} example={example} />
                 ))}
               </ListPanel>
             )}
@@ -212,7 +223,7 @@ export function SecretaryView({
                       }}
                     />
                   </span>
-                  {topUps && (
+                  {topUps && !example && (
                     <TextLink href="/pro/onboarding/formule" className="self-start text-sm">
                       {t.recharge}
                     </TextLink>
@@ -234,7 +245,9 @@ export function SecretaryView({
                   {hours ? (
                     t.hoursSet
                   ) : (
-                    <TextLink href="/pro/agenda/disponibilites#horaires">{t.hoursMissing}</TextLink>
+                    <TextLink href={`${base}/agenda/disponibilites#horaires` as Route}>
+                      {t.hoursMissing}
+                    </TextLink>
                   )}
                 </SheetRow>
                 <SheetRow label={t.instructionsRow}>
@@ -243,9 +256,11 @@ export function SecretaryView({
                   </span>
                 </SheetRow>
               </dl>
-              <SecretaryTestCall compact />
+              <ExampleLock locked={example}>
+                <SecretaryTestCall compact />
+              </ExampleLock>
               <Link
-                href="/pro/secretaire?vue=reglages"
+                href={`${base}/secretaire?vue=reglages` as Route}
                 className="inline-flex min-h-10 items-center justify-center gap-2 rounded-pill border border-border-strong bg-surface px-4 text-sm font-semibold hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
               >
                 <SlidersHorizontal aria-hidden="true" className="size-4" />
@@ -260,7 +275,15 @@ export function SecretaryView({
 }
 
 /** Un appel : qui, pourquoi, quand, puis « Appeler », « Voir dans l'agenda » et « Traité ». */
-function CallRow({ message: m }: { message: SecretaryMessage }) {
+function CallRow({
+  message: m,
+  base,
+  example,
+}: {
+  message: SecretaryMessage;
+  base: string;
+  example: boolean;
+}) {
   const appointment = m.kind === "rendez_vous" && m.appointment_at ? m.appointment_at : null;
   const Icon = appointment ? CalendarCheck : MessageSquareText;
   return (
@@ -292,25 +315,27 @@ function CallRow({ message: m }: { message: SecretaryMessage }) {
           <p className="text-[0.9375rem] leading-relaxed text-label">« {m.reason} »</p>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2 sm:pl-[3.625rem]">
-        <a
-          href={`tel:${m.caller_phone}`}
-          className="inline-flex min-h-10 items-center gap-1.5 rounded-pill bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary-strong focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
-        >
-          <Phone aria-hidden="true" className="size-4" />
-          {ts.call} {formatPhone(m.caller_phone)}
-        </a>
-        {appointment && (
-          <Link
-            href={`/pro/agenda?semaine=${parisDay.format(new Date(appointment))}` as Route}
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-pill border border-border-strong bg-surface px-4 text-sm font-semibold hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+      <ExampleLock locked={example}>
+        <div className="flex flex-wrap items-center gap-2 sm:pl-[3.625rem]">
+          <a
+            href={`tel:${m.caller_phone}`}
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-pill bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary-strong focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
           >
-            <CalendarDays aria-hidden="true" className="size-4" />
-            {t.seeAgenda}
-          </Link>
-        )}
-        <SecretaryMessageToggle id={m.id} done={Boolean(m.done_at)} />
-      </div>
+            <Phone aria-hidden="true" className="size-4" />
+            {ts.call} {formatPhone(m.caller_phone)}
+          </a>
+          {appointment && (
+            <Link
+              href={`${base}/agenda?semaine=${parisDay.format(new Date(appointment))}` as Route}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-pill border border-border-strong bg-surface px-4 text-sm font-semibold hover:bg-background focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+            >
+              <CalendarDays aria-hidden="true" className="size-4" />
+              {t.seeAgenda}
+            </Link>
+          )}
+          <SecretaryMessageToggle id={m.id} done={Boolean(m.done_at)} />
+        </div>
+      </ExampleLock>
     </li>
   );
 }

@@ -14,6 +14,7 @@ import { TrendingDown, TrendingUp } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ExampleLock } from "@/components/pro/examples";
 import { AutoRemindersForm, RemindButton } from "@/components/pro/money-reminders";
 import { Card, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -86,7 +87,19 @@ function ReminderTrail({ sent }: { sent: number }) {
  * son ancienneté et ses relances, le réglage des relances automatiques et ce qui cloche. Des
  * chiffres seulement, aucun conseil.
  */
-export function MoneyOverviewView({ overview, now }: { overview: MoneyOverview; now: Date }) {
+export function MoneyOverviewView({
+  overview,
+  now,
+  base = "/pro",
+  example = false,
+}: {
+  overview: MoneyOverview;
+  now: Date;
+  /** Racine des liens : `/pro`, ou les pages d'exemples (ADR 0364). */
+  base?: string;
+  /** Exemple : boutons visibles mais inactifs. */
+  example?: boolean;
+}) {
   const month = moneyMonthLabel(overview.current.month);
   const previousMonth = moneyMonthLabel(overview.previous.month) || null;
   const deltas = moneyMonthDeltas(overview);
@@ -205,7 +218,7 @@ export function MoneyOverviewView({ overview, now }: { overview: MoneyOverview; 
                           <div className="flex items-start justify-between gap-3">
                             <span className="flex min-w-0 flex-col">
                               <Link
-                                href={`/pro/chantiers/${item.chantierId}` as Route}
+                                href={`${base}/chantiers/${item.chantierId}` as Route}
                                 className="truncate font-semibold hover:underline"
                               >
                                 {item.chantier}
@@ -244,11 +257,13 @@ export function MoneyOverviewView({ overview, now }: { overview: MoneyOverview; 
                             <span className="font-display hidden text-lg font-bold whitespace-nowrap tabular-nums @2xl:block">
                               {money(item.amountCents)}
                             </span>
-                            <RemindButton
-                              chantierId={item.chantierId}
-                              kind={item.kind}
-                              allowed={canRemindNow(item.lastReminder, now)}
-                            />
+                            <ExampleLock locked={example}>
+                              <RemindButton
+                                chantierId={item.chantierId}
+                                kind={item.kind}
+                                allowed={canRemindNow(item.lastReminder, now)}
+                              />
+                            </ExampleLock>
                           </span>
                         </div>
                       </li>
@@ -263,7 +278,9 @@ export function MoneyOverviewView({ overview, now }: { overview: MoneyOverview; 
             <Card className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold">{t.autoTitle}</h2>
-                <AutoRemindersForm enabled={overview.autoReminders} />
+                <ExampleLock locked={example}>
+                  <AutoRemindersForm enabled={overview.autoReminders} />
+                </ExampleLock>
               </div>
               <p className="text-sm text-muted-foreground">{t.autoShort}</p>
               <ul className="flex flex-col gap-2.5">
@@ -290,7 +307,7 @@ export function MoneyOverviewView({ overview, now }: { overview: MoneyOverview; 
                     >
                       <span className="flex min-w-0 flex-col">
                         <Link
-                          href={`/pro/chantiers/${item.chantierId}` as Route}
+                          href={`${base}/chantiers/${item.chantierId}` as Route}
                           className="truncate text-sm font-semibold hover:underline"
                         >
                           {item.chantier}

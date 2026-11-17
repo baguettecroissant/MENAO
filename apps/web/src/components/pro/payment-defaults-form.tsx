@@ -19,9 +19,12 @@ const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR
 export function PaymentDefaultsForm({
   deposit: initialDeposit,
   start: initialStart,
+  example = false,
 }: {
   deposit: number;
   start: number;
+  /** Page d'exemple (ADR 0364) : les réglages se manipulent, rien ne s'enregistre. */
+  example?: boolean;
 }) {
   const [state, action, pending] = useActionState(savePaymentDefaults, initialFormState);
   const [deposit, setDeposit] = useState(String(initialDeposit));
@@ -121,7 +124,12 @@ export function PaymentDefaultsForm({
           )}
           <div className="flex flex-col gap-3 pt-1.5 @lg/form:flex-row @lg/form:items-center @lg/form:justify-between @lg/form:gap-4">
             <p className="text-[0.8125rem] text-muted-foreground">{t.total}</p>
-            <Button type="submit" block={false} disabled={pending || invalid} className="px-6">
+            <Button
+              type="submit"
+              block={false}
+              disabled={pending || invalid || example}
+              className="px-6"
+            >
               {pending ? t.saving : t.save}
             </Button>
           </div>
