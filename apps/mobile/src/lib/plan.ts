@@ -37,8 +37,13 @@ export type MyPlan = {
   requests: { received: number; limit: number | null };
   voice: VoiceGauge | null;
   seats: { used: number; total: number } | null;
+  /** Formule dont l'écran montre le contenu : Base sans formule en cours. */
+  column: PlanCode;
   groups: PlanContents["groups"];
   excluded: string[];
+  /** Lignes comprises, et lignes « en plus » de Base (lot 71, ADR 0369). */
+  included: number;
+  added: number;
 };
 
 export async function loadMyPlan(): Promise<MyPlan | null> {
@@ -62,7 +67,7 @@ export async function loadMyPlan(): Promise<MyPlan | null> {
   const code = PLAN_CODES.find((p) => p === agents.plan) ?? null;
   // Sans formule en cours : les droits de Base (app.artisan_agents).
   const column = code ?? "base";
-  const { groups, excluded } = planContents(features.data ?? [], column);
+  const { groups, excluded, included, added } = planContents(features.data ?? [], column);
   const sub = subscription.data;
   const state = !code
     ? t.states.none
@@ -81,8 +86,11 @@ export async function loadMyPlan(): Promise<MyPlan | null> {
     requests: usage.requests,
     voice: gauge.level === "sans_voix" ? null : gauge,
     seats: team ? { used: team.used, total: team.seats } : null,
+    column,
     groups,
     excluded,
+    included,
+    added,
   };
 }
 

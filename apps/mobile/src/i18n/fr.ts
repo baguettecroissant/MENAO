@@ -4528,6 +4528,58 @@ export const fr = {
       remaining: (n: number, total: number) => `${n} sur ${total} restantes`,
     },
     excluded: "Non compris dans votre formule",
+    // Lot 71 (ADR 0369) : la valeur de la formule d'abord, sans prix ni bouton (règle 10).
+    summary: {
+      added: (n: number) => `Tout Base, plus ${n} fonctions`,
+      included: (n: number) => `${n} fonctions comprises`,
+    },
+    highlightsTitle: (name: string) => `Ce que ${name} fait pour vous`,
+    highlightsLabel: "Ce que votre formule fait pour vous",
+    swipe: "Glissez",
+    detailTitle: (name: string) => `Le détail de ${name}`,
+    count: (n: number) => (n > 1 ? `${n} fonctions` : `${n} fonction`),
+    plus: "EN PLUS",
+    plusLabel: "en plus de Base",
+    highlights: {
+      secretary: {
+        title: "Manon décroche pour vous",
+        text: "Elle répond, note la demande et fixe le rendez-vous.",
+      },
+      requests: {
+        title: (limit: number | null) =>
+          limit === null ? "Demandes illimitées" : `Jusqu'à ${limit} demandes par mois`,
+        text: "Vérifiées, dans votre zone.",
+        meta: (n: number) => (n > 1 ? `${n} reçues ce mois-ci` : `${n} reçue ce mois-ci`),
+      },
+      quote: {
+        title: "Le devis est prêt avant vous",
+        text: "Un brouillon dès la demande, avec les photos.",
+      },
+      quotes: {
+        title: "Devis et factures illimités",
+        text: "Dictée, catalogue, signature électronique.",
+      },
+      payments: {
+        title: "Acompte et solde en ligne",
+        text: "Payés directement sur votre compte, relances comprises.",
+      },
+      money: {
+        title: "Plus aucun paiement oublié",
+        text: "Ce qui vous est dû, les relances, l'échéancier des gros chantiers.",
+      },
+      margin: {
+        title: "Votre marge, chantier par chantier",
+        text: "Dépenses comparées au facturé, prix d'achat tenus à jour.",
+      },
+      tenders: {
+        title: "Appels d'offres chiffrés",
+        text: "Le DPGF rempli avec vos prix, même depuis un plan.",
+      },
+      team: {
+        title: "Toute l'équipe dedans",
+        text: "Planning partagé et appel de démarrage.",
+      },
+    },
     // Écran d'une fonction réservée à d'autres formules : une explication, aucun achat.
     locked: {
       note: "Cette fonction n'est pas comprise dans votre formule.",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planContents, planFeatureValue } from "../src/plan-limits";
+import { planContents, planFeatureValue, planHighlights } from "../src/plan-limits";
 
 const ROWS = [
   { categorie: "Demandes", libelle: "Demandes vérifiées", valeurs: { base: true, premium: true } },
@@ -36,8 +36,8 @@ describe("contenu d'une formule d'après le comparatif (ADR 0363)", () => {
     const base = planContents(ROWS, "base");
     expect(base.groups.map((g) => g.title)).toEqual(["Demandes", "Équipe"]);
     expect(base.groups[0]?.features).toEqual([
-      { label: "Demandes vérifiées", value: null },
-      { label: "Demandes par mois", value: "Jusqu'à 10" },
+      { label: "Demandes vérifiées", value: null, plus: false },
+      { label: "Demandes par mois", value: "Jusqu'à 10", plus: false },
     ]);
     expect(base.excluded).toEqual(["Secrétaire", "Minutes de voix", "Appels d'offres"]);
   });
@@ -46,9 +46,33 @@ describe("contenu d'une formule d'après le comparatif (ADR 0363)", () => {
     const premium = planContents(ROWS, "premium");
     expect(premium.groups.map((g) => g.title)).toEqual(["Demandes", "Assistants", "Équipe"]);
     expect(premium.groups[1]?.features).toEqual([
-      { label: "Secrétaire", value: null },
-      { label: "Minutes de voix", value: "300" },
+      { label: "Secrétaire", value: null, plus: true },
+      { label: "Minutes de voix", value: "300", plus: true },
     ]);
     expect(premium.excluded).toEqual(["Appels d'offres"]);
+  });
+
+  it("compte ce qui est compris et ce qui s'ajoute à Base (lot 71, ADR 0369)", () => {
+    const base = planContents(ROWS, "base");
+    expect(base.included).toBe(3);
+    expect(base.added).toBe(0);
+    const premium = planContents(ROWS, "premium");
+    expect(premium.included).toBe(5);
+    // Secrétaire et minutes (absentes de Base), demandes et comptes (plus haut que Base).
+    expect(premium.added).toBe(4);
+    expect(premium.groups[0]?.features.map((f) => f.plus)).toEqual([false, true]);
+  });
+});
+
+describe("cartes « ce que votre formule fait pour vous » (lot 71, ADR 0369)", () => {
+  it("Base met en avant ce qu'elle a, sans les fonctions des autres formules", () => {
+    expect(planHighlights("base")).toEqual(["requests", "quotes", "payments"]);
+  });
+
+  it("Premium et Entreprise commencent par Manon et les demandes", () => {
+    expect(planHighlights("premium").slice(0, 2)).toEqual(["secretary", "requests"]);
+    expect(planHighlights("entreprise").slice(0, 2)).toEqual(["secretary", "requests"]);
+    expect(planHighlights("entreprise")).toContain("tenders");
+    expect(planHighlights("premium")).not.toContain("tenders");
   });
 });
