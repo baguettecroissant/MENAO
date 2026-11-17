@@ -9264,6 +9264,10 @@ export const fr = {
             non_inclus: "La secrétaire est incluse dans les formules Premium et Entreprise.",
             generic: "L'appel n'a pas pu être préparé. Réessayez dans un instant.",
           } as Record<string, string>,
+          // Essai dans l'application (ADR 0362) : aucun achat évoqué (règle 10).
+          appNotIncluded: "La secrétaire n'est pas comprise dans votre formule.",
+          appMinutes: "Vous n'avez plus de minutes ce mois-ci.",
+          outsideApp: "Cette page s'ouvre depuis l'application MENAO.",
           settingsTitle: "Ses réglages",
           displayName: "Nom annoncé au téléphone",
           displayNameHint: (fallback: string) => `Laissé vide : « ${fallback} ».`,

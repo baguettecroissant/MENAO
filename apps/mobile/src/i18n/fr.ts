@@ -4447,6 +4447,7 @@ export const fr = {
       invoices: "Factures",
       expenses: "Dépenses",
       accountant: "Envoi au comptable",
+      secretary: "Secrétaire",
       identity: "Identité et connexion",
       notifications: "Notifications",
       help: "Aide et contact",
@@ -4455,6 +4456,7 @@ export const fr = {
     values: {
       upToDate: "À jour",
       team: (used: number, seats: number) => `${used} sur ${seats}`,
+      secretary: (n: number) => (n === 1 ? "1 appel" : `${n} appels`),
       toComplete: "À compléter",
       photos: (n: number) => (n === 0 ? "Aucune photo" : n === 1 ? "1 photo" : `${n} photos`),
       toAnswer: (n: number) => `${n} à répondre`,
@@ -4503,6 +4505,74 @@ export const fr = {
     selectLabel: (label: string, value: string) => (value ? `${label} : ${value}` : label),
     datePlaceholder: "AAAA-MM-JJ",
     pickDate: "Choisir une date",
+  },
+  // Secrétaire dans l'application (lot 68, ADR 0362), comme la rubrique du site (ADR 0244).
+  proSecretary: {
+    title: "Secrétaire",
+    figuresLabel: "Chiffres de la secrétaire",
+    figures: {
+      toHandle: (urgent: number) =>
+        urgent === 0
+          ? "à traiter"
+          : urgent === 1
+            ? "à traiter, dont 1 urgent"
+            : `à traiter, dont ${urgent} urgents`,
+      appointments: "rendez-vous ce mois",
+      minutes: "min restantes",
+    },
+    tabsLabel: "Vues de la secrétaire",
+    tabs: { todo: "À traiter", done: "Traités", settings: "Réglages" },
+    todoEmpty:
+      "Rien à traiter. Quand vous ne pouvez pas décrocher, votre secrétaire prend l'appel : ses messages et rendez-vous arrivent ici.",
+    doneEmpty: "Aucun appel traité pour l'instant.",
+    urgent: "Urgent",
+    toCallBack: "À rappeler",
+    appointmentTaken: (when: string) => `Rendez-vous pris : ${when}`,
+    call: "Appeler",
+    agenda: "Agenda",
+    markDone: "Traité",
+    markTodo: "À traiter",
+    answering: "● Répond quand vous ne décrochez pas",
+    paused: "● Ne prend plus d'appels ce mois-ci",
+    minutesLabel: "Minutes ce mois-ci",
+    minutesOf: (remaining: number, total: number) => `${remaining} / ${total} min`,
+    test: {
+      start: "L'essayer",
+      hint: "Appelez-la comme le ferait un client. Les minutes de l'essai comptent dans votre formule.",
+      noMinutes: "Vous n'avez plus de minutes ce mois-ci.",
+      loading: "Préparation de l'appel…",
+      close: "Fermer l'appel d'essai",
+    },
+    settings: {
+      displayName: "Nom annoncé au téléphone",
+      displayNameHint: (company: string) =>
+        company ? `Laissé vide : « ${company} ».` : "Laissé vide : le nom de votre entreprise.",
+      canBook: "Elle peut prendre des rendez-vous dans mon agenda",
+      visit: "Durée d'un rendez-vous",
+      visitChoices: { 30: "30 min", 60: "1 h", 90: "1 h 30", 120: "2 h" } as Record<number, string>,
+      instructions: "Consignes à donner aux clients",
+      instructionsHint: "Par exemple : pas de dépannage le week-end, devis gratuit.",
+      hours: "Mes horaires",
+      hoursSet: "Elle propose des créneaux dans ces horaires",
+      hoursMissing: "À renseigner : sans eux, elle prend des messages mais pas de rendez-vous",
+      save: "Enregistrer",
+      saved: "Réglages enregistrés.",
+    },
+    alert: {
+      title: (n: number) => (n === 1 ? "1 appel à traiter" : `${n} appels à traiter`),
+      text: (urgent: number) =>
+        urgent === 0
+          ? "Pris par votre secrétaire"
+          : urgent === 1
+            ? "Dont 1 urgent · pris par votre secrétaire"
+            : `Dont ${urgent} urgents · pris par votre secrétaire`,
+    },
+    // Sans la secrétaire dans la formule : une explication, aucun achat (règle 10).
+    notIncluded: {
+      title: "Une secrétaire qui répond quand vous êtes sur un chantier",
+      text: "Elle prend les appels, note les messages et cale les rendez-vous dans votre agenda.",
+      note: "La secrétaire n'est pas comprise dans votre formule.",
+    },
   },
   // Aide du particulier dans l'application (lot 67, ADR 0361) : questions, contact, assistant.
   clientHelp: {

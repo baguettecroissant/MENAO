@@ -6,6 +6,7 @@ import {
   Clock,
   MapPin,
   Minus,
+  Phone,
   TrendingDown,
   TrendingUp,
 } from "lucide-react-native";
@@ -26,6 +27,7 @@ import {
   activityCurrentMonth,
   activityYears,
   dashboardActivity,
+  teamCan,
   todoForPosition,
 } from "@menao/core";
 import { GradeCard } from "@/components/grade/grade-card";
@@ -57,6 +59,7 @@ import { useExamplesActive } from "@/lib/examples";
 import { loadDashboard, type Dashboard } from "@/lib/pro-dashboard";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { useTeamPosition } from "@/lib/team";
+import { loadSecretaryTodo } from "@/lib/secretary";
 import { useFocusData } from "@/lib/use-focus-data";
 import { useUnread } from "@/lib/unread";
 import { Notice, Tappable, useReveal } from "@/ui";
@@ -273,6 +276,7 @@ export function DashboardScreen() {
   // Rendez-vous des jours suivants : ceux du jour sont dans « À faire maintenant ».
   const appointments = data ? <Upcoming appointments={data.later} /> : null;
   const todo = data ? todoForPosition(data.todo, position) : [];
+  const [secretaryTodo] = useFocusData(loadSecretaryTodo);
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
@@ -334,6 +338,28 @@ export function DashboardScreen() {
                 activity={activity}
               />
             ) : null}
+            {/* Appels pris par la secrétaire, encore à traiter (ADR 0362) : patron et chef d'équipe. */}
+            {secretaryTodo && secretaryTodo.count > 0 && teamCan(position, "secretary") ? (
+              <Tappable
+                role="link"
+                aria-label={`${fr.proSecretary.alert.title(secretaryTodo.count)}. ${fr.proSecretary.alert.text(secretaryTodo.urgent)}`}
+                onPress={() => router.push("/pro-secretaire")}
+                style={styles.secretary}
+              >
+                <View style={styles.secretaryIcon}>
+                  <Phone size={18} color={colors.danger} />
+                </View>
+                <View style={styles.secretaryText}>
+                  <Text style={styles.secretaryTitle}>
+                    {fr.proSecretary.alert.title(secretaryTodo.count)}
+                  </Text>
+                  <Text style={styles.secretaryHint}>
+                    {fr.proSecretary.alert.text(secretaryTodo.urgent)}
+                  </Text>
+                </View>
+                <ChevronRight size={18} color={colors.label} />
+              </Tappable>
+            ) : null}
             <TodoList items={todo} />
             <ActivityShortcuts
               example={examples}
@@ -391,6 +417,26 @@ export function DashboardScreen() {
 const cardShadow = "0 1px 3px rgba(17, 23, 40, 0.06)";
 
 const styles = StyleSheet.create({
+  secretary: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(3),
+    paddingVertical: spacing(3.5),
+    paddingHorizontal: spacing(4),
+    borderRadius: 16,
+    backgroundColor: colors["danger-soft"],
+  },
+  secretaryIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  secretaryText: { flex: 1, gap: 1 },
+  secretaryTitle: { fontFamily: font.bold, fontSize: 15, color: colors.foreground },
+  secretaryHint: { fontFamily: font.regular, fontSize: 13, color: colors.label },
   safe: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing(4), gap: spacing(6), paddingBottom: spacing(10) },
   revealed: { gap: spacing(6) },

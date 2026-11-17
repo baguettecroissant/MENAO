@@ -14,6 +14,7 @@ import {
   Eye,
   FileText,
   Gift,
+  Headset,
   ImageIcon,
   LifeBuoy,
   ListChecks,
@@ -50,6 +51,7 @@ import { formatDay } from "@/lib/format";
 import { haptic } from "@/lib/haptics";
 import { choosePhotoSource, pickAvatar, uploadPhoto } from "@/lib/photos";
 import { loadProfileHub, type ProfileHub } from "@/lib/profile-hub";
+import { loadSecretaryTodo } from "@/lib/secretary";
 import type { HubRow, HubStatus } from "@/lib/profile-hub-status";
 import { forgetProfileSummary } from "@/lib/profile-summary";
 import { useFocusData } from "@/lib/use-focus-data";
@@ -70,7 +72,8 @@ type Row = {
     | "accountant"
     | "identity"
     | "notifications"
-    | "help";
+    | "help"
+    | "secretary";
   icon: LucideIcon;
   /** Couleur du carré de l'icône (maquette « ProfilApp »). */
   tone: FicheTone;
@@ -91,6 +94,7 @@ const ROW_PERMISSION: Partial<Record<Row["key"], TeamPermission>> = {
   trades: "storefront",
   zone: "storefront",
   availability: "agenda",
+  secretary: "secretary",
   team: "team",
   documents: "dossier",
   charter: "dossier",
@@ -120,6 +124,8 @@ const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
       { key: "trades", icon: Wrench, tone: "success", href: "/pro-metiers" },
       { key: "zone", icon: MapPin, tone: "success", href: "/pro-zone" },
       { key: "availability", icon: CalendarClock, tone: "success", href: "/pro-disponibilites" },
+      // Secrétaire (ADR 0362) : appels à traiter, historique et réglages.
+      { key: "secretary", icon: Headset, tone: "primary", href: "/pro-secretaire" },
       // Comptes d'équipe (ADR 0240) : patron d'une formule qui les inclut.
       { key: "team", icon: Users, tone: "success", href: "/pro-equipe" },
     ],
@@ -210,6 +216,8 @@ export function ProfileHubContent({
   onChange: () => Promise<void>;
 }) {
   const [leaving, setLeaving] = useState(false);
+  // Appels pris par la secrétaire et encore à traiter (ADR 0362) : pastille de sa ligne.
+  const [secretaryTodo] = useFocusData(loadSecretaryTodo);
   // Exemples (ADR 0184) : « Mon profil » d'exemple ; seules les rubriques qui ont leurs exemples
   // (avis, grade, factures, fiche) s'ouvrent, les vrais réglages restent fermés.
   const example = useExamplesActive();
@@ -292,7 +300,16 @@ export function ProfileHubContent({
                 <HubLine
                   key={row.key}
                   row={row}
-                  status={statusOf(row.key, hub)}
+                  status={
+                    row.key === "secretary"
+                      ? secretaryTodo && secretaryTodo.count > 0
+                        ? {
+                            text: t.values.secretary(secretaryTodo.count),
+                            tone: secretaryTodo.urgent > 0 ? "danger" : "warning",
+                          }
+                        : null
+                      : statusOf(row.key, hub)
+                  }
                   detail={row.key === "identity" ? hub.email : null}
                 />
               );
@@ -339,7 +356,9 @@ function statusOf(key: Row["key"], hub: ProfileHub): HubStatus {
     key === "expenses" ||
     key === "accountant" ||
     key === "notifications" ||
-    key === "help"
+    key === "help" ||
+    // La secrétaire a son propre compteur (appels à traiter), lu à part.
+    key === "secretary"
   ) {
     return null;
   }
