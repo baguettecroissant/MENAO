@@ -1,3 +1,4 @@
+export * from "./client-faq";
 export * from "./avatar";
 export * from "./roles";
 export * from "./avatar-framing";

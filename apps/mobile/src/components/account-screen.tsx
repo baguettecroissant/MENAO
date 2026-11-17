@@ -252,17 +252,18 @@ export function AccountScreen({ title = t.title }: { title?: string }) {
         <Notice tone="info">{t.subscriptionText}</Notice>
       ) : (
         <SettingsSection>
+          {/* Questions, contact et assistant dans l'application (ADR 0361) : plus de renvoi au site. */}
           <SettingsRow
             icon={CircleHelp}
             iconTone="success"
-            label={fr.guest.faq}
-            onPress={() => WebBrowser.openBrowserAsync(siteLinks.faq)}
+            label={fr.clientHelp.row}
+            href="/aide"
           />
           <SettingsRow
             icon={MessageSquare}
             iconTone="success"
-            label={fr.guest.contact}
-            onPress={() => WebBrowser.openBrowserAsync(siteLinks.contact)}
+            label={fr.clientHelp.exchanges.title}
+            href="/echanges"
           />
         </SettingsSection>
       )}
