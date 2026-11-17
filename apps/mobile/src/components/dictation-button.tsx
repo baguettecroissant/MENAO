@@ -1,4 +1,5 @@
 import { AudioLines, Mic } from "lucide-react-native";
+import { useEffect, useRef } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
 import { useDictation } from "@/lib/use-dictation";
@@ -24,14 +25,25 @@ const ERRORS = {
 export function DictationButton({
   onText,
   onError,
+  autoStart = false,
 }: {
   onText: (text: string) => void;
   onError: (message: string | null) => void;
+  /** « Dicter » touché sur l'accueil (ADR 0359) : l'écoute démarre dès l'arrivée, une seule fois. */
+  autoStart?: boolean;
 }) {
   const { state, seconds, level, quiet, start, stop } = useDictation({
     onText,
     onError: (error) => onError(error ? ERRORS[error] : null),
   });
+
+  const started = useRef(false);
+  useEffect(() => {
+    if (!autoStart || started.current) return;
+    started.current = true;
+    void start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- à l'arrivée seulement
+  }, [autoStart]);
 
   const listening = state === "listening";
   const label =

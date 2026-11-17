@@ -888,52 +888,34 @@ export const fr = {
   },
   // Textes repris du site (accueil, « Comment ça marche », garanties) : aucun chiffre inventé.
   home: {
-    greeting: "Bonjour !",
-    subtitle: "Besoin d'un artisan du bâtiment ?",
-    searchPlaceholder: "Décrivez votre projet…",
-    tags: ["Artisans vérifiés", "Décennale contrôlée", "Réponse sous 72\u00a0h"],
-    tradesTitle: "Trouvez votre artisan",
-    tradesText: "Des artisans vérifiés pour chaque corps de métier, dans les Alpes-Maritimes.",
+    // Accueil clair avec photo (lot 65, ADR 0359) : une promesse en titre, la saisie d'abord.
+    title: "Un artisan vérifié,\nprès de chez vous",
+    subtitle: "Décrivez vos travaux : les artisans disponibles vous répondent sous 72\u00a0h.",
+    photoBadge: "Chaque artisan est vérifié par MENAO",
+    photoAlt: "Un artisan accueilli chez une cliente",
+    searchPlaceholder: "Décrivez votre projet, avec vos mots…",
+    tools: { photo: "Photo", dictate: "Dicter", urgent: "Urgent", go: "Décrire mon projet" },
+    examples: ["Fuite sous l'évier", "Refaire ma salle de bain", "Tableau électrique"],
+    examplesLabel: "Exemples de projets",
+    verifyTitle: "Comment on vérifie un artisan",
+    verify: [
+      { title: "Son entreprise", text: "Contrôlée au registre des entreprises" },
+      {
+        title: "Son assurance décennale",
+        text: "Attestation en cours de validité, métiers couverts",
+      },
+      { title: "Ses cotisations", text: "Attestation URSSAF à jour" },
+    ],
+    tradesTitle: "Par métier",
     allTrades: "Tous les métiers",
+    stepLabel: (n: number) => `ÉTAPE ${n}`,
+    illustratedSteps: [
+      { title: "Décrivez votre projet", text: "Texte, photo ou dictée" },
+      { title: "Choisissez vos artisans", text: "Fiches, avis et disponibilités" },
+      { title: "Devis, signature, suivi", text: "Tout se passe dans l'application" },
+    ],
+    artisan: { title: "Vous êtes artisan ?", text: "Recevez des demandes près de chez vous" },
     stepsTitle: "Comment ça marche",
-    steps: [
-      {
-        title: "Décrivez votre projet",
-        text: "Notre assistant IA en déduit le métier, les travaux et les délais.",
-      },
-      {
-        title: "Choisissez vos artisans",
-        text: "MENAO vous présente jusqu'à 5 artisans vérifiés de votre secteur.",
-      },
-      {
-        title: "Signez votre devis en ligne",
-        text: "L'artisan accepte sous 72\u00a0h, vient voir votre chantier, puis vous envoie son devis.",
-      },
-      {
-        title: "Suivez jusqu'à la réception",
-        text: "Acompte, photos de l'avancement, réception et solde : tout se passe dans votre espace.",
-      },
-    ],
-    trustTitle: "La confiance, ça se vérifie",
-    trust: [
-      {
-        title: "Artisans vérifiés",
-        text: "Entreprise active, Kbis récent, assurance décennale, RC Pro et identité du dirigeant contrôlés.",
-      },
-      {
-        title: "Paiement direct à l'artisan",
-        text: "Par carte, via Stripe : MENAO ne prélève rien sur votre chantier.",
-      },
-      {
-        title: "Avis vérifiés",
-        text: "Seuls les clients ayant réalisé un chantier via MENAO peuvent noter un artisan.",
-      },
-      {
-        title: "Un recours en cas de problème",
-        text: "Signalez un souci depuis votre espace : l'équipe MENAO l'examine et vous répond.",
-      },
-    ],
-    free: "MENAO est 100\u00a0% gratuit.",
     // Accueil du client connect\u00e9 (ADR 0082) : tableau de bord.
     dashboard: {
       hello: (firstName: string | null) => (firstName ? `Bonjour ${firstName} !` : "Bonjour !"),

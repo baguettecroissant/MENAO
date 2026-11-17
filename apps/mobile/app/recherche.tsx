@@ -86,13 +86,19 @@ export default function Recherche() {
     artisan?: string;
     depuis?: string;
     nom?: string;
+    // Raccourcis de l'accueil (ADR 0359) : exemple à toucher, « Urgent », « Photo », « Dicter ».
+    texte?: string;
+    urgent?: string;
+    action?: string;
   }>();
   const rehire =
     params.artisan && params.depuis && UUID.test(params.artisan) && UUID.test(params.depuis)
       ? { artisanId: params.artisan, chantierId: params.depuis }
       : null;
   const trades = useTrades();
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(() =>
+    (params.texte ?? "").slice(0, PROJECT_TEXT_MAX_LENGTH),
+  );
   const [trade, setTrade] = useState<string | null>(params.metier ?? null);
   const [photos, setPhotos] = useState<PickedPhoto[]>([]);
   const [phase, setPhase] = useState<"idle" | "analyzing" | "photos">("idle");
@@ -212,6 +218,15 @@ export default function Recherche() {
     }
   }
 
+  // « Photo » touché sur l'accueil : le choix de la photo s'ouvre dès l'arrivée, une seule fois.
+  const openedPhoto = useRef(false);
+  useEffect(() => {
+    if (params.action !== "photo" || openedPhoto.current) return;
+    openedPhoto.current = true;
+    void addPhotos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- à l'arrivée seulement
+  }, [params.action]);
+
   async function submit() {
     if (!ready || phase !== "idle") return;
     setFailure(null);
@@ -242,7 +257,9 @@ export default function Recherche() {
 
   // Urgence (ADR 0279), comme sur le site : repérée dans le texte dès la saisie, ou réglée avec le
   // bouton « Urgent » ; le choix du particulier passe avant ce qui est repéré.
-  const [urgencyChoice, setUrgencyChoice] = useState<UrgencyChoice>("auto");
+  const [urgencyChoice, setUrgencyChoice] = useState<UrgencyChoice>(
+    params.urgent === "1" ? "oui" : "auto",
+  );
   const detectedUrgency = useMemo(() => detectUrgency(description), [description]);
   const urgent = resolveUrgency(urgencyChoice, detectedUrgency !== null);
   const urgencyDetected = urgent && urgencyChoice === "auto" ? detectedUrgency : null;
@@ -347,6 +364,7 @@ export default function Recherche() {
             </Pressable>
             <View style={styles.spacer} />
             <DictationButton
+              autoStart={params.action === "dictee"}
               onText={(spoken) =>
                 setDescription((current) =>
                   (current.trim() ? `${current.trim()} ${spoken}` : spoken).slice(
