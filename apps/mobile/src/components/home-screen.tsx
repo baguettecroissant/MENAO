@@ -16,12 +16,13 @@ import {
   type LucideIcon,
 } from "lucide-react-native";
 import { useCallback, useState, type ReactNode } from "react";
-import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ClientDashboard } from "@/components/client-dashboard";
 import { LogoMark } from "@/components/logo";
 import { tradeIcon } from "@/components/trade-icon";
 import { PushPrompt } from "@/components/push-prompt";
+import { AvatarImage } from "@/components/avatar";
 import { fr } from "@/i18n/fr";
 import { loadClientHome } from "@/lib/client-home";
 import { openTab } from "@/lib/navigation";
@@ -256,7 +257,7 @@ function HomeFrame({
             style={({ pressed }) => [styles.roundButton, styles.avatar, pressed && styles.pressed]}
           >
             {profile?.avatarUrl ? (
-              <Image source={{ uri: profile.avatarUrl }} style={styles.avatarImage} alt="" />
+              <AvatarImage uri={profile.avatarUrl} style={styles.avatarImage} />
             ) : profile?.initials ? (
               <Text style={styles.avatarInitial}>{profile.initials}</Text>
             ) : (

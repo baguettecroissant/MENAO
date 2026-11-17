@@ -1,3 +1,4 @@
+import { isLogoImagePath } from "@menao/core";
 import { LogoMark } from "@/components/brand/logo";
 
 /** Photo de l'artisan en grand (cartes et fiche) ; à défaut, dégradé MENAO et initiales. */
@@ -13,8 +14,10 @@ export function ArtisanPhoto({
   initialsClassName?: string;
 }) {
   if (url) {
+    // Logo (ADR 0357) : en entier sur fond blanc, avec assez de marge pour tenir dans un rond.
+    const fit = isLogoImagePath(url) ? "bg-white object-contain p-[14%]" : "object-cover";
     // eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4)
-    return <img src={url} alt="" className={`object-cover ${className}`} />;
+    return <img src={url} alt="" className={`${fit} ${className}`} />;
   }
   const initials = name
     .split(/\s+/)

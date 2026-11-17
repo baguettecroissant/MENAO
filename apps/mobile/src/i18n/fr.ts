@@ -319,6 +319,7 @@ export const fr = {
       openNow: "Ouvert",
       optional: "Facultatif",
       added: "Ajouté",
+      add: "Ajouter",
       missing: "À ajouter",
       en_attente: "Déposé",
       valide: "Vérifié",

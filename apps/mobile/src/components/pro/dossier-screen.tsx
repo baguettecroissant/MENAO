@@ -293,13 +293,13 @@ export function DossierScreen() {
       ) : null}
 
       {/* Facultatif, rendu visible (ADR 0354, 0355) : rien ici ne retarde le dossier. */}
-      <DossierGroup title={t.groups.extras}>
+      <DossierGroup title={t.groups.extras} count={t.states.optional}>
         <DossierRow
           icon={ImageIcon}
           title={t.imageTitle}
           hint={t.imageHint}
           tone={dossier.avatarPath ? "done" : "todo"}
-          status={dossier.avatarPath ? t.states.added : t.states.optional}
+          status={dossier.avatarPath ? t.states.added : t.states.add}
           href="/pro-profil-public"
         />
       </DossierGroup>

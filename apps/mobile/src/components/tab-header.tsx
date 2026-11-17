@@ -1,7 +1,8 @@
 import { router, useFocusEffect } from "expo-router";
 import { Bell, MessageCircle, UserRound } from "lucide-react-native";
 import { useCallback, type ReactNode } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AvatarImage } from "@/components/avatar";
 import { fr } from "@/i18n/fr";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { useSession } from "@/lib/session";
@@ -76,7 +77,7 @@ export function TabHeader({
         style={({ pressed }) => [styles.avatar, pressed && styles.pressed]}
       >
         {profile?.avatarUrl ? (
-          <Image source={{ uri: profile.avatarUrl }} style={styles.avatarImage} alt="" />
+          <AvatarImage uri={profile.avatarUrl} style={styles.avatarImage} />
         ) : profile?.initials ? (
           <Text style={styles.initial}>{profile.initials}</Text>
         ) : (
