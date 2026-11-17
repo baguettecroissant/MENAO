@@ -52,6 +52,7 @@ export function TenderEditor({
   sourceKind,
   exportLocked = false,
   checkSlot,
+  example = false,
 }: {
   tenderId: string;
   lines: TenderLine[];
@@ -66,6 +67,8 @@ export function TenderEditor({
   exportLocked?: boolean;
   /** Case « J'ai vérifié les quantités », affichée avec l'export. */
   checkSlot?: ReactNode;
+  /** Page d'exemple (ADR 0365) : les prix se saisissent, rien ne s'enregistre ni ne s'exporte. */
+  example?: boolean;
 }) {
   const fromPlan = sourceKind === "plan";
   const [state, formAction, pending] = useActionState(saveTender, initialFormState);
@@ -362,7 +365,7 @@ export function TenderEditor({
           </label>
           <div className="flex items-center gap-3">
             {dirty && <span className="text-sm text-warning">{t.unsaved}</span>}
-            <Button type="submit" disabled={pending || invalid} block={false}>
+            <Button type="submit" disabled={pending || invalid || example} block={false}>
               {t.save}
             </Button>
           </div>
@@ -382,7 +385,7 @@ export function TenderEditor({
           {sourceKind && (
             <a
               href={`${base}/excel`}
-              aria-disabled={dirty || exportLocked || undefined}
+              aria-disabled={dirty || exportLocked || example || undefined}
               className="flex items-start gap-3 rounded-input border border-border p-4 hover:border-primary/40 aria-disabled:pointer-events-none aria-disabled:opacity-50"
             >
               <FileSpreadsheet
@@ -412,7 +415,7 @@ export function TenderEditor({
             href={`${base}/pdf`}
             target="_blank"
             rel="noreferrer"
-            aria-disabled={dirty || exportLocked || undefined}
+            aria-disabled={dirty || exportLocked || example || undefined}
             className="flex items-start gap-3 rounded-input border border-border p-4 hover:border-primary/40 aria-disabled:pointer-events-none aria-disabled:opacity-50"
           >
             <FileText aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary-strong" />

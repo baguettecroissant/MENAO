@@ -1,26 +1,18 @@
 import { teamCan } from "@menao/core";
 import type { Metadata, Route } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EmptyState } from "@/components/empty-state";
 import { RequestsTabs } from "@/components/pro/requests-tabs";
+import { TenderList } from "@/components/pro/tender-list";
 import { TenderNewForm } from "@/components/pro/tender-new-form";
-import { ButtonLink, Card, CardTitle, StatusBadge } from "@/components/ui";
+import { ButtonLink, Card, CardTitle } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireTeamPermission } from "@/lib/artisan/space";
 import { listTenders, tendersIncluded } from "@/lib/artisan/tenders";
-import { formatDay } from "@/lib/format";
 
 const t = fr.pro.tenders;
 
 export const metadata: Metadata = { title: `${t.title} — MENAO` };
-
-const TONES = {
-  en_cours: "warning",
-  envoye: "primary",
-  retenu: "success",
-  perdu: "neutral",
-} as const;
 
 /**
  * Appels d'offres (F-136, ADR 0287) : onglet de Demandes pour le patron et le chef d'équipe.
@@ -67,34 +59,7 @@ export default async function TendersPage() {
         )}
 
         {tenders.length > 0 ? (
-          <section aria-label={t.listLabel} className="flex flex-col gap-3">
-            <h2 className="text-lg font-semibold">{t.listLabel}</h2>
-            <ul className="flex flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card">
-              {tenders.map((tender) => (
-                <li key={tender.id} className="border-t border-border first:border-t-0">
-                  <Link
-                    href={`/pro/demandes/appels-offres/${tender.id}` as Route}
-                    className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-4 hover:bg-background"
-                  >
-                    <span className="flex min-w-0 flex-1 flex-col">
-                      <span className="font-semibold">{tender.name}</span>
-                      {tender.client_name && (
-                        <span className="text-sm text-muted-foreground">{tender.client_name}</span>
-                      )}
-                    </span>
-                    <StatusBadge tone={TONES[tender.status as keyof typeof TONES] ?? "neutral"}>
-                      {t.status[tender.status] ?? tender.status}
-                    </StatusBadge>
-                    {tender.due_on && (
-                      <span className="text-sm text-muted-foreground">
-                        {t.dueOn(formatDay(`${tender.due_on}T12:00:00Z`))}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <TenderList tenders={tenders} />
         ) : (
           included && <EmptyState illustration="demandes">{t.empty}</EmptyState>
         )}
