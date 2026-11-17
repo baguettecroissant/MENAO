@@ -125,9 +125,12 @@ export const fr = {
       search: "Nom de l'entreprise ou SIRET",
       searchHint: "3 caractères minimum.",
       searching: "Recherche en cours…",
+      slow: "L'annuaire de l'État est lent en ce moment, la recherche continue…",
+      retry: "Réessayer",
       noResult:
         "Aucune entreprise trouvée. Vérifiez l'orthographe, ou tapez votre numéro SIRET (14 chiffres).",
-      unavailable: "La recherche ne répond pas pour le moment : saisissez votre SIRET.",
+      unavailable:
+        "La recherche de l'État ne répond pas pour le moment. Réessayez, ou saisissez votre SIRET.",
       closed: "Fermée",
       notListed: "Mon entreprise n'apparaît pas",
       manualLabel: "Numéro SIRET",
@@ -447,6 +450,20 @@ export const fr = {
   },
   /** Zone d'intervention (ADR 0125), comme l'étape « Zone » du site. */
   /** Aperçu de la zone d'intervention sur le Plan IGN (ADR 0126, 0127). */
+  // Carte de France de la zone (ADR 0358), comme sur le site.
+  franceMap: {
+    label: {
+      departements: "Carte des départements",
+      regions: "Carte des régions",
+      france: "Carte de France",
+    },
+    hint: {
+      departements: "Touchez un département pour l'ajouter ou le retirer · © IGN",
+      regions: "Touchez une région pour l'ajouter ou la retirer · © IGN",
+    },
+    caption: "© IGN",
+    selected: "choisi",
+  },
   zoneMap: {
     // Source du Plan IGN, exigée par la Licence Ouverte.
     credit: "© IGN",
@@ -723,6 +740,14 @@ export const fr = {
     current: (state: string) => `État : ${state}`,
     /** Lecture automatique du document (ADR 0176), comme sur le site. */
     reading: {
+      read: "Lu",
+      fields: {
+        dateEmission: "Date d'émission",
+        dateFin: "Date de fin de validité",
+        assureur: "Assureur",
+        numero: "Numéro",
+        couverture: "Couverture",
+      } as Record<string, string>,
       done: "Document lu automatiquement : vérifiez les informations ci-dessous avant de l'envoyer.",
       empty:
         "Nous n'avons pas trouvé ces informations sur le document : complétez les champs ci-dessous.",

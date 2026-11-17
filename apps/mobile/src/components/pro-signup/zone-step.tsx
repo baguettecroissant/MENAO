@@ -9,6 +9,7 @@ import { MapPin } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { AutocompleteField } from "@/components/autocomplete-field";
+import { FranceMap } from "@/components/france-map";
 import { TerritoryField } from "@/components/territory-field";
 import { FicheCard } from "@/components/pro/fiche-kit";
 import { IconSquare } from "@/components/pro/tools-kit";
@@ -111,6 +112,7 @@ export function ZoneStep({
           mode={mode}
           codes={draft.territories}
           onChange={(territories) => update({ territories })}
+          point={base}
           labels={{
             search: mode === "regions" ? t.regionSearch : t.departementSearch,
             hint: mode === "regions" ? t.regionSearchHint : t.departementSearchHint,
@@ -120,6 +122,7 @@ export function ZoneStep({
       ) : null}
       {!base ? <Muted>{t.noBase}</Muted> : null}
       {base && mode === "rayon" ? <Muted>{t.summary(draft.radiusKm, place)}</Muted> : null}
+      {mode === "france" ? <FranceMap mode="france" point={base} /> : null}
       {mode === "france" ? <Muted>{t.franceNote}</Muted> : null}
       {mode === "regions" || mode === "france" ? <Muted>{t.wideNote}</Muted> : null}
       {mode === "rayon" ? <Muted>{t.communesLater}</Muted> : null}

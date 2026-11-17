@@ -29,8 +29,8 @@ export function FranceMap({
   useEffect(() => {
     let alive = true;
     (level === "departements"
-      ? import("@/data/france-departements.json")
-      : import("@/data/france-regions.json")
+      ? import("@menao/core/data/france-departements.json")
+      : import("@menao/core/data/france-regions.json")
     ).then((module) => {
       if (alive) setLoaded({ level, data: module.default as FranceMapData });
     });

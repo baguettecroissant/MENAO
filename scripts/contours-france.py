@@ -4,7 +4,7 @@ Carte de la zone d'intervention (F-162, ADR 0349). Source, à télécharger hors
   https://data.geopf.fr/wfs/ows?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&OUTPUTFORMAT=application/json
     &SRSNAME=EPSG:4326&COUNT=200&TYPENAMES=ADMINEXPRESS-COG-CARTO.LATEST:departement   (ou :region)
 Usage : python3 -I scripts/contours-france.py <source.json> <sortie.json>
-Sorties : apps/web/src/data/france-departements.json et france-regions.json.
+Sorties : packages/core/data/france-departements.json et france-regions.json.
 """
 import json, math, sys
 src, out = sys.argv[1], sys.argv[2]

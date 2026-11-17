@@ -16,7 +16,13 @@ import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
 import { PageHead, PrivacyNote, SoftBanner } from "@/components/pro/dossier-kit";
 import { DocumentHelpButton, HelpVideoCard } from "@/components/pro/onboarding-help";
-import { CardHeading, FicheButton, FicheCard, FicheScreen } from "@/components/pro/fiche-kit";
+import {
+  CardHeading,
+  FicheButton,
+  FicheCard,
+  FicheScreen,
+  FicheTag,
+} from "@/components/pro/fiche-kit";
 import { CheckRow, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { AiProgress } from "@/components/ai-progress";
@@ -224,6 +230,8 @@ function DocumentForm({
   const [failure, setFailure] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [reading, setReading] = useState<Reading | null>(null);
+  // Ce que MENAO a lu dans le document, montré champ par champ, comme sur le site (lot 61).
+  const [readFields, setReadFields] = useState<DocumentPrefill>({});
   const insurance = type === "decennale" || type === "rc_pro";
   // Document déposé dès qu'il est choisi, pour sa lecture automatique (ADR 0176), puis réutilisé
   // à l'envoi ; retiré s'il est remplacé ou si l'écran est quitté sans l'envoyer.
@@ -269,6 +277,7 @@ function DocumentForm({
     // Champs vides (ou remplis par la lecture précédente) seulement : la saisie est gardée.
     const updates = prefillUpdates(current.current, result.fields, lastRead.current);
     lastRead.current = result.fields;
+    setReadFields(result.fields);
     const next = { ...current.current, ...updates };
     setValues(next);
     // Dates lues contrôlées tout de suite, comme à l'envoi : document expiré, Kbis trop ancien…
@@ -401,7 +410,25 @@ function DocumentForm({
             </Notice>
           ))}
           {reading.filled ? (
-            <SoftBanner text={r.done} />
+            <SoftBanner text={r.done}>
+              {Object.entries(readFields).map(([field, value]) =>
+                value ? (
+                  <View key={field} style={styles.readRow}>
+                    <Text style={styles.readLabel}>
+                      {type === "urssaf" && field === "numero"
+                        ? t.securityCode
+                        : (r.fields[field] ?? field)}
+                    </Text>
+                    <Text style={styles.readValue}>
+                      {/^\d{4}-\d{2}-\d{2}$/.test(String(value))
+                        ? String(value).split("-").reverse().join("/")
+                        : String(value)}
+                    </Text>
+                    <FicheTag text={r.read} tone="success" />
+                  </View>
+                ) : null,
+              )}
+            </SoftBanner>
           ) : reading.warnings.length === 0 ? (
             <Notice tone="info">{r.empty}</Notice>
           ) : null}
@@ -506,6 +533,9 @@ function DocumentForm({
 }
 
 const styles = StyleSheet.create({
+  readRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing(2) },
+  readLabel: { fontFamily: font.regular, fontSize: 13, color: colors.label },
+  readValue: { fontFamily: font.bold, fontSize: 14, color: colors.foreground },
   photoBlock: { gap: spacing(2.5) },
   // Photo du document en grand, sur un fond papier, avec « Reprendre » en bas à droite.
   stage: {

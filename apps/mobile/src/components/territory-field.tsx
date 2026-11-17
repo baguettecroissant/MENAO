@@ -3,6 +3,7 @@ import { X } from "lucide-react-native";
 import { useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AutocompleteField } from "@/components/autocomplete-field";
+import { FranceMap } from "@/components/france-map";
 import { theme } from "@/ui/theme";
 
 const { colors, font, radius, spacing } = theme;
@@ -15,15 +16,27 @@ export function TerritoryField({
   codes,
   onChange,
   labels,
+  point,
 }: {
   mode: "departements" | "regions";
   codes: string[];
   onChange: (codes: string[]) => void;
   labels: { search: string; hint: string; remove: (nom: string) => string };
+  /** Adresse de départ de l'artisan, placée sur la carte. */
+  point?: { lon: number; lat: number } | null;
 }) {
   const search = useCallback(async (query: string) => searchTerritories(mode, query), [mode]);
   return (
     <>
+      {/* Carte à toucher (ADR 0358), comme sur le site : la recherche reste pour l'outre-mer. */}
+      <FranceMap
+        mode={mode}
+        codes={codes}
+        point={point}
+        onToggle={(code) =>
+          onChange(codes.includes(code) ? codes.filter((c) => c !== code) : [...codes, code])
+        }
+      />
       {codes.length > 0 ? (
         <View style={styles.chips}>
           {codes.map((code) => {

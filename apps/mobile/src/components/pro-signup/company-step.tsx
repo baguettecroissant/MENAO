@@ -6,11 +6,11 @@ import {
   type ArtisanSignupCompany,
   type ArtisanSignupDraft,
 } from "@menao/core";
-import { messages } from "@menao/validation";
+import { COMPANY_SEARCH_SLOW_MS, messages } from "@menao/validation";
 import { ArrowLeftRight, Building2, ChevronRight } from "lucide-react-native";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { FicheButton, FicheTag } from "@/components/pro/fiche-kit";
 import { IconSquare, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
@@ -24,7 +24,7 @@ const { colors, font, radius, spacing } = theme;
 
 type Search =
   | { status: "idle" }
-  | { status: "loading"; query: string }
+  | { status: "loading"; query: string; slow?: boolean }
   | { status: "done"; query: string; results: CompanySuggestion[] }
   | { status: "error"; query: string };
 
@@ -116,6 +116,8 @@ function CompanyFinder({
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState<Search>({ status: "idle" });
   const [manual, setManual] = useState(false);
+  // « Réessayer » : relance la même recherche.
+  const [retries, setRetries] = useState(0);
   const q = query.trim();
 
   useEffect(() => {
@@ -123,7 +125,11 @@ function CompanyFinder({
     const controller = new AbortController();
     const timer = setTimeout(() => {
       setSearch({ status: "loading", query: q });
-      searchCompanies(q, controller.signal)
+      // Recherche longue : l'artisan est prévenu qu'on cherche toujours.
+      const warn = () => setSearch({ status: "loading", query: q, slow: true });
+      const slow = setTimeout(warn, COMPANY_SEARCH_SLOW_MS);
+      searchCompanies(q, controller.signal, warn)
+        .finally(() => clearTimeout(slow))
         .then((results) => setSearch({ status: "done", query: q, results }))
         .catch(() => {
           if (!controller.signal.aborted) setSearch({ status: "error", query: q });
@@ -133,7 +139,7 @@ function CompanyFinder({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [q]);
+  }, [q, retries]);
 
   if (manual) return <ManualSiret onSubmit={onManual} onCancel={() => setManual(false)} />;
 
@@ -142,8 +148,22 @@ function CompanyFinder({
   return (
     <View style={styles.finder}>
       <SearchField label={t.search} value={query} onChangeText={setQuery} hint={t.searchHint} />
-      {current?.status === "loading" ? <Muted>{t.searching}</Muted> : null}
-      {current?.status === "error" ? <Notice tone="info">{t.unavailable}</Notice> : null}
+      {current?.status === "loading" ? (
+        <View style={styles.waiting} aria-live="polite">
+          <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={styles.waitingText}>{current.slow ? t.slow : t.searching}</Text>
+        </View>
+      ) : null}
+      {current?.status === "error" ? (
+        <>
+          <Notice tone="info">{t.unavailable}</Notice>
+          <FicheButton
+            label={t.retry}
+            variant="secondary"
+            onPress={() => setRetries((n) => n + 1)}
+          />
+        </>
+      ) : null}
       {current?.status === "done" && current.results.length === 0 ? (
         <Muted>{t.noResult}</Muted>
       ) : null}
@@ -308,6 +328,14 @@ function CompanyCard({
 }
 
 const styles = StyleSheet.create({
+  waiting: { flexDirection: "row", alignItems: "center", gap: spacing(2.5) },
+  waitingText: {
+    flex: 1,
+    fontFamily: font.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors["muted-foreground"],
+  },
   finder: { gap: spacing(3) },
   result: {
     flexDirection: "row",
