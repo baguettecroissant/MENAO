@@ -10,8 +10,10 @@ import {
   type ArtisanSignupDraft,
 } from "@menao/core";
 import {
+  COMPANY_SEARCH_ATTEMPTS,
   COMPANY_SEARCH_MIN_LENGTH,
   artisanSignupMetadata,
+  companySearchRetryable,
   companySearchUrl,
   parseCompanySearch,
   type ArtisanAccount,
@@ -32,15 +34,70 @@ import { myArtisanKey } from "./team";
 
 export type { CompanySuggestion };
 
-/** Annuaire des entreprises (API de l'État, sans clé). Exception levée si elle ne répond pas. */
+/** Recherches déjà faites pendant la visite : retaper le même nom ne rappelle pas l'API. */
+const searchCache = new Map<string, CompanySuggestion[]>();
+const SEARCH_CACHE_SIZE = 50;
+
+class RetryableFailure extends Error {}
+
+const pause = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Annuaire des entreprises (API de l'État, sans clé), comme sur le site (ADR 0110) : l'API est
+ * parfois très lente, alors chaque essai a un délai maximum, et un délai dépassé, une coupure, un
+ * 429 ou une erreur du serveur donnent un nouvel essai (`onRetry` prévient l'écran). Après le
+ * dernier essai, une exception : l'écran propose « Réessayer » ou la saisie du SIRET.
+ */
 export async function searchCompanies(
   query: string,
   signal?: AbortSignal,
+  onRetry?: (attempt: number) => void,
 ): Promise<CompanySuggestion[]> {
-  if (query.trim().length < COMPANY_SEARCH_MIN_LENGTH) return [];
-  const res = await fetch(companySearchUrl(query), { signal });
-  if (!res.ok) throw new Error(`Recherche d'entreprises indisponible (${res.status})`);
-  return parseCompanySearch(await res.json());
+  const q = query.trim();
+  if (q.length < COMPANY_SEARCH_MIN_LENGTH) return [];
+  const key = q.toLowerCase();
+  const known = searchCache.get(key);
+  if (known) return known;
+
+  let lastError: unknown = null;
+  for (const [index, attempt] of COMPANY_SEARCH_ATTEMPTS.entries()) {
+    if (index > 0) onRetry?.(index + 1);
+    await pause(attempt.waitMs);
+    if (signal?.aborted) throw new Error("Recherche abandonnée");
+    // Essai annulé par l'écran (nouvelle saisie) ou au bout du délai.
+    const controller = new AbortController();
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, attempt.timeoutMs);
+    const stop = () => controller.abort();
+    signal?.addEventListener("abort", stop);
+    try {
+      const res = await fetch(companySearchUrl(q), { signal: controller.signal });
+      if (!res.ok) {
+        if (companySearchRetryable(res.status)) throw new RetryableFailure(String(res.status));
+        throw new Error(`Recherche d'entreprises indisponible (${res.status})`);
+      }
+      const results = parseCompanySearch(await res.json());
+      if (searchCache.size >= SEARCH_CACHE_SIZE) {
+        searchCache.delete(searchCache.keys().next().value as string);
+      }
+      searchCache.set(key, results);
+      return results;
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      // Coupure du réseau : fetch lève une TypeError.
+      if (!(error instanceof RetryableFailure || timedOut || error instanceof TypeError)) {
+        throw error;
+      }
+      lastError = error;
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", stop);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Recherche d'entreprises indisponible");
 }
 
 /** Brouillon gardé sur le téléphone : l'artisan reprend là où il en était (jamais le mot de passe). */

@@ -7,6 +7,7 @@ import { PageHead } from "@/components/pro/dossier-kit";
 import { FicheButton, FicheCard, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
 import { IconSquare } from "@/components/pro/tools-kit";
 import { ChoiceGroup } from "@/components/pro-signup/signup-parts";
+import { FranceMap } from "@/components/france-map";
 import { TerritoryField } from "@/components/territory-field";
 import { ZoneMap } from "@/components/zone-map";
 import { fr } from "@/i18n/fr";
@@ -182,6 +183,7 @@ function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> 
                 mode={mode}
                 codes={territories}
                 onChange={setTerritories}
+                point={point}
                 labels={{
                   search: mode === "regions" ? t.regionSearch : t.departementSearch,
                   hint: mode === "regions" ? t.regionSearchHint : t.departementSearchHint,
@@ -189,6 +191,7 @@ function ZoneForm({ zone, onSaved }: { zone: Zone; onSaved: () => Promise<void> 
                 }}
               />
             ) : null}
+            {mode === "france" ? <FranceMap mode="france" point={point} /> : null}
             {mode === "france" ? <Text style={styles.text}>{t.franceNote}</Text> : null}
             {mode === "regions" || mode === "france" ? (
               <Text style={styles.text}>{t.wideNote}</Text>
