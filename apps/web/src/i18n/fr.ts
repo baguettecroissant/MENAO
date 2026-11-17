@@ -9477,6 +9477,8 @@ export const fr = {
         fileHintPhoto: "JPEG ou PNG.",
         sending: "Envoi en cours…",
         fileRequired: "Choisissez un fichier.",
+        chooseOther: "Choisir un autre fichier",
+        previewAlt: "Aperçu de l'image choisie",
         fileTooLarge: "Ce fichier dépasse 10 Mo.",
         uploadFailed: "L'envoi du fichier a échoué. Réessayez.",
         status: {
@@ -9687,6 +9689,8 @@ export const fr = {
             photo: { label: "Une photo", hint: "Mon visage, mon équipe, mon camion" },
           },
           logoFile: "Fichier du logo",
+          logoDrop: "Glissez votre logo ici",
+          photoDrop: "Glissez votre photo ici",
           logoFormats: "PNG, JPEG ou WebP, 10 Mo maximum. Un PNG à fond transparent rend le mieux.",
           logoSend: "Envoyer mon logo",
           logoChange: "Changer mon logo",

@@ -49,6 +49,7 @@ export function LogoCard({
           userId={userId}
           accept="image/png,image/jpeg,image/webp"
           fileLabel={t.file}
+          dropLabel={fr.pro.onboarding.profile.image.logoDrop}
           hint={t.hint}
           submitLabel={hasLogo ? t.change : t.send}
           resizeTo={600}

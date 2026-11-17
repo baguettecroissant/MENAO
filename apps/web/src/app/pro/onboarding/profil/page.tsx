@@ -1,5 +1,5 @@
 import { PORTFOLIO_MAX_PHOTOS, parisToday, presentationDraft } from "@menao/core";
-import { Eye } from "lucide-react";
+import { ArrowLeft, Eye } from "lucide-react";
 import Image from "next/image";
 import { ButtonLink, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -129,6 +129,11 @@ export default async function ProfileStepPage() {
             )}
           </section>
         </Card>
+        {/* Retour au dossier en bas de page aussi : le lien du haut est loin après les envois. */}
+        <ButtonLink href="/pro/onboarding" variant="outline" className="self-start">
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          {fr.pro.onboarding.documents.backToDossier}
+        </ButtonLink>
       </div>
       <aside className="overflow-hidden rounded-card border border-border bg-surface shadow-card lg:sticky lg:top-6">
         <p className="flex items-center gap-1.5 border-b border-border bg-background px-4 py-2.5 text-sm font-semibold text-muted-foreground">
