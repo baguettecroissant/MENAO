@@ -145,3 +145,30 @@ export async function signOutEverywhere(): Promise<void> {
   await supabase.auth.signOut({ scope: "global" });
   redirect("/connexion?deconnexion=partout");
 }
+
+/**
+ * Photo de profil du particulier (ADR 0360) : le fichier déjà déposé dans « uploads » est vérifié
+ * et rangé par l'Edge Function process-upload (usage « avatar », ouvert à tout compte).
+ */
+export async function saveAccountPhoto(_prev: FormState, formData: FormData): Promise<FormState> {
+  const path = text(formData, "path");
+  if (!path) return { error: t.photo.failed };
+  const { supabase } = await requireAccount();
+  const { data, error } = await supabase.functions.invoke<{ status: string }>("process-upload", {
+    method: "POST",
+    body: { purpose: "avatar", path },
+  });
+  if (error || data?.status !== "ok") return { error: t.photo.failed };
+  revalidatePath("/compte");
+  return { success: t.photo.saved };
+}
+
+/** « Retirer ma photo » (ADR 0360) : la photo est supprimée pour de bon. */
+export async function removeAccountPhoto(): Promise<void> {
+  const { supabase } = await requireAccount();
+  await supabase.functions.invoke("process-upload", {
+    method: "POST",
+    body: { purpose: "avatar_remove" },
+  });
+  revalidatePath("/compte");
+}

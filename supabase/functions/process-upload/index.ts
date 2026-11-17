@@ -103,6 +103,19 @@ Deno.serve(
       ticketId?: string;
       expenseId?: string;
     } | null;
+    // « Retirer ma photo » (ADR 0360) : aucun fichier à lire, la photo du compte est supprimée.
+    if (body?.purpose === "avatar_remove") {
+      try {
+        await removeAvatar(admin, user.id);
+        return respond("ok");
+      } catch (error) {
+        console.error(
+          "process-upload : retrait de la photo",
+          error instanceof Error ? error.name : "",
+        );
+        return respond("unavailable", 503);
+      }
+    }
     const purpose = body?.purpose as Purpose | undefined;
     const path = body?.path ?? "";
     if (!purpose || !(purpose in ALLOWED) || !new RegExp(`^${user.id}/${UUID}$`).test(path)) {
@@ -224,6 +237,24 @@ async function saveAvatar(admin: SupabaseClient, userId: string, file: CleanFile
     .eq("user_id", userId);
   if (error) throw error;
   if (previous?.avatar_path) await admin.storage.from("avatars").remove([previous.avatar_path]);
+}
+
+/** Photo du compte retirée pour de bon : chemin effacé, puis fichier supprimé (ADR 0360). */
+async function removeAvatar(admin: SupabaseClient, userId: string) {
+  const { data: previous } = await admin
+    .from("profiles")
+    .select("avatar_path")
+    .eq("user_id", userId)
+    .single();
+  if (!previous?.avatar_path) return;
+  const { error } = await admin
+    .from("profiles")
+    .update({ avatar_path: null })
+    .eq("user_id", userId);
+  if (error) throw error;
+  // Artisan : l'image de la fiche n'est plus un logo (ADR 0355).
+  await admin.from("artisans").update({ image_logo: false }).eq("user_id", userId);
+  await admin.storage.from("avatars").remove([previous.avatar_path]);
 }
 
 // Logo des documents (ADR 0038). L'ancien logo n'est effacé que s'il n'est repris dans aucun devis

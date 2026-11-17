@@ -1,5 +1,6 @@
 import {
   Bell,
+  Camera,
   Download,
   FolderOpen,
   KeyRound,
@@ -17,6 +18,7 @@ import {
   PasswordForm,
   ProfileForm,
 } from "@/components/account/account-forms";
+import { AccountPhotoCard } from "@/components/account/photo-card";
 import { Alert, Button, Card, buttonClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { signOutEverywhere } from "@/lib/account/actions";
@@ -47,6 +49,8 @@ export function AccountScreen({
   email,
   pendingEmail,
   pro,
+  userId,
+  photoUrl = null,
   deletionRequestedAt,
   emailConfirmed,
 }: {
@@ -60,6 +64,9 @@ export function AccountScreen({
   /** Nouvelle adresse en attente de confirmation. */
   pendingEmail: string | null;
   pro: boolean;
+  /** Particulier : son identifiant et sa photo de profil (ADR 0360). */
+  userId?: string;
+  photoUrl?: string | null;
   /** Demande de suppression en cours : sa date. */
   deletionRequestedAt: string | null;
   /** Retour d'un lien de confirmation d'adresse e-mail. */
@@ -67,6 +74,8 @@ export function AccountScreen({
 }) {
   const rubrics = [
     { id: "informations", label: t.profile.title, Icon: UserRound },
+    // Photo de profil : pour un particulier (un artisan règle son image dans sa fiche).
+    ...(!pro && userId ? [{ id: "photo", label: t.photo.title, Icon: Camera }] : []),
     { id: "adresse-email", label: t.email.title, Icon: Mail },
     { id: "mot-de-passe", label: t.password.title, Icon: KeyRound },
     { id: "communications", label: t.communications.title, Icon: Bell },
@@ -113,6 +122,18 @@ export function AccountScreen({
               pro={pro}
             />
           </Section>
+
+          {!pro && userId && (
+            <Section id="photo" title={t.photo.title}>
+              <AccountPhotoCard
+                userId={userId}
+                photoUrl={photoUrl}
+                initials={[profile?.first_name, profile?.last_name]
+                  .map((part) => part?.charAt(0).toUpperCase() ?? "")
+                  .join("")}
+              />
+            </Section>
+          )}
 
           <Section id="adresse-email" title={t.email.title}>
             <EmailForm email={email} pendingEmail={pendingEmail} />

@@ -2,9 +2,11 @@ import Constants from "expo-constants";
 import * as WebBrowser from "expo-web-browser";
 import {
   Bell,
+  Camera,
   CircleHelp,
   Download,
   FileText,
+  ImageIcon,
   KeyRound,
   LogOut,
   Mail,
@@ -16,6 +18,7 @@ import {
 } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { BottomSheet } from "@/components/bottom-sheet";
 import { PageHead } from "@/components/pro/dossier-kit";
 import { FicheScreen, FicheTag } from "@/components/pro/fiche-kit";
 import { SettingsRow, SettingsSection, SettingsSwitch } from "@/components/settings-list";
@@ -25,7 +28,8 @@ import { loadAccount, saveMarketingOptIn, shareAccountData } from "@/lib/account
 import { signOut, signOutEverywhere } from "@/lib/auth";
 import { siteLinks } from "@/lib/env";
 import { formatDay } from "@/lib/format";
-import { useProfileSummary } from "@/lib/profile-summary";
+import { pickAvatar, removeAvatar, uploadPhoto } from "@/lib/photos";
+import { forgetProfileSummary, useProfileSummary } from "@/lib/profile-summary";
 import { useSession } from "@/lib/session";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Notice, toast } from "@/ui";
@@ -53,6 +57,10 @@ export function AccountScreen({ title = t.title }: { title?: string }) {
   const [optInError, setOptInError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [exportFailed, setExportFailed] = useState(false);
+  // Photo de profil du particulier (lot 66, ADR 0360) : le rond ouvre trois choix.
+  const [photoSheet, setPhotoSheet] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const artisan = role === "artisan" || role === "artisan_en_attente";
   const roleLabel =
     role === "artisan"
@@ -84,25 +92,74 @@ export function AccountScreen({ title = t.title }: { title?: string }) {
     setExportFailed(!shared);
   }
 
+  async function changePhoto(source: "camera" | "library") {
+    setPhotoSheet(false);
+    setPhotoError(null);
+    // iOS : la feuille doit avoir fini de se fermer avant d'ouvrir l'appareil photo ou la photothèque.
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    const picked = await pickAvatar(source);
+    if ("error" in picked) return setPhotoError(picked.error);
+    const photo = picked.photos[0];
+    if (!photo) return;
+    setPhotoBusy(true);
+    const status = await uploadPhoto({ purpose: "avatar" }, photo);
+    setPhotoBusy(false);
+    if (status !== "ok") {
+      return setPhotoError(fr.search.upload[status] ?? fr.search.upload.unavailable);
+    }
+    forgetProfileSummary();
+    toast.success(t.photo.saved);
+  }
+
+  async function removePhoto() {
+    setPhotoSheet(false);
+    setPhotoError(null);
+    setPhotoBusy(true);
+    const removed = await removeAvatar();
+    setPhotoBusy(false);
+    if (!removed) return setPhotoError(t.photo.removeFailed);
+    forgetProfileSummary();
+    toast.success(t.photo.removed);
+  }
+
   async function leave(scope: "here" | "everywhere") {
     setLeaving(scope);
     await (scope === "everywhere" ? signOutEverywhere() : signOut());
     setLeaving(null);
   }
 
+  const avatar = summary?.avatarUrl ? (
+    <AvatarImage uri={summary.avatarUrl} style={styles.avatarImage} />
+  ) : summary?.initials || name ? (
+    <Text style={styles.initials}>{summary?.initials || name.charAt(0)}</Text>
+  ) : (
+    <UserRound size={26} color={colors["primary-foreground"]} />
+  );
+
   return (
     <FicheScreen>
       <PageHead title={title} />
       <View style={styles.identity}>
-        <View style={styles.avatar}>
-          {summary?.avatarUrl ? (
-            <AvatarImage uri={summary.avatarUrl} style={styles.avatarImage} />
-          ) : summary?.initials || name ? (
-            <Text style={styles.initials}>{summary?.initials || name.charAt(0)}</Text>
-          ) : (
-            <UserRound size={26} color={colors["primary-foreground"]} />
-          )}
-        </View>
+        {artisan ? (
+          <View style={styles.avatar}>{avatar}</View>
+        ) : (
+          // Particulier : le rond ouvre le choix de la photo (un artisan règle son image dans sa fiche).
+          <Pressable
+            role="button"
+            aria-label={summary?.avatarUrl ? t.photo.change : t.photo.add}
+            aria-busy={photoBusy}
+            disabled={photoBusy}
+            onPress={() => setPhotoSheet(true)}
+            style={({ pressed }) => pressed && styles.pressed}
+          >
+            <View style={styles.avatar}>
+              {photoBusy ? <ActivityIndicator color={colors["primary-foreground"]} /> : avatar}
+            </View>
+            <View style={styles.camera}>
+              <Camera size={13} strokeWidth={2.4} color={colors["primary-foreground"]} />
+            </View>
+          </Pressable>
+        )}
         <View style={styles.identityText}>
           {name ? (
             <Text style={styles.name} numberOfLines={1}>
@@ -117,6 +174,44 @@ export function AccountScreen({ title = t.title }: { title?: string }) {
           </View>
         </View>
       </View>
+
+      {artisan ? null : <Text style={styles.privacy}>{t.photo.privacy}</Text>}
+      {photoError ? <Notice tone="error">{photoError}</Notice> : null}
+      <BottomSheet
+        visible={photoSheet}
+        onClose={() => setPhotoSheet(false)}
+        title={t.photo.title}
+        closeLabel={fr.proHelp.close}
+      >
+        <View style={styles.sheet}>
+          <Pressable
+            role="button"
+            onPress={() => void changePhoto("camera")}
+            style={({ pressed }) => [styles.sheetAction, pressed && styles.pressed]}
+          >
+            <Camera size={20} color={colors.foreground} />
+            <Text style={styles.sheetActionText}>{t.photo.take}</Text>
+          </Pressable>
+          <Pressable
+            role="button"
+            onPress={() => void changePhoto("library")}
+            style={({ pressed }) => [styles.sheetAction, pressed && styles.pressed]}
+          >
+            <ImageIcon size={20} color={colors.foreground} />
+            <Text style={styles.sheetActionText}>{t.photo.choose}</Text>
+          </Pressable>
+          {summary?.avatarUrl ? (
+            <Pressable
+              role="button"
+              onPress={() => void removePhoto()}
+              style={({ pressed }) => [styles.sheetAction, pressed && styles.pressed]}
+            >
+              <Trash2 size={20} color={colors.danger} />
+              <Text style={[styles.sheetActionText, styles.sheetDanger]}>{t.photo.remove}</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      </BottomSheet>
 
       <SettingsSection>
         <SettingsRow
@@ -259,6 +354,37 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   avatarImage: { width: 56, height: 56 },
+  camera: {
+    position: "absolute",
+    right: -4,
+    bottom: -4,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 2.5,
+    borderColor: colors.surface,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  privacy: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["muted-foreground"],
+  },
+  sheet: { gap: spacing(2.5) },
+  sheetAction: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing(3),
+    minHeight: 54,
+    paddingHorizontal: spacing(4),
+    borderRadius: 16,
+    backgroundColor: colors.background,
+  },
+  sheetActionText: { fontFamily: font.semibold, fontSize: 16, color: colors.foreground },
+  sheetDanger: { color: colors.danger },
   initials: { fontFamily: font.bold, fontSize: 19, color: colors["primary-foreground"] },
   identityText: { flex: 1, minWidth: 0, gap: 2 },
   name: { fontFamily: font.display, fontSize: 19, letterSpacing: -0.4, color: colors.foreground },

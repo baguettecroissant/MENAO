@@ -4588,6 +4588,20 @@ export const fr = {
   },
   account: {
     title: "Mon compte",
+    // Photo de profil du particulier (lot 66, ADR 0360), facultative.
+    photo: {
+      title: "Photo de profil",
+      add: "Ajouter une photo de profil",
+      change: "Changer ma photo de profil",
+      take: "Prendre une photo",
+      choose: "Choisir dans mes photos",
+      remove: "Retirer ma photo",
+      privacy:
+        "Photo facultative. Seuls les artisans à qui vous envoyez une demande la voient, jamais le public.",
+      saved: "Photo enregistrée.",
+      removed: "Photo retirée.",
+      removeFailed: "La photo n'a pas pu être retirée. Réessayez.",
+    },
     // Organisation en sections (refonte, comme « Mon profil », ADR 0132).
     sections: {
       account: "Mon compte",

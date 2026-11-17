@@ -12,7 +12,7 @@ export default async function AccountPage({ searchParams }: PageProps<"/compte">
   const [{ data: profile }, { data: deletion }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("first_name, last_name, phone, marketing_opt_in")
+      .select("first_name, last_name, phone, marketing_opt_in, avatar_path")
       .eq("user_id", user.id)
       .single(),
     supabase
@@ -28,6 +28,12 @@ export default async function AccountPage({ searchParams }: PageProps<"/compte">
       email={email}
       pendingEmail={user.new_email ?? null}
       pro={role !== "particulier"}
+      userId={user.id}
+      photoUrl={
+        profile?.avatar_path
+          ? supabase.storage.from("avatars").getPublicUrl(profile.avatar_path).data.publicUrl
+          : null
+      }
       deletionRequestedAt={deletion?.created_at ?? null}
       emailConfirmed={params.email === "confirme"}
     />

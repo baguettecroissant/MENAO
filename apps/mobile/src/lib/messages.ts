@@ -4,6 +4,7 @@ import { parseArtisanChantierDetail } from "@menao/validation";
 import { fr } from "@/i18n/fr";
 import { artisanAvatar } from "./chantiers";
 import { formatDayLabel, formatTime } from "./format";
+import { publicUrl } from "./project";
 import { supabase } from "./supabase";
 import { exampleConversation, exampleConversationList } from "./example-data";
 import { examplesActive } from "./examples";
@@ -101,7 +102,8 @@ async function conversationParty(chantierId: string, artisan: boolean) {
       title: c.chantier.title,
       otherName,
       shortName: c.client.first_name || otherName,
-      avatarUrl: null,
+      // Photo du client (ADR 0360), donnée avec la fiche du chantier.
+      avatarUrl: c.client.avatar_path ? publicUrl("avatars", c.client.avatar_path) : null,
       phone: c.client.phone,
       chantierPath: `/pro-chantier/${chantierId}` as const,
       closed: conversationClosed(c.chantier.status),
