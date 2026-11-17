@@ -1635,3 +1635,177 @@ export function exampleLibrary(now: Date = new Date()): {
     components,
   };
 }
+
+/** Appel d'offres et ligne de DPGF d'exemple : mêmes colonnes que `tenders` et `tender_lines`. */
+export type ExampleTender = {
+  id: string;
+  name: string;
+  client_name: string | null;
+  due_on: string | null;
+  status: "en_cours" | "envoye" | "retenu" | "perdu";
+  created_at: string;
+};
+export type ExampleTenderLine = {
+  id: string;
+  kind: "titre" | "poste";
+  lot: string | null;
+  code: string | null;
+  designation: string;
+  unit_label: string | null;
+  architect_quantity_milli: number | null;
+  quantity_milli: number | null;
+  unit_price_ht_cents: number | null;
+  price_source: "devis" | "manuel" | "bibliotheque" | null;
+  price_reference: string | null;
+};
+
+/**
+ * Appels d'offres d'exemple (ADR 0365) : trois dossiers (en cours, envoyé, retenu) et le DPGF du
+ * premier, reçu en Excel : deux lots, des prix repris de la bibliothèque et d'anciens devis, deux
+ * postes à chiffrer et un poste où l'artisan compte plus que l'architecte.
+ */
+export function exampleTenders(now: Date = new Date()): {
+  tenders: ExampleTender[];
+  /** DPGF du premier dossier. */
+  lines: ExampleTenderLine[];
+} {
+  const t = now.getTime();
+  const tender = (
+    n: number,
+    name: string,
+    client_name: string,
+    status: ExampleTender["status"],
+    dueDays: number,
+    createdDaysAgo: number,
+  ): ExampleTender => ({
+    id: `${PREFIX}${950 + n}`,
+    name,
+    client_name,
+    due_on: dateOnly(now, dueDays),
+    status,
+    created_at: iso(t - createdDaysAgo * DAY),
+  });
+  let n = 0;
+  const id = () => `${PREFIX}${960 + ++n}`;
+  const title = (lot: string, designation: string): ExampleTenderLine => ({
+    id: id(),
+    kind: "titre",
+    lot,
+    code: lot,
+    designation,
+    unit_label: null,
+    architect_quantity_milli: null,
+    quantity_milli: null,
+    unit_price_ht_cents: null,
+    price_source: null,
+    price_reference: null,
+  });
+  const post = (
+    lot: string,
+    code: string,
+    designation: string,
+    unit_label: string,
+    architect: number,
+    quantity: number,
+    price: number | null,
+    source: ExampleTenderLine["price_source"] = null,
+    reference: string | null = null,
+  ): ExampleTenderLine => ({
+    id: id(),
+    kind: "poste",
+    lot,
+    code,
+    designation,
+    unit_label,
+    architect_quantity_milli: architect,
+    quantity_milli: quantity,
+    unit_price_ht_cents: price,
+    price_source: source,
+    price_reference: reference,
+  });
+  return {
+    tenders: [
+      tender(
+        1,
+        "Rénovation de quatre salles de bains",
+        "Cabinet d'architecture d'exemple",
+        "en_cours",
+        9,
+        2,
+      ),
+      tender(2, "Plomberie d'un cabinet médical", "Atelier d'exemple", "envoye", -6, 21),
+      tender(3, "Chaufferie d'une petite copropriété", "Syndic d'exemple", "retenu", -40, 62),
+    ],
+    lines: [
+      title("1", "Plomberie sanitaire"),
+      post(
+        "1",
+        "1.1",
+        "Dépose des appareils sanitaires existants",
+        "ens",
+        4_000,
+        4_000,
+        18_000,
+        "manuel",
+      ),
+      post(
+        "1",
+        "1.2",
+        "Alimentation en cuivre 16 mm",
+        "ml",
+        60_000,
+        72_000,
+        2_565,
+        "bibliotheque",
+        "Alimentation en cuivre 16 mm",
+      ),
+      post("1", "1.3", "Évacuations en PVC", "ml", 40_000, 40_000, null),
+      post(
+        "1",
+        "1.4",
+        "Pose d'un WC suspendu",
+        "u",
+        4_000,
+        4_000,
+        60_770,
+        "bibliotheque",
+        "Pose d'un WC suspendu",
+      ),
+      post(
+        "1",
+        "1.5",
+        "Pose d'un mitigeur de lavabo",
+        "u",
+        8_000,
+        8_000,
+        13_860,
+        "bibliotheque",
+        "Pose d'un mitigeur de lavabo",
+      ),
+      post(
+        "1",
+        "1.6",
+        "Création d'une douche à l'italienne",
+        "u",
+        4_000,
+        4_000,
+        117_850,
+        "bibliotheque",
+        "Création d'une douche à l'italienne",
+      ),
+      title("2", "Production d'eau chaude"),
+      post(
+        "2",
+        "2.1",
+        "Remplacement d'un chauffe-eau électrique 200 litres",
+        "u",
+        4_000,
+        4_000,
+        64_720,
+        "devis",
+        "DEV-EXEMPLE-0001",
+      ),
+      post("2", "2.2", "Calorifugeage des réseaux", "ml", 30_000, 30_000, null),
+    ],
+  };
+}

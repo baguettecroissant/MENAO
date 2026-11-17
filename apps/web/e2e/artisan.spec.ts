@@ -343,6 +343,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
     ["bibliotheque", "Pose d'un WC suspendu"],
     ["bibliotheque?vue=fournitures", "Tube cuivre 16 mm"],
     ["paiements", "Mes paiements"],
+    ["demandes/appels-offres", "Rénovation de quatre salles de bains"],
     ["secretaire", "Sophie Lambert"],
     ["mon-profil", "Votre entreprise"],
     ["profil", "Ma fiche publique"],

@@ -35,6 +35,7 @@ import {
   exampleScore,
   exampleSecretary,
   exampleSentQuote,
+  exampleTenders,
   isExampleId,
   spaceExamplesShown,
 } from "../src/space-examples";
@@ -283,6 +284,31 @@ describe("exemples de l'espace artisan (ADR 0184)", () => {
       true,
     );
     expect([...ids, ...supplies.keys()].every(isExampleId)).toBe(true);
+  });
+
+  it("appels d'offres : trois dossiers, un DPGF à chiffrer avec des écarts de quantité", () => {
+    const { tenders, lines } = exampleTenders(SUMMER);
+    expect(tenders.map((t) => t.status)).toEqual(["en_cours", "envoye", "retenu"]);
+    expect(tenders.every((t) => isExampleId(t.id))).toBe(true);
+    // Échéance du dossier en cours : dans le futur.
+    expect((tenders[0]?.due_on ?? "") > "2026-07-15").toBe(true);
+    const posts = lines.filter((l) => l.kind === "poste");
+    expect(lines.filter((l) => l.kind === "titre").length).toBeGreaterThanOrEqual(2);
+    expect(posts.length).toBeGreaterThanOrEqual(7);
+    // Des prix repris de la bibliothèque et d'anciens devis, et des postes encore à chiffrer.
+    expect(posts.some((l) => l.price_source === "bibliotheque")).toBe(true);
+    expect(posts.some((l) => l.price_source === "devis")).toBe(true);
+    expect(posts.filter((l) => l.unit_price_ht_cents === null).length).toBeGreaterThanOrEqual(2);
+    // Un poste où l'artisan compte plus que l'architecte (risque au forfait).
+    expect(
+      posts.some(
+        (l) =>
+          l.quantity_milli !== null &&
+          l.architect_quantity_milli !== null &&
+          l.quantity_milli > l.architect_quantity_milli,
+      ),
+    ).toBe(true);
+    expect(new Set(lines.map((l) => l.id)).size).toBe(lines.length);
   });
 
   it("suivi : un mois en cours et le précédent, des tranches dues, des retards", () => {
