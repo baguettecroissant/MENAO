@@ -27,5 +27,14 @@ export function MoneySwitcher({
     { value: "bibliotheque", label: fr.tabs.library },
     ...(overview ? [{ value: "suivi" as const, label: fr.tabs.overview }] : []),
   ];
-  return <PillTabs label={fr.tabs.money} options={options} value={value} onChange={onChange} />;
+  // Quatre ou cinq onglets : la rangée défile, les libellés ne se chevauchent plus.
+  return (
+    <PillTabs
+      label={fr.tabs.money}
+      options={options}
+      value={value}
+      onChange={onChange}
+      scrollable
+    />
+  );
 }
