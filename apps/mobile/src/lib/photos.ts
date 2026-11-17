@@ -275,3 +275,12 @@ export async function uploadPhoto(target: PhotoTarget, photo: PickedPhoto): Prom
   const deposit = await depositPhoto(target.purpose, photo);
   return "path" in deposit ? processDeposit(target, deposit.path) : deposit.status;
 }
+
+/** « Retirer ma photo » (ADR 0360) : la photo du compte est supprimée pour de bon. Vrai si c'est fait. */
+export async function removeAvatar(): Promise<boolean> {
+  const { data, error } = await supabase.functions.invoke<{ status: UploadStatus }>(
+    "process-upload",
+    { body: { purpose: "avatar_remove" } },
+  );
+  return !error && data?.status === "ok";
+}

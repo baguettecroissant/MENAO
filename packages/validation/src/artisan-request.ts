@@ -47,6 +47,8 @@ export const requestDetailSchema = z.object({
     last_name: z.string().nullable(),
     phone: z.string().nullable(),
     email: z.string().nullable(),
+    // Photo de profil du particulier (ADR 0360), une fois la demande acceptée.
+    avatar_path: z.string().nullable().optional(),
   }),
   chantier_id: z.string().nullable(),
 });

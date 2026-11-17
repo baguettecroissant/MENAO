@@ -12,6 +12,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { Tag, buttonClasses } from "@/components/ui";
+import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import type { RequestDetail } from "@/lib/artisan/requests";
 import { formatClock, formatDay } from "@/lib/format";
@@ -282,9 +283,19 @@ export function RequestClientCard({ detail: r }: { detail: RequestDetail }) {
   return (
     <section aria-label={st.clientCard} className={sheetCard}>
       <div className="flex items-center gap-3">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary-soft font-bold text-primary-strong">
-          {(r.client.first_name ?? "?").charAt(0).toUpperCase()}
-        </span>
+        {/* Photo du client une fois la demande acceptée (ADR 0360), sinon son initiale. */}
+        {r.client.avatar_path ? (
+          // eslint-disable-next-line @next/next/no-img-element -- image non optimisée par Vercel (spec §4.4)
+          <img
+            src={`${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${r.client.avatar_path}`}
+            alt=""
+            className="size-11 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary-soft font-bold text-primary-strong">
+            {(r.client.first_name ?? "?").charAt(0).toUpperCase()}
+          </span>
+        )}
         <span className="flex min-w-0 flex-col">
           <span className="truncate text-base font-semibold">{name || "—"}</span>
           <span className="text-sm text-muted-foreground">{st.particulier}</span>

@@ -6,7 +6,9 @@ import { useState, type ReactNode } from "react";
 import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { PhotoViewer } from "@/components/photo-viewer";
 import { CardHeading, FicheButton, FicheCard, FicheTag } from "@/components/pro/fiche-kit";
+import { AvatarImage } from "@/components/avatar";
 import { fr } from "@/i18n/fr";
+import { publicUrl } from "@/lib/project";
 import { formatLongDate } from "@/lib/dates";
 import { Card } from "@/ui";
 import { theme } from "@/ui/theme";
@@ -202,9 +204,14 @@ function ClientCard({
   return (
     <FicheCard gap={3}>
       <View style={styles.person}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{(r.client.first_name ?? "?").charAt(0)}</Text>
-        </View>
+        {/* Photo du client une fois la demande acceptée (ADR 0360), sinon son initiale. */}
+        {r.client.avatar_path ? (
+          <AvatarImage uri={publicUrl("avatars", r.client.avatar_path)} style={styles.avatar} />
+        ) : (
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{(r.client.first_name ?? "?").charAt(0)}</Text>
+          </View>
+        )}
         <View style={styles.flex}>
           <Text role="heading" style={styles.name}>
             {clientName || t.client}

@@ -65,6 +65,11 @@ type UploadFormProps = {
    * Le texte de la zone, par exemple « Glissez votre logo ici ».
    */
   dropLabel?: string;
+  /**
+   * Action qui enregistre le fichier déposé ; par défaut celle du dossier de l'artisan. « Mon
+   * compte » d'un particulier passe la sienne (ADR 0360).
+   */
+  process?: (prev: FormState, formData: FormData) => Promise<FormState>;
 };
 
 /**
@@ -87,6 +92,7 @@ export function UploadForm({
   camera = false,
   readAs,
   dropLabel,
+  process = processUpload,
 }: UploadFormProps) {
   const form = useRef<HTMLFormElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -238,7 +244,7 @@ export function UploadForm({
     formData.delete("file");
     formData.set("path", path);
     formData.set("purpose", purpose);
-    const result = await processUpload(prev, formData);
+    const result = await process(prev, formData);
     // Le formulaire est vidé après l'envoi (React) : le fichier sera choisi de nouveau. Le fichier
     // brut est retiré par process-upload, ou ici si les champs ont été refusés avant son appel.
     if (result.fieldErrors) void discardRaw(path);

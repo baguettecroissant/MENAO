@@ -3628,6 +3628,21 @@ export const fr = {
     // Refonte « Nette » (ADR 0258) : rubriques à gauche.
     rubricsLabel: "Rubriques du compte",
     proNav: "Paramètres du compte",
+    // Photo de profil du particulier (ADR 0360), facultative.
+    photo: {
+      title: "Photo de profil",
+      privacy:
+        "Facultative. Seuls les artisans à qui vous envoyez une demande la voient, jamais le public.",
+      alt: "Votre photo de profil",
+      file: "Photo",
+      drop: "Glissez votre photo ici",
+      hint: "JPEG ou PNG, 10 Mo maximum. Vous cadrez la photo avant l'envoi.",
+      send: "Envoyer ma photo",
+      change: "Changer ma photo",
+      remove: "Retirer ma photo",
+      saved: "Photo enregistrée.",
+      failed: "La photo n'a pas pu être enregistrée. Réessayez.",
+    },
     profile: {
       title: "Mes informations",
       firstName: "Prénom",
