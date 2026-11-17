@@ -1,5 +1,5 @@
 import { PORTFOLIO_MAX_PHOTOS, PRESENTATION_MIN_LENGTH } from "@menao/core";
-import { Camera, ImagePlus, Sparkles, X } from "lucide-react-native";
+import { Camera, ImageIcon, ImagePlus, Sparkles, X } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { PageHead } from "@/components/pro/dossier-kit";
@@ -10,7 +10,9 @@ import {
   FicheCard,
   FicheScreen,
   FicheSkeleton,
+  FicheTag,
 } from "@/components/pro/fiche-kit";
+import { Segmented } from "@/components/segmented";
 import { SwitchCard, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import {
@@ -29,11 +31,12 @@ import { theme } from "@/ui/theme";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proPublicProfile;
+const i = t.image;
 const { colors, font, radius, spacing } = theme;
 
 /**
- * Photo de profil, présentation et photos de réalisations de la fiche (ADR 0113, 0124), comme sur
- * le site : photo recadrée au carré et réduite à 512 px, présentation de 100 caractères au moins,
+ * Image (logo ou photo, facultative, ADR 0355), présentation et photos de réalisations de la fiche
+ * (ADR 0113, 0124), comme sur le site : photo recadrée au carré et réduite à 512 px, présentation de 100 caractères au moins,
  * 12 photos de réalisations au plus. Puis le choix d'afficher la fiche dans Google (ADR 0171).
  * Refonte « Nette » (lot 9, maquette « ProfilDossierNette ») : grand titre, cartes, photo ronde,
  * interrupteur en carte et « Enregistrer la présentation » collé en bas.
@@ -81,7 +84,13 @@ function PublicProfileContent({
     >
       <PageHead title={t.title} lead={fr.proDossier.profilHint} />
       <HelpVideoCard id="v10-profil" />
-      <PhotoCard avatarPath={dossier?.avatarPath ?? null} onSaved={() => void onSaved()} />
+      <ImageCard
+        // Relu après un envoi : le choix suit l'image enregistrée.
+        key={`${dossier?.avatarPath ?? ""}:${dossier?.imageLogo ? "logo" : "photo"}`}
+        avatarPath={dossier?.avatarPath ?? null}
+        isLogo={dossier?.imageLogo === true}
+        onSaved={() => void onSaved()}
+      />
       <FicheCard padding={4.5} gap={3}>
         <ToolField
           label={t.presentation}
@@ -108,21 +117,38 @@ function PublicProfileContent({
   );
 }
 
-function PhotoCard({ avatarPath, onSaved }: { avatarPath: string | null; onSaved: () => void }) {
+/**
+ * « Votre image » (ADR 0355), comme sur le site : une seule image, logo ou photo, au choix de
+ * l'artisan, et facultative. Le logo est envoyé sans cadrage, montré en entier, et sert aussi sur
+ * les documents ; la photo passe par le cadrage rond (ADR 0202).
+ */
+function ImageCard({
+  avatarPath,
+  isLogo,
+  onSaved,
+}: {
+  avatarPath: string | null;
+  isLogo: boolean;
+  onSaved: () => void;
+}) {
+  // Sans image : le logo d'abord, ce que la plupart des artisans veulent montrer.
+  const [kind, setKind] = useState<"logo" | "photo">(isLogo || !avatarPath ? "logo" : "photo");
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
-  const hasPhoto = avatarPath !== null;
+  const logo = kind === "logo";
+  // L'image actuelle n'est montrée que sous le choix qui lui correspond.
+  const current = avatarPath && isLogo === logo ? publicUrl("avatars", avatarPath) : null;
 
   async function add() {
     setMessage(null);
-    const source = await choosePhotoSource(t.photoTitle);
+    const source = await choosePhotoSource(i.title);
     if (!source) return;
-    const picked = await pickAvatar(source);
+    const picked = logo ? await pickPhotos(source, 1) : await pickAvatar(source);
     if ("error" in picked) return setMessage({ tone: "error", text: picked.error });
     const photo = picked.photos[0];
     if (!photo) return;
     setSending(true);
-    const status = await uploadPhoto({ purpose: "avatar" }, photo);
+    const status = await uploadPhoto({ purpose: logo ? "image_logo" : "avatar" }, photo);
     setSending(false);
     if (status !== "ok") {
       return setMessage({
@@ -131,37 +157,56 @@ function PhotoCard({ avatarPath, onSaved }: { avatarPath: string | null; onSaved
       });
     }
     forgetProfileSummary();
-    toast.success(t.photoDone);
+    toast.success(logo ? i.logoDone : t.photoDone);
     onSaved();
   }
 
   return (
     <FicheCard padding={4.5} gap={3}>
-      <CardHeading title={t.photoTitle} size={17} />
+      <View style={styles.imageHead}>
+        <CardHeading title={i.title} size={17} />
+        <FicheTag text={i.optional} tone="neutral" />
+      </View>
+      <Text style={styles.text}>{i.lead}</Text>
+      <Segmented
+        label={i.choice}
+        options={[
+          { value: "logo", label: i.logo },
+          { value: "photo", label: i.photo },
+        ]}
+        value={kind}
+        onChange={setKind}
+      />
       <View style={styles.photoRow}>
-        {avatarPath ? (
+        {current ? (
           <Image
-            source={{ uri: publicUrl("avatars", avatarPath) }}
-            style={styles.avatar}
-            alt={t.photoTitle}
+            source={{ uri: current }}
+            style={logo ? styles.logo : styles.avatar}
+            resizeMode={logo ? "contain" : "cover"}
+            alt={logo ? i.logo : t.photoTitle}
           />
         ) : (
-          <View style={[styles.avatar, styles.avatarEmpty]}>
-            <Camera size={26} color={colors["primary-strong"]} />
+          <View style={[logo ? styles.logo : styles.avatar, styles.avatarEmpty]}>
+            {logo ? (
+              <ImageIcon size={26} color={colors["primary-strong"]} />
+            ) : (
+              <Camera size={26} color={colors["primary-strong"]} />
+            )}
           </View>
         )}
         <View style={styles.photoText}>
-          <Text style={styles.text}>{t.photoHint}</Text>
-          <FicheButton
-            label={hasPhoto ? t.changePhoto : t.addPhoto}
-            icon={Camera}
-            variant="secondary"
-            onPress={() => void add()}
-            loading={sending}
-          />
+          <Text style={styles.text}>{logo ? i.logoHint : i.photoHint}</Text>
         </View>
       </View>
+      <FicheButton
+        label={logo ? (current ? i.changeLogo : i.addLogo) : current ? t.changePhoto : t.addPhoto}
+        icon={logo ? ImageIcon : Camera}
+        variant="secondary"
+        onPress={() => void add()}
+        loading={sending}
+      />
       {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
+      <Text style={styles.none}>{i.none}</Text>
     </FicheCard>
   );
 }
@@ -291,6 +336,27 @@ const styles = StyleSheet.create({
   photoText: { flex: 1, gap: spacing(2.5), alignItems: "flex-start" },
   avatar: { width: 88, height: 88, borderRadius: 44, backgroundColor: colors["primary-soft"] },
   avatarEmpty: { alignItems: "center", justifyContent: "center" },
+  // Logo montré en entier, sur fond blanc bordé.
+  logo: {
+    width: 120,
+    height: 80,
+    borderRadius: radius.input,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  imageHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing(3),
+  },
+  none: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors["muted-foreground"],
+  },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: spacing(2) },
   tile: { width: "31%", aspectRatio: 1 },
   thumb: {

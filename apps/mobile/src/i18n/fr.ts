@@ -279,6 +279,8 @@ export const fr = {
       company: "Votre entreprise",
       documents: "Vos documents",
       profile: "Votre fiche",
+      parallel: "À faire en attendant",
+      extras: "Pour vous démarquer",
     },
     profileParts: { entreprise: "Entreprise", metiers: "Métiers", zone: "Zone" },
     profileTitle: "Votre entreprise, vos métiers, votre zone",
@@ -286,11 +288,14 @@ export const fr = {
     charterTitle: "Charte qualité MENAO",
     charterHint: (rules: number) =>
       `${rules} règles à cocher et votre engagement à certifier, puis une signature`,
-    profilTitle: "Votre photo et votre présentation",
-    profilHint: "Ce que les clients verront sur votre fiche",
-    // Paiements ouverts dès l'envoi du dossier (ADR 0215).
+    profilTitle: "Votre présentation",
+    profilHint: "Ce que les clients liront sur votre fiche",
+    // Image de la fiche, facultative (ADR 0355), comme sur le site.
+    imageTitle: "Votre image",
+    imageHint: "Votre logo ou une photo, sur votre fiche et vos devis",
+    // Paiements ouverts dès le début du dossier (ADR 0353).
     paiementsTitle: "Recevoir les paiements de vos clients",
-    paiementsHintNow: "Vous pouvez le faire dès maintenant, pendant la vérification",
+    paiementsHintNow: "Vous pouvez le faire dès maintenant : Stripe vérifie pendant ce temps",
     documents: {
       kbis: "Kbis ou extrait INSEE/RNE de moins de 3 mois",
       decennale: "Attestation d'assurance décennale",
@@ -308,7 +313,12 @@ export const fr = {
     // Kbis remplacé par la vérification au registre (ADR 0217), comme sur le site.
     registryHint: "Vérifié automatiquement au registre des entreprises",
     registryFailedHint: "Vérification automatique impossible : déposez-le",
+    registryPendingHint: "MENAO vérifie votre entreprise au registre : rien à faire pour l'instant",
     states: {
+      checking: "En cours",
+      openNow: "Ouvert",
+      optional: "Facultatif",
+      added: "Ajouté",
       missing: "À ajouter",
       en_attente: "Déposé",
       valide: "Vérifié",
@@ -606,13 +616,6 @@ export const fr = {
     later: "Plus tard",
     laterHint: "Continuez votre dossier : MENAO vous rappelle les pièces qui manquent.",
     askInsurer: "Demander mon attestation à mon assureur",
-    prepare: {
-      title: "Avant de commencer",
-      intro:
-        "Préparez ces documents : l'inscription prend environ 10 minutes. Vous pouvez vous arrêter et reprendre plus tard.",
-      missing:
-        "Il vous manque un document ? Commencez quand même : il se dépose plus tard, et MENAO vous le rappelle.",
-    },
     insurer: {
       title: "Votre assureur vous l'envoie",
       lead: "MENAO a préparé le message avec votre entreprise et vos métiers. Ajoutez l'adresse de votre assureur, relisez, envoyez.",
@@ -735,9 +738,24 @@ export const fr = {
   },
   /** Photo et présentation de la fiche de l'artisan (ADR 0113), comme sur le site. */
   proPublicProfile: {
-    title: "Votre photo et votre présentation",
+    title: "Votre présentation et votre image",
+    // Une seule image, logo ou photo, facultative (ADR 0355), comme sur le site.
+    image: {
+      title: "Votre image",
+      optional: "Facultatif",
+      lead: "Une seule image suffit. Choisissez ce que vous voulez montrer.",
+      choice: "Ce que vous voulez montrer",
+      logo: "Mon logo",
+      photo: "Une photo",
+      logoHint:
+        "Montré en entier sur votre fiche, et en haut de vos devis, factures et cartes de visite.",
+      photoHint: "Votre visage, votre équipe ou votre camion, en rond sur votre fiche.",
+      addLogo: "Ajouter mon logo",
+      changeLogo: "Changer mon logo",
+      logoDone: "Logo enregistré.",
+      none: "Vous ne voulez rien montrer ? Votre fiche affiche l'image de votre métier et vos initiales, et votre dossier part quand même.",
+    },
     photoTitle: "Photo de profil",
-    photoHint: "Votre visage ou le logo de votre entreprise, bien cadré.",
     addPhoto: "Ajouter une photo",
     changePhoto: "Changer la photo",
     photoDone: "Photo enregistrée.",

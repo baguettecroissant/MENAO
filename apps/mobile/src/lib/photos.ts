@@ -37,6 +37,8 @@ export type PhotoTarget =
   | { purpose: "avatar" }
   | { purpose: "portfolio" }
   | { purpose: "logo" }
+  // Logo comme image de la fiche (ADR 0355) : sert aussi sur les documents.
+  | { purpose: "image_logo" }
   | { purpose: "document"; document: DocumentMetadata }
   | { purpose: "project_photo"; projectId: string }
   | { purpose: "chantier_photo"; chantierId: string }
@@ -211,6 +213,7 @@ export async function depositPhoto(
   const { data } = await supabase.auth.getSession();
   const userId = data.session?.user.id;
   if (!userId) return { status: "forbidden" };
+  const isLogo = purpose === "logo" || purpose === "image_logo";
   let jpeg: string;
   let bytes: Uint8Array;
   try {
@@ -219,13 +222,9 @@ export async function depositPhoto(
       ? photo.uri
       : await toJpeg(
           photo.uri,
-          purpose === "avatar"
-            ? AVATAR_MAX_SIDE
-            : purpose === "logo"
-              ? LOGO_MAX_SIDE
-              : PHOTO_MAX_SIDE,
+          purpose === "avatar" ? AVATAR_MAX_SIDE : isLogo ? LOGO_MAX_SIDE : PHOTO_MAX_SIDE,
           // Logo : PNG, pour garder un fond transparent.
-          purpose === "logo",
+          isLogo,
         );
     bytes = await readBytes(jpeg);
   } catch {
@@ -237,7 +236,7 @@ export async function depositPhoto(
   }
   const path = `${userId}/${uploadId()}`;
   const { error: uploadError } = await supabase.storage.from("uploads").upload(path, bytes, {
-    contentType: photo.pdf ? "application/pdf" : purpose === "logo" ? "image/png" : "image/jpeg",
+    contentType: photo.pdf ? "application/pdf" : isLogo ? "image/png" : "image/jpeg",
     upsert: false,
   });
   removeCopy(jpeg);

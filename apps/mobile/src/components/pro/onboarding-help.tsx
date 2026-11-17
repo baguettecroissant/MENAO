@@ -2,11 +2,9 @@ import {
   DOCUMENT_HELP,
   DOCUMENT_HELP_VIDEO,
   HELP_VIDEOS,
-  PREPARE_ITEMS,
   STRIPE_CHECKLIST,
   helpVideoUrls,
   type HelpVideoId,
-  type PrepareItemKey,
   type RequiredDocumentType,
 } from "@menao/core";
 import * as Linking from "expo-linking";
@@ -18,14 +16,11 @@ import {
   ChevronRight,
   Clock,
   ExternalLink,
-  FileText,
-  Hash,
   IdCard,
   Info,
   Landmark,
   Mail,
   Play,
-  ShieldCheck,
   Smartphone,
   type LucideIcon,
 } from "lucide-react-native";
@@ -163,62 +158,6 @@ function DocumentHelpSteps({ type, onLater }: { type: RequiredDocumentType; onLa
       <FicheButton label={t.later} icon={Clock} variant="secondary" onPress={onLater} />
       <Text style={styles.laterHint}>{t.laterHint}</Text>
     </View>
-  );
-}
-
-const prepareIcons: Record<PrepareItemKey, LucideIcon> = {
-  siret: Hash,
-  decennale: ShieldCheck,
-  rc_pro: ShieldCheck,
-  urssaf: FileText,
-  identite: IdCard,
-  rib: Landmark,
-};
-
-/**
- * « Avant de commencer » (maquette « AidePreparer ») : les six éléments à préparer, montrés tant
- * qu'aucune pièce n'est déposée. Chaque document ouvre son écran, où se trouve son aide.
- */
-export function PrepareCard() {
-  return (
-    <FicheCard padding={4.5} gap={3}>
-      <CardHeading title={t.prepare.title} />
-      <Text style={styles.body}>{t.prepare.intro}</Text>
-      <HelpVideoCard id="v01-inscription" />
-      {PREPARE_ITEMS.map((item) => {
-        const document =
-          item.key === "siret" || item.key === "rib" ? null : (item.key as RequiredDocumentType);
-        const content = (
-          <>
-            <IconSquare icon={prepareIcons[item.key]} tone="neutral" size={38} />
-            <View style={styles.itemTexts}>
-              <Text style={styles.itemTitle}>{item.title}</Text>
-              <Text style={styles.itemHint}>{item.hint}</Text>
-            </View>
-            {document ? <ChevronRight size={16} color={colors["muted-foreground"]} /> : null}
-          </>
-        );
-        return document ? (
-          <Pressable
-            key={item.key}
-            role="link"
-            aria-label={`${item.title}, ${t.where}`}
-            onPress={() => router.push({ pathname: "/pro-document", params: { type: document } })}
-            style={({ pressed }) => [styles.item, pressed && styles.pressed]}
-          >
-            {content}
-          </Pressable>
-        ) : (
-          <View key={item.key} style={styles.item}>
-            {content}
-          </View>
-        );
-      })}
-      <View style={[styles.note, styles.noteInfo]}>
-        <Clock size={16} color={colors["primary-strong"]} />
-        <Text style={styles.noteText}>{t.prepare.missing}</Text>
-      </View>
-    </FicheCard>
   );
 }
 
