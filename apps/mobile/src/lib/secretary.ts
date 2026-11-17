@@ -1,4 +1,10 @@
-import { parseAiAgents, secretaryFigures, voiceGauge, type VoiceGauge } from "@menao/core";
+import {
+  exampleSecretary,
+  parseAiAgents,
+  secretaryFigures,
+  voiceGauge,
+  type VoiceGauge,
+} from "@menao/core";
 import { fr } from "@/i18n/fr";
 import { examplesActive } from "./examples";
 import { supabase } from "./supabase";
@@ -80,9 +86,30 @@ function monthStart(now: Date): string {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1) - 86_400_000).toISOString();
 }
 
+/** Secrétaire d'exemple (ADR 0364) : les mêmes appels fictifs que sur le site. */
+function exampleSecretaryView(): Secretary {
+  const example = exampleSecretary();
+  const todo = example.todo.map(call);
+  return {
+    included: true,
+    name: fr.proSecretary.title,
+    company: "",
+    gauge: example.gauge,
+    settings: {
+      displayName: "",
+      canBook: example.settings.can_book,
+      visitMinutes: example.settings.visit_minutes,
+      instructions: example.settings.instructions ?? "",
+    },
+    hours: true,
+    todo,
+    done: example.done.map(call),
+    figures: secretaryFigures(todo, example.month),
+  };
+}
+
 export async function loadSecretary(): Promise<Secretary | null> {
-  // Données d'exemple : la secrétaire n'en fait pas partie.
-  if (examplesActive()) return { included: false };
+  if (examplesActive()) return exampleSecretaryView();
   const { data: agentsData, error } = await supabase.rpc("my_ai_agents");
   if (error) return null;
   const agents = parseAiAgents(agentsData);
@@ -147,7 +174,10 @@ export async function loadSecretary(): Promise<Secretary | null> {
 
 /** Appels à traiter, pour « Mon profil » et l'accueil : nombre et urgents ; null hors formule. */
 export async function loadSecretaryTodo(): Promise<{ count: number; urgent: number } | null> {
-  if (examplesActive()) return null;
+  if (examplesActive()) {
+    const { todo } = exampleSecretary();
+    return { count: todo.length, urgent: todo.filter((c) => c.urgent).length };
+  }
   const { data: agentsData, error } = await supabase.rpc("my_ai_agents");
   if (error || !parseAiAgents(agentsData).agents.secretary) return null;
   const { data } = await supabase
