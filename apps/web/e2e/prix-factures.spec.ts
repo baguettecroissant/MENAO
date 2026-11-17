@@ -1,4 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { SEED_ARTISANS, setArtisanPlan } from "./plan";
+
+// Prix à jour : fonction des formules Premium et Entreprise (ADR 0363). L'artisan du seed, en
+// formule Base, passe en Premium le temps du test.
+test.beforeAll(() => setArtisanPlan(SEED_ARTISANS.plombierDispo, "premium"));
+test.afterAll(() => setArtisanPlan(SEED_ARTISANS.plombierDispo, "base"));
 
 // Prix d'achat repérés dans les factures (F-149, ADR 0311, lot 44) : la facture fictive du seed, déjà lue
 // dans Dépenses, reprend une fourniture de la plombière (même référence, +10 %) et un article

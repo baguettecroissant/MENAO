@@ -5260,6 +5260,20 @@ export const fr = {
      * invitation), et page d'un membre dont l'accès est suspendu.
      */
     /** Rubrique « Secrétaire » (ADR 0244) : appels à traiter, historique, essai, réglages. */
+    // Fonction comprise dans une formule supérieure (ADR 0363).
+    planLocked: {
+      included: "Comprise dans les formules Premium et Entreprise.",
+      cta: "Voir les formules",
+      importTitle: "Reprenez votre catalogue dans MENAO",
+      importText:
+        "Déposez votre fichier Excel ou CSV : MENAO reconnaît les colonnes et ajoute vos ouvrages et vos fournitures à votre bibliothèque.",
+      raiseTitle: "Augmentez vos prix en un geste",
+      raiseText:
+        "Une hausse appliquée d'un coup à vos ouvrages et à vos prix d'achat, avec l'aperçu avant et après, annulable pendant 24 heures.",
+      pricesTitle: "Vos prix d'achat à jour d'après vos factures",
+      pricesText:
+        "MENAO relève les prix sur les factures déposées dans vos dépenses et vous propose de mettre à jour vos fournitures.",
+    },
     secretaryPage: {
       title: "Secrétaire",
       lead: (name: string) =>

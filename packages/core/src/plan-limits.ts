@@ -76,3 +76,51 @@ export function canChangeTrades({
   const have = new Set(current);
   return [...wanted].every((code) => have.has(code));
 }
+
+/** Ligne du comparatif des formules (plan_features, ADR 0200) : libellé et valeur par formule. */
+export type PlanContentRow = { categorie: string; libelle: string; valeurs: unknown };
+
+/**
+ * Valeur d'une ligne du comparatif pour une formule : comprise (`true`, un nombre positif ou un
+ * texte, par exemple « Jusqu'à 25 ») ou non (`false`, zéro, absente).
+ */
+export function planFeatureValue(
+  values: unknown,
+  plan: PlanCode,
+): { included: boolean; value: string | null } {
+  const raw = record(values)[plan];
+  if (raw === true) return { included: true, value: null };
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return raw > 0 ? { included: true, value: String(raw) } : { included: false, value: null };
+  }
+  if (typeof raw === "string" && raw.trim()) return { included: true, value: raw.trim() };
+  return { included: false, value: null };
+}
+
+export type PlanContents = {
+  /** Ce que la formule comprend, par catégorie, dans l'ordre du comparatif. */
+  groups: { title: string; features: { label: string; value: string | null }[] }[];
+  /** Ce qu'elle ne comprend pas. */
+  excluded: string[];
+};
+
+/**
+ * Contenu d'une formule d'après le comparatif (« Ma formule » dans l'application, ADR 0363). Les
+ * lignes arrivent déjà triées.
+ */
+export function planContents(rows: readonly PlanContentRow[], plan: PlanCode): PlanContents {
+  const groups: PlanContents["groups"] = [];
+  const excluded: string[] = [];
+  for (const row of rows) {
+    const { included, value } = planFeatureValue(row.valeurs, plan);
+    if (!included) {
+      excluded.push(row.libelle);
+      continue;
+    }
+    const group = groups.find((g) => g.title === row.categorie);
+    const feature = { label: row.libelle, value };
+    if (group) group.features.push(feature);
+    else groups.push({ title: row.categorie, features: [feature] });
+  }
+  return { groups, excluded };
+}

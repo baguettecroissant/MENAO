@@ -1,8 +1,10 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { LibraryRaise } from "@/components/pro/library-raise";
+import { LockedPage, PlanLocked } from "@/components/pro/plan-locked";
 import { fr } from "@/i18n/fr";
 import { loadLibrary } from "@/lib/artisan/library";
+import { planRights } from "@/lib/artisan/plan-rights";
 import { requireTeamPermission } from "@/lib/artisan/space";
 
 const t = fr.pro.library.raise;
@@ -15,6 +17,14 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
  */
 export default async function RaisePage() {
   const { supabase } = await requireTeamPermission("money");
+  // Hausse des prix : Premium et Entreprise (ADR 0363).
+  if (!(await planRights(supabase)).priceUpdates) {
+    return (
+      <LockedPage title={t.title}>
+        <PlanLocked title={fr.pro.planLocked.raiseTitle} text={fr.pro.planLocked.raiseText} />
+      </LockedPage>
+    );
+  }
   const library = await loadLibrary(supabase, { seed: false });
   return (
     <main className="flex-1">

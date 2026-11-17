@@ -4448,6 +4448,7 @@ export const fr = {
       expenses: "Dépenses",
       accountant: "Envoi au comptable",
       secretary: "Secrétaire",
+      plan: "Ma formule",
       identity: "Identité et connexion",
       notifications: "Notifications",
       help: "Aide et contact",
@@ -4505,6 +4506,40 @@ export const fr = {
     selectLabel: (label: string, value: string) => (value ? `${label} : ${value}` : label),
     datePlaceholder: "AAAA-MM-JJ",
     pickDate: "Choisir une date",
+  },
+  // « Ma formule » dans l'application (lot 69, ADR 0363) : ni prix ni achat (règle 10).
+  proPlan: {
+    title: "Ma formule",
+    yourPlan: "VOTRE FORMULE",
+    names: { base: "Base", premium: "Premium", entreprise: "Entreprise", none: "Aucune formule" },
+    states: {
+      none: "Les fonctions de la formule Base s'appliquent.",
+      trial: (date: string) => `Essai gratuit jusqu'au ${date}`,
+      ending: (date: string) => `Se termine le ${date}`,
+      active: "En cours",
+    },
+    month: "Ce mois-ci",
+    usage: {
+      requests: "Demandes reçues",
+      voice: "Minutes de voix",
+      seats: "Comptes utilisateurs",
+      of: (n: number, total: number) => `${n} sur ${total}`,
+      unlimited: (n: number) => `${n} · illimitées`,
+      remaining: (n: number, total: number) => `${n} sur ${total} restantes`,
+    },
+    excluded: "Non compris dans votre formule",
+    // Écran d'une fonction réservée à d'autres formules : une explication, aucun achat.
+    locked: {
+      note: "Cette fonction n'est pas comprise dans votre formule.",
+      raise: {
+        title: "Augmenter mes prix",
+        text: "Une hausse appliquée d'un coup à vos ouvrages et à vos prix d'achat, avec l'aperçu avant et après, annulable pendant 24 heures.",
+      },
+      prices: {
+        title: "Prix d'après mes factures",
+        text: "MENAO relève les prix sur les factures déposées dans vos dépenses et vous propose de mettre à jour vos fournitures.",
+      },
+    },
   },
   // Secrétaire dans l'application (lot 68, ADR 0362), comme la rubrique du site (ADR 0244).
   proSecretary: {

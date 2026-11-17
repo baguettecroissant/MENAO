@@ -50,6 +50,7 @@ import { signOut } from "@/lib/auth";
 import { formatDay } from "@/lib/format";
 import { haptic } from "@/lib/haptics";
 import { choosePhotoSource, pickAvatar, uploadPhoto } from "@/lib/photos";
+import { loadPlanName } from "@/lib/plan";
 import { loadProfileHub, type ProfileHub } from "@/lib/profile-hub";
 import { loadSecretaryTodo } from "@/lib/secretary";
 import type { HubRow, HubStatus } from "@/lib/profile-hub-status";
@@ -73,7 +74,8 @@ type Row = {
     | "identity"
     | "notifications"
     | "help"
-    | "secretary";
+    | "secretary"
+    | "plan";
   icon: LucideIcon;
   /** Couleur du carré de l'icône (maquette « ProfilApp »). */
   tone: FicheTone;
@@ -99,6 +101,7 @@ const ROW_PERMISSION: Partial<Record<Row["key"], TeamPermission>> = {
   documents: "dossier",
   charter: "dossier",
   payments: "subscription",
+  plan: "subscription",
   invoices: "money",
   expenses: "money",
   accountant: "accounting",
@@ -142,6 +145,8 @@ const SECTIONS: { key: keyof typeof t.sections; rows: Row[] }[] = [
     // Paiements des clients (Stripe Connect), factures, dépenses, comptable : aucun abonnement
     // (règle 10).
     rows: [
+      // Ma formule (ADR 0363) : ce qu'elle comprend, sans prix ni achat (règle 10).
+      { key: "plan", icon: Award, tone: "primary", href: "/pro-formule" },
       { key: "payments", icon: Euro, tone: "primary", href: "/pro-paiements" },
       { key: "invoices", icon: ReceiptText, tone: "primary", href: "/pro-factures" },
       { key: "expenses", icon: ShoppingCart, tone: "primary", href: "/pro-depenses" },
@@ -218,6 +223,8 @@ export function ProfileHubContent({
   const [leaving, setLeaving] = useState(false);
   // Appels pris par la secrétaire et encore à traiter (ADR 0362) : pastille de sa ligne.
   const [secretaryTodo] = useFocusData(loadSecretaryTodo);
+  // Nom de la formule en cours (ADR 0363) : pastille de sa ligne.
+  const [planName] = useFocusData(loadPlanName);
   // Exemples (ADR 0184) : « Mon profil » d'exemple ; seules les rubriques qui ont leurs exemples
   // (avis, grade, factures, fiche) s'ouvrent, les vrais réglages restent fermés.
   const example = useExamplesActive();
@@ -301,14 +308,18 @@ export function ProfileHubContent({
                   key={row.key}
                   row={row}
                   status={
-                    row.key === "secretary"
-                      ? secretaryTodo && secretaryTodo.count > 0
-                        ? {
-                            text: t.values.secretary(secretaryTodo.count),
-                            tone: secretaryTodo.urgent > 0 ? "danger" : "warning",
-                          }
+                    row.key === "plan"
+                      ? planName
+                        ? { text: planName, tone: "neutral" }
                         : null
-                      : statusOf(row.key, hub)
+                      : row.key === "secretary"
+                        ? secretaryTodo && secretaryTodo.count > 0
+                          ? {
+                              text: t.values.secretary(secretaryTodo.count),
+                              tone: secretaryTodo.urgent > 0 ? "danger" : "warning",
+                            }
+                          : null
+                        : statusOf(row.key, hub)
                   }
                   detail={row.key === "identity" ? hub.email : null}
                 />
@@ -357,8 +368,9 @@ function statusOf(key: Row["key"], hub: ProfileHub): HubStatus {
     key === "accountant" ||
     key === "notifications" ||
     key === "help" ||
-    // La secrétaire a son propre compteur (appels à traiter), lu à part.
-    key === "secretary"
+    // La secrétaire a son propre compteur (appels à traiter), lu à part ; la formule, son nom.
+    key === "secretary" ||
+    key === "plan"
   ) {
     return null;
   }

@@ -12,6 +12,11 @@ insert into auth.users (id, email, is_anonymous, email_confirmed_at, raw_app_met
 insert into public.artisans (id, user_id, status, raison_sociale, zone_mode) values
   ('e1481000-0000-4000-8000-000000000001', 'e1480000-0000-4000-8000-000000000001', 'valide', 'PLOMBERIE 148', 'communes'),
   ('e1481000-0000-4000-8000-000000000002', 'e1480000-0000-4000-8000-000000000002', 'valide', 'AUTRE 148', 'communes');
+-- Formule Premium en cours : la fonction lui est réservée (ADR 0363).
+insert into public.subscriptions (artisan_id, plan_code, stripe_customer_id, stripe_subscription_id, status, trial_end)
+select ('e1481000-0000-4000-8000-00000000000' || n)::uuid, 'premium', 'cus_l148_' || n, 'sub_l148_' || n,
+  'trialing', now() + interval '30 days'
+from generate_series(1, 2) n;
 insert into public.artisan_works (id, artisan_id, designation, unit, manual_price_cents, source) values
   ('e1482000-0000-4000-8000-000000000001', 'e1481000-0000-4000-8000-000000000001', 'Pose WC suspendu', 'u', 66550, 'manuel'),
   ('e1482000-0000-4000-8000-000000000002', 'e1481000-0000-4000-8000-000000000001', 'Dépose cloison', 'm2', 1400, 'manuel'),

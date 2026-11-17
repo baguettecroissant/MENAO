@@ -1,4 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { SEED_ARTISANS, setArtisanPlan } from "./plan";
+
+// Import de catalogue : fonction des formules Premium et Entreprise (ADR 0363). L'artisan du seed, en
+// formule Base, passe en Premium le temps du test.
+test.beforeAll(() => setArtisanPlan(SEED_ARTISANS.plombierDispo, "premium"));
+test.afterAll(() => setArtisanPlan(SEED_ARTISANS.plombierDispo, "base"));
 
 // Import du catalogue (F-148, ADR 0309-0310) : le plombier du seed dépose un CSV avec ses propres
 // titres ; colonnes reconnues, deux lignes à corriger, deux ouvrages importés au prix du fichier.

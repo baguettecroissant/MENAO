@@ -1,10 +1,12 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { type InvoiceChangeView, InvoicePrices } from "@/components/pro/invoice-prices";
+import { LockedPage, PlanLocked } from "@/components/pro/plan-locked";
 import { ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { loadLibrary } from "@/lib/artisan/library";
 import { loadInvoicePrices } from "@/lib/artisan/library-invoices";
+import { planRights } from "@/lib/artisan/plan-rights";
 import { requireTeamPermission } from "@/lib/artisan/space";
 
 const t = fr.pro.library.invoices;
@@ -17,6 +19,14 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
  */
 export default async function InvoicePricesPage() {
   const { supabase } = await requireTeamPermission("money");
+  // Prix à jour d'après les factures : Premium et Entreprise (ADR 0363).
+  if (!(await planRights(supabase)).priceUpdates) {
+    return (
+      <LockedPage title={t.title}>
+        <PlanLocked title={fr.pro.planLocked.pricesTitle} text={fr.pro.planLocked.pricesText} />
+      </LockedPage>
+    );
+  }
   const library = await loadLibrary(supabase, { seed: false });
   const prices = await loadInvoicePrices(supabase, library);
   const supplies = new Map(library.supplies.map((s) => [s.id, s]));
