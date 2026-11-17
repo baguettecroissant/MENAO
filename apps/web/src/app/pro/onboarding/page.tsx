@@ -22,6 +22,7 @@ import {
   Image as ImageIcon,
   Lock,
   PenLine,
+  Plus,
   ShieldCheck,
   Sparkles,
   UserRound,
@@ -467,6 +468,8 @@ export default async function OnboardingIndexPage() {
                     hint={item.hint}
                     tone={item.done ? "done" : "pending"}
                     status={item.done ? x.added : x.optional}
+                    // « Facultatif » est déjà dit en tête du bloc : la ligne invite à ajouter.
+                    action={item.done ? undefined : x.add}
                   />
                 ))}
               </ul>
@@ -585,6 +588,7 @@ function Row({
   status,
   step,
   minutes,
+  action,
 }: {
   href: string;
   icon: ReactNode;
@@ -595,6 +599,8 @@ function Row({
   /** Numéro de l'étape et durée indicative (maquette du lot 61). */
   step?: number;
   minutes?: number;
+  /** Ligne facultative pas encore remplie : « Ajouter » à la place de la pastille d'état. */
+  action?: string;
 }) {
   return (
     <li>
@@ -617,8 +623,17 @@ function Row({
             {d.minutes(minutes)}
           </span>
         )}
-        <Chip tone={tone}>{status}</Chip>
-        <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+        {action ? (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-pill border-[1.5px] border-border-strong bg-surface px-3 py-1.5 text-sm font-semibold whitespace-nowrap text-primary-strong">
+            <Plus aria-hidden="true" className="size-4" />
+            {action}
+          </span>
+        ) : (
+          <>
+            <Chip tone={tone}>{status}</Chip>
+            <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+          </>
+        )}
       </Link>
     </li>
   );

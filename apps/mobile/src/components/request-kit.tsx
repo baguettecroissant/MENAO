@@ -1,3 +1,4 @@
+import { isLogoImagePath } from "@menao/core";
 import { Check } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
@@ -84,7 +85,7 @@ export function ArtisanAvatar({
   logo?: boolean;
 }) {
   const shape = { width: size, height: size, borderRadius: size / 2 };
-  if (uri && logo) {
+  if (uri && (logo || isLogoImagePath(uri))) {
     return (
       <Image
         source={{ uri }}

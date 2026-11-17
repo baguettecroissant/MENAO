@@ -3,6 +3,7 @@
 // range dans son espace définitif et l'enregistre. Le fichier brut est toujours supprimé.
 // TODO [À VALIDER] : analyse antivirus des documents (prestataire à choisir).
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { logoImageName } from "../../../packages/core/src/avatar.ts";
 import { messageAttachmentKind } from "../../../packages/core/src/messaging.ts";
 import { MAX_PROJECT_PHOTOS } from "../../../packages/core/src/project.ts";
 import {
@@ -179,7 +180,8 @@ Deno.serve(
       // publique, en entier, et en tête des documents.
       if (purpose === "image_logo") {
         await saveLogo(admin, artisan.id, file);
-        await saveAvatar(admin, user.id, file);
+        // Nom préfixé : chaque écran reconnaît un logo à son chemin et le montre en entier (ADR 0357).
+        await saveAvatar(admin, user.id, { ...file, name: logoImageName(file.name) });
         const { error } = await admin
           .from("artisans")
           .update({ image_logo: true })

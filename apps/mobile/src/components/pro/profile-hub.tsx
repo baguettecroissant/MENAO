@@ -30,7 +30,7 @@ import {
   type LucideIcon,
 } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Image, StyleSheet, Switch, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Switch, Text, View } from "react-native";
 import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated";
 import { ListGroup } from "@/components/list-kit";
 import { ProgressRing } from "@/components/progress-ring";
@@ -43,6 +43,7 @@ import {
   type FicheTone,
 } from "@/components/pro/fiche-kit";
 import { ShareCard } from "@/components/pro/share-card";
+import { AvatarImage } from "@/components/avatar";
 import { fr } from "@/i18n/fr";
 import { signOut } from "@/lib/auth";
 import { formatDay } from "@/lib/format";
@@ -455,7 +456,7 @@ function Header({
       >
         <View style={styles.avatar}>
           {hub.avatarUrl ? (
-            <Image source={{ uri: hub.avatarUrl }} style={styles.avatarImage} alt="" />
+            <AvatarImage uri={hub.avatarUrl} style={styles.avatarImage} />
           ) : (
             <Text style={styles.initials}>{hub.initials}</Text>
           )}

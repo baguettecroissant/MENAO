@@ -1,7 +1,8 @@
 import { timeLeft } from "@menao/core";
 import { router } from "expo-router";
 import { Mail, MapPin, Phone } from "lucide-react-native";
-import { Image, Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { AvatarImage } from "@/components/avatar";
 import { fr } from "@/i18n/fr";
 import { artisanAvatar, type RequestRow } from "@/lib/chantiers";
 import { LinkText } from "@/ui";
@@ -75,7 +76,7 @@ export function RequestGroup({
             <View key={r.request_id} style={styles.artisan}>
               <View style={styles.row}>
                 {avatar ? (
-                  <Image source={{ uri: avatar }} style={styles.avatar} alt="" />
+                  <AvatarImage uri={avatar} style={styles.avatar} />
                 ) : (
                   <View style={[styles.avatar, styles.avatarEmpty]}>
                     <Text style={styles.avatarText}>{r.artisan_name.charAt(0).toUpperCase()}</Text>

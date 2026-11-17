@@ -15,10 +15,11 @@ import {
   UserRound,
 } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { PageHead } from "@/components/pro/dossier-kit";
 import { FicheScreen, FicheTag } from "@/components/pro/fiche-kit";
 import { SettingsRow, SettingsSection, SettingsSwitch } from "@/components/settings-list";
+import { AvatarImage } from "@/components/avatar";
 import { fr } from "@/i18n/fr";
 import { loadAccount, saveMarketingOptIn, shareAccountData } from "@/lib/account";
 import { signOut, signOutEverywhere } from "@/lib/auth";
@@ -95,7 +96,7 @@ export function AccountScreen({ title = t.title }: { title?: string }) {
       <View style={styles.identity}>
         <View style={styles.avatar}>
           {summary?.avatarUrl ? (
-            <Image source={{ uri: summary.avatarUrl }} style={styles.avatarImage} alt="" />
+            <AvatarImage uri={summary.avatarUrl} style={styles.avatarImage} />
           ) : summary?.initials || name ? (
             <Text style={styles.initials}>{summary?.initials || name.charAt(0)}</Text>
           ) : (

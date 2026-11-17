@@ -8808,6 +8808,7 @@ export const fr = {
           lead: "Facultatif. Rien de tout cela ne retarde votre dossier.",
           optional: "Facultatif",
           added: "Ajouté",
+          add: "Ajouter",
           logoTitle: "Votre image",
           logoHint: "Votre logo ou une photo, sur votre fiche et vos devis",
           skillsTitle: "Spécialités, diplôme, expérience",
