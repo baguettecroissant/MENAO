@@ -77,17 +77,13 @@ export function GuestAccount() {
         />
       </FicheCard>
       <SettingsSection title={fr.guest.helpTitle}>
-        <SettingsRow
-          icon={CircleHelp}
-          iconTone="success"
-          label={fr.guest.faq}
-          onPress={() => WebBrowser.openBrowserAsync(siteLinks.faq)}
-        />
+        {/* Questions, contact et assistant dans l'application (ADR 0361). */}
+        <SettingsRow icon={CircleHelp} iconTone="success" label={fr.clientHelp.row} href="/aide" />
         <SettingsRow
           icon={MessageSquare}
           iconTone="success"
-          label={fr.guest.contact}
-          onPress={() => WebBrowser.openBrowserAsync(siteLinks.contact)}
+          label={fr.clientHelp.contact.title}
+          href="/contact"
         />
       </SettingsSection>
       <SettingsSection title={fr.account.legal}>

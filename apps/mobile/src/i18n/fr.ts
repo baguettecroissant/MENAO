@@ -4504,6 +4504,86 @@ export const fr = {
     datePlaceholder: "AAAA-MM-JJ",
     pickDate: "Choisir une date",
   },
+  // Aide du particulier dans l'application (lot 67, ADR 0361) : questions, contact, assistant.
+  clientHelp: {
+    title: "Aide",
+    row: "Aide",
+    assistant: {
+      title: "Posez votre question",
+      lead: "L'assistant MENAO répond tout de suite",
+      example: "Comment se passe le devis ?",
+    },
+    contact: {
+      title: "Écrire à l'équipe MENAO",
+      lead: "La réponse arrive dans l'application",
+      intro: "Nous vous répondons ici et par e-mail.",
+      about: "C'est à propos de…",
+      subjects: {
+        question: "Une question",
+        chantier: "Un chantier",
+        compte: "Mon compte",
+        autre: "Autre",
+      },
+      which: "Quel chantier ?",
+      email: "Votre adresse e-mail",
+      emailHint: "Pour vous répondre. Elle ne sert à rien d'autre.",
+      emailRequired: "Indiquez votre adresse e-mail.",
+      message: "Votre message",
+      messageRequired: "Écrivez votre message.",
+      joined: "Votre nom et votre e-mail sont joints automatiquement.",
+      send: "Envoyer mon message",
+      sent: "Message envoyé à l'équipe MENAO.",
+    },
+    exchanges: {
+      title: "Mes échanges avec MENAO",
+      unread: (n: number) => (n === 1 ? "1 réponse de l'équipe" : `${n} réponses de l'équipe`),
+      empty:
+        "Aucun échange pour le moment. Une question ? Écrivez à l'équipe : la réponse arrivera ici.",
+      write: "Écrire à l'équipe MENAO",
+      statuses: {
+        ouvert: "En attente de réponse",
+        en_cours: "Réponse de l'équipe",
+        resolu: "Clos",
+      },
+      untitled: "Sans objet",
+      sentOn: (date: string) => `Envoyé le ${date}`,
+      you: "Vous",
+      team: "Équipe MENAO",
+      replyLabel: "Votre réponse",
+      reply: "Envoyer ma réponse",
+      replySent: "Réponse envoyée.",
+      closed: "Cet échange est clos. Pour une nouvelle question, écrivez à l'équipe.",
+    },
+    faqTitle: "Questions fréquentes",
+    themesLabel: "Thèmes des questions",
+    assistantChat: {
+      title: "Assistant MENAO",
+      greeting:
+        "Bonjour ! Décrivez votre problème avec vos mots, ou posez votre question : je vous aide à trouver le bon artisan et à préparer votre demande.",
+      quick: [
+        "J'ai une fuite ou de l'humidité",
+        "Je ne sais pas quel artisan contacter",
+        "C'est gratuit pour moi ?",
+        "Comment les artisans sont vérifiés ?",
+      ],
+      placeholder: "Votre question…",
+      inputLabel: "Votre question à l'assistant",
+      send: "Envoyer",
+      thinking: "L'assistant écrit…",
+      unavailable:
+        "L'assistant est momentanément indisponible. Réessayez dans un instant, ou écrivez à l'équipe MENAO.",
+      limit:
+        "Pour aller plus loin, écrivez à l'équipe MENAO : elle vous répond dans l'application.",
+      write: "Écrire à l'équipe",
+      draft: {
+        title: "Votre demande est prête",
+        use: "Utiliser cette description",
+        hint: "Vous pourrez la relire et la compléter avant de l'envoyer.",
+      },
+      disclaimer:
+        "Réponses données par un assistant automatique, à partir des informations de MENAO. Pour un cas particulier, écrivez à l'équipe.",
+    },
+  },
   help: {
     title: "Aide et contact",
     lead: "Les réponses aux questions les plus courantes. Une autre question ? Écrivez-nous.",
