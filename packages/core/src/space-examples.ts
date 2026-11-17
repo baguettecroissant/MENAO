@@ -9,7 +9,9 @@
 
 import { HOURS_PRESETS, agendaItemsFrom, type AgendaItem, type HoursRange } from "./agenda";
 import type { ActivityChantier, ActivityPayment, ActivityQuote } from "./artisan-activity";
+import type { VoiceGauge } from "./ai-agents";
 import type { ExpenseRow } from "./expenses";
+import type { MoneyOverview } from "./money-overview";
 import { REQUIRED_DOCUMENT_TYPES, type ArtisanOnboardingSnapshot } from "./onboarding";
 import type { ProfileHubFacts } from "./profile-hub";
 import { parisToday } from "./project";
@@ -1303,6 +1305,173 @@ export function exampleActivityInput(now: Date = new Date()): {
         clientName: name(c),
         startAt: c.start_at,
       })),
+    ],
+  };
+}
+
+/** Appel pris par la secrétaire (mêmes colonnes que `secretary_messages`). */
+export type ExampleSecretaryMessage = {
+  id: string;
+  kind: string;
+  caller_name: string;
+  caller_phone: string;
+  city: string | null;
+  reason: string;
+  urgent: boolean;
+  appointment_at: string | null;
+  done_at: string | null;
+  created_at: string;
+};
+
+/**
+ * Rubrique « Secrétaire » d'exemple (ADR 0364) : trois appels à traiter (un urgent à rappeler, un
+ * rendez-vous pris, une question), deux appels traités, les réglages et les minutes du mois.
+ */
+export function exampleSecretary(now: Date = new Date()): {
+  todo: ExampleSecretaryMessage[];
+  done: ExampleSecretaryMessage[];
+  /** Appels du mois (kind, created_at), pour les chiffres. */
+  month: { kind: string; created_at: string }[];
+  settings: {
+    display_name: string | null;
+    can_book: boolean;
+    visit_minutes: number;
+    instructions: string | null;
+  };
+  gauge: VoiceGauge;
+} {
+  const t = now.getTime();
+  const call = (
+    n: number,
+    name: string,
+    city: string,
+    reason: string,
+    hoursAgo: number,
+    extra: Partial<ExampleSecretaryMessage> = {},
+  ): ExampleSecretaryMessage => ({
+    id: `${PREFIX}7${String(n).padStart(2, "0")}`,
+    kind: "message",
+    caller_name: name,
+    caller_phone: `+3360000000${n}`,
+    city,
+    reason,
+    urgent: false,
+    appointment_at: null,
+    done_at: null,
+    created_at: iso(t - hoursAgo * HOUR),
+    ...extra,
+  });
+  const todo = [
+    call(1, "Sophie Lambert", "Antibes", "Fuite sous l'évier, l'eau coule dans le meuble.", 1, {
+      urgent: true,
+    }),
+    call(2, "Marc Durand", "Nice", "Devis pour remplacer un chauffe-eau de 200 litres.", 3, {
+      kind: "rendez_vous",
+      appointment_at: parisAt(now, 2, "14:00"),
+    }),
+    call(
+      3,
+      "Nadia Benali",
+      "Cagnes-sur-Mer",
+      "Question sur l'entretien annuel de la chaudière.",
+      22,
+    ),
+  ];
+  const done = [
+    call(4, "Paul Roche", "Nice", "Visite pour une salle de bains à refaire.", 3 * 24, {
+      kind: "rendez_vous",
+      appointment_at: parisAt(now, -1, "09:00"),
+      done_at: iso(t - 2 * DAY),
+    }),
+    call(
+      5,
+      "Julie Morel",
+      "Vence",
+      "Robinet de cuisine qui goutte, à rappeler en fin de journée.",
+      5 * 24,
+      {
+        done_at: iso(t - 4 * DAY),
+      },
+    ),
+  ];
+  return {
+    todo,
+    done,
+    month: [...todo, ...done].map(({ kind, created_at }) => ({ kind, created_at })),
+    settings: {
+      display_name: null,
+      can_book: true,
+      visit_minutes: 60,
+      instructions: "Pas de dépannage le week-end. Le devis est gratuit.",
+    },
+    gauge: {
+      usedMinutes: 36,
+      includedMinutes: 300,
+      topUpMinutes: 0,
+      remainingMinutes: 264,
+      ratio: 0.12,
+      level: "ok",
+    },
+  };
+}
+
+/**
+ * « Suivi » d'exemple (ADR 0364) : le mois en cours et le précédent, deux tranches à encaisser sur
+ * les chantiers d'exemple (dont une en retard, déjà relancée) et un paiement reçu sans facture.
+ */
+export function exampleMoneyOverview(now: Date = new Date()): MoneyOverview {
+  const month = parisToday(now).slice(0, 7);
+  const [year = 0, m = 1] = month.split("-").map(Number);
+  const previous = m === 1 ? `${year - 1}-12` : `${year}-${String(m - 1).padStart(2, "0")}`;
+  return {
+    included: true,
+    autoReminders: false,
+    current: {
+      month,
+      signedQuotes: 2,
+      signedCents: 684_000,
+      collectedCents: 412_500,
+      expensesCents: 138_400,
+      invoices: 3,
+    },
+    previous: {
+      month: previous,
+      signedQuotes: 3,
+      signedCents: 521_000,
+      collectedCents: 356_000,
+      expensesCents: 121_900,
+      invoices: 4,
+    },
+    open: [
+      {
+        chantierId: EXAMPLE_IDS.chantierCuisine,
+        chantier: "Plomberie d'une cuisine",
+        kind: "solde",
+        amountCents: 186_000,
+        since: dateOnly(now, -34),
+        failed: false,
+        lastReminder: dateOnly(now, -19),
+        reminders: 2,
+      },
+      {
+        chantierId: EXAMPLE_IDS.chantierSalleDEau,
+        chantier: "Création d'une salle d'eau",
+        kind: "acompte",
+        amountCents: 147_000,
+        since: dateOnly(now, -3),
+        failed: false,
+        lastReminder: null,
+        reminders: 0,
+      },
+    ],
+    withoutInvoice: [
+      {
+        chantierId: EXAMPLE_IDS.chantierChauffeEau,
+        chantier: "Remplacement d'un chauffe-eau",
+        kind: "solde",
+        amountCents: 98_500,
+        paidAt: dateOnly(now, -2),
+      },
     ],
   };
 }

@@ -3,7 +3,9 @@ import { artisanTodo } from "../src/artisan-todo";
 import { requestsAwaitingAnswer } from "../src/requests";
 import { upcomingAgenda } from "../src/appointment";
 import { clientsAwaitingQuote } from "../src/chantier-state";
+import { lateOpenCount } from "../src/money-overview";
 import { monthToDateRevenue } from "../src/payment";
+import { secretaryFigures } from "../src/secretary-figures";
 import { profileHubStatuses } from "../src/profile-hub";
 import { parisToday } from "../src/project";
 import { quoteTotals } from "../src/quote";
@@ -20,6 +22,7 @@ import {
   exampleInbox,
   exampleInvoices,
   exampleMessages,
+  exampleMoneyOverview,
   examplePayments,
   examplePhotoKey,
   exampleProfile,
@@ -28,6 +31,7 @@ import {
   exampleRequest,
   exampleReviews,
   exampleScore,
+  exampleSecretary,
   exampleSentQuote,
   isExampleId,
   spaceExamplesShown,
@@ -209,6 +213,42 @@ describe("exemples de l'espace artisan (ADR 0184)", () => {
     expect(statuses.reviews).toEqual({ code: "toAnswer", n: 1, tone: "danger" });
     expect(exampleProfile("Alex", SUMMER).display_name).toBe("Alex");
     expect(exampleProfile(null, SUMMER).display_name).toBe("Votre nom");
+  });
+
+  it("secrétaire : appels à traiter (dont un urgent), historique, chiffres du mois", () => {
+    const example = exampleSecretary(SUMMER);
+    expect(example.todo.length).toBeGreaterThanOrEqual(3);
+    expect(example.todo.every((m) => m.done_at === null)).toBe(true);
+    expect(example.done.every((m) => m.done_at !== null)).toBe(true);
+    // Un urgent à rappeler, et au moins un rendez-vous pris, à venir.
+    expect(example.todo.filter((m) => m.urgent)).toHaveLength(1);
+    const booked = example.todo.find((m) => m.kind === "rendez_vous");
+    expect(new Date(booked?.appointment_at ?? 0).getTime()).toBeGreaterThan(SUMMER.getTime());
+    const figures = secretaryFigures(example.todo, example.month, SUMMER);
+    expect(figures.toHandle).toBe(example.todo.length);
+    expect(figures.urgent).toBe(1);
+    expect(figures.monthAppointments).toBeGreaterThan(0);
+    // La jauge des minutes : des minutes restantes, sans dépassement.
+    expect(example.gauge.level).toBe("ok");
+    expect(example.gauge.remainingMinutes).toBeLessThan(example.gauge.includedMinutes);
+    // Personnes fictives : numéros en +336000000.
+    for (const m of [...example.todo, ...example.done]) {
+      expect(m.caller_phone).toMatch(/^\+3360000000\d$/);
+    }
+  });
+
+  it("suivi : un mois en cours et le précédent, des tranches dues, des retards", () => {
+    const overview = exampleMoneyOverview(SUMMER);
+    expect(overview.included).toBe(true);
+    expect(overview.current.month).toBe("2026-07");
+    expect(overview.previous.month).toBe("2026-06");
+    expect(overview.current.collectedCents).toBeGreaterThan(0);
+    expect(overview.open.length).toBeGreaterThanOrEqual(2);
+    expect(lateOpenCount(overview.open, SUMMER)).toBeGreaterThan(0);
+    // Les tranches renvoient aux chantiers d'exemple.
+    for (const item of [...overview.open, ...overview.withoutInvoice]) {
+      expect(isExampleId(item.chantierId)).toBe(true);
+    }
   });
 
   it("personnes et coordonnées fictives (numéros en +336000000, adresses « de l'Exemple »)", () => {
