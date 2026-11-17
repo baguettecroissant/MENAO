@@ -668,6 +668,22 @@ export const fr = {
       caption: "Inscrits, validés et abonnés des six derniers mois",
       month: "Mois",
     },
+    // Secteur et objectifs par métier (ADR 0367).
+    sector: {
+      title: "Mon secteur",
+      named: (n: number, name: string) => `Secteur ${n} · ${name}`,
+      custom: (codes: string) => `Codes postaux : ${codes}`,
+      none: "Pas encore de secteur attribué : tout le département.",
+      balance:
+        "Un réseau équilibré entre les métiers : un particulier doit trouver chez MENAO un plombier comme un maçon, près de chez lui.",
+    },
+    trades: {
+      title: "Objectif par métier",
+      lead: "Par mois, au rythme de 3 artisans par jour. Réduit de moitié environ en août et en décembre.",
+      trade: "Métier",
+      perMonth: "Par mois",
+      total: "Total",
+    },
     bonuses: {
       title: "Mes primes",
       notSet: "Les montants des primes ne sont pas encore fixés par l'équipe MENAO.",
@@ -10902,6 +10918,10 @@ export const fr = {
         zoneHint:
           "Séparés par des virgules ; un début de code vaut pour tous ceux qui commencent ainsi (par exemple 061 pour 06100 à 06199). Vide : aucune zone, le commercial voit tout le département.",
         zoneSave: "Enregistrer la zone",
+        // Secteurs des Alpes-Maritimes (ADR 0367) : remplissent la zone, à enregistrer ensuite.
+        sectorsLabel: "Remplir avec un secteur",
+        sector: (n: number, name: string) => `Secteur ${n} · ${name}`,
+        sectorCurrent: (n: number, name: string) => `Zone actuelle : secteur ${n}, ${name}.`,
         zoneSaved: "Zone enregistrée.",
         zoneInvalid: (codes: string) => `Codes invalides : ${codes}`,
         transfer: "Ses prospects",
