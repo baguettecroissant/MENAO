@@ -306,6 +306,8 @@ const RESULTS = () => ({
   bonuses: { pending: 2, validated_cents: 25_000, paid_cents: 44_000 },
   prime_validation_centimes: 11_000,
   prime_abonnement_centimes: 3_000,
+  prime_abonnement_premium_centimes: 10_000,
+  prime_abonnement_entreprise_centimes: 20_000,
   // Indépendants : pas d'objectif imposé dans la démo.
   objectif_valides_mois: null,
 });

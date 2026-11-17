@@ -40,6 +40,9 @@ const resultsSchema = z.object({
   bonuses: z.object({ pending: n, validated_cents: n, paid_cents: n }),
   prime_validation_centimes: n.nullable(),
   prime_abonnement_centimes: n.nullable(),
+  // Primes d'abonnement des offres 500 € et 1 500 € (ADR 0366) ; absentes avant la migration.
+  prime_abonnement_premium_centimes: n.nullable().optional(),
+  prime_abonnement_entreprise_centimes: n.nullable().optional(),
   objectif_valides_mois: n.nullable(),
 });
 
@@ -218,11 +221,37 @@ export default async function CommercialResultsPage() {
                     <h2 id="primes" className="text-lg">
                       {t.bonuses.title}
                     </h2>
-                    <p className="text-sm text-muted-foreground">
-                      {validationAmount || subscriptionAmount
-                        ? t.bonuses.amounts(validationAmount, subscriptionAmount)
-                        : t.bonuses.notSet}
-                    </p>
+                    {validationAmount || subscriptionAmount ? (
+                      <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+                        {validationAmount && <p>{t.bonuses.scale.validation(validationAmount)}</p>}
+                        {subscriptionAmount && (
+                          <>
+                            <p>{t.bonuses.scale.subscription}</p>
+                            <ul className="grid grid-cols-3 gap-2">
+                              {(
+                                [
+                                  ["base", data.prime_abonnement_centimes],
+                                  ["premium", data.prime_abonnement_premium_centimes],
+                                  ["entreprise", data.prime_abonnement_entreprise_centimes],
+                                ] as const
+                              ).map(([plan, cents]) => (
+                                <li
+                                  key={plan}
+                                  className="flex flex-col rounded-input border border-border bg-surface px-3 py-2"
+                                >
+                                  <span className="text-xs">{t.bonuses.scale.plans[plan]}</span>
+                                  <b className="text-base text-foreground tabular-nums">
+                                    + {money(cents ?? data.prime_abonnement_centimes ?? 0)}
+                                  </b>
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">{t.bonuses.notSet}</p>
+                    )}
                   </div>
                   <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-card border border-border bg-border shadow-card">
                     <Tile label={t.bonuses.validated} value={money(data.bonuses.validated_cents)} />

@@ -44,7 +44,7 @@ export default async function AdminCommercialsPage() {
     supabase
       .from("commercial_bonus_settings")
       .select(
-        "prime_validation_centimes, prime_abonnement_centimes, delai_validation_jours, objectif_valides_mois",
+        "prime_validation_centimes, prime_abonnement_centimes, prime_abonnement_premium_centimes, prime_abonnement_entreprise_centimes, delai_validation_jours, objectif_valides_mois",
       )
       .maybeSingle(),
     // Lien de démo de l'espace commercial (ADR 0344).
@@ -173,7 +173,11 @@ export default async function AdminCommercialsPage() {
             title={tr.settings.title}
             summary={fr.admin.settingsPage.summaries.commercials(
               settingEuros(settings.prime_validation_centimes),
-              settingEuros(settings.prime_abonnement_centimes),
+              [
+                settings.prime_abonnement_centimes,
+                settings.prime_abonnement_premium_centimes ?? settings.prime_abonnement_centimes,
+                settings.prime_abonnement_entreprise_centimes ?? settings.prime_abonnement_centimes,
+              ].map(settingEuros) as [string, string, string],
               settings.delai_validation_jours,
             )}
           />

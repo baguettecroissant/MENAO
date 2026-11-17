@@ -45,7 +45,7 @@ export async function getSettingsPage(supabase: Client) {
       supabase
         .from("commercial_bonus_settings")
         .select(
-          "prime_validation_centimes, prime_abonnement_centimes, delai_validation_jours, objectif_valides_mois",
+          "prime_validation_centimes, prime_abonnement_centimes, prime_abonnement_premium_centimes, prime_abonnement_entreprise_centimes, delai_validation_jours, objectif_valides_mois",
         )
         .maybeSingle(),
       supabase

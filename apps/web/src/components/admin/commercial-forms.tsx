@@ -108,6 +108,8 @@ export function CommercialBonusSettingsForm({
   settings: {
     prime_validation_centimes: number | null;
     prime_abonnement_centimes: number | null;
+    prime_abonnement_premium_centimes: number | null;
+    prime_abonnement_entreprise_centimes: number | null;
     delai_validation_jours: number;
     objectif_valides_mois: number | null;
   };
@@ -136,6 +138,28 @@ export function CommercialBonusSettingsForm({
           inputMode="decimal"
           defaultValue={v?.subscription ?? eurosInput(settings.prime_abonnement_centimes)}
           errors={errors.subscription}
+        />
+        <Field
+          id="primes-abonnement-premium"
+          label={s.subscriptionPremium}
+          name="subscriptionPremium"
+          inputMode="decimal"
+          hint={s.subscriptionHint}
+          defaultValue={
+            v?.subscriptionPremium ?? eurosInput(settings.prime_abonnement_premium_centimes)
+          }
+          errors={errors.subscriptionPremium}
+        />
+        <Field
+          id="primes-abonnement-entreprise"
+          label={s.subscriptionEnterprise}
+          name="subscriptionEnterprise"
+          inputMode="decimal"
+          hint={s.subscriptionHint}
+          defaultValue={
+            v?.subscriptionEnterprise ?? eurosInput(settings.prime_abonnement_entreprise_centimes)
+          }
+          errors={errors.subscriptionEnterprise}
         />
         <Field
           id="primes-delai"

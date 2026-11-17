@@ -119,13 +119,29 @@ export async function saveCommercialBonusSettings(
   formData: FormData,
 ): Promise<FormState> {
   const values = Object.fromEntries(
-    ["validation", "subscription", "delay", "objective"].map((k) => [k, text(formData, k) ?? ""]),
+    [
+      "validation",
+      "subscription",
+      "subscriptionPremium",
+      "subscriptionEnterprise",
+      "delay",
+      "objective",
+    ].map((k) => [k, text(formData, k) ?? ""]),
   );
   const validation = optionalCents(formData, "validation");
   const subscription = optionalCents(formData, "subscription");
   if ("invalid" in validation) return { fieldErrors: { validation: [tr.errors.amount] }, values };
   if ("invalid" in subscription) {
     return { fieldErrors: { subscription: [tr.errors.amount] }, values };
+  }
+  // Primes d'abonnement des offres 500 € et 1 500 € (ADR 0366) ; vides : celle de l'offre 150 €.
+  const premium = optionalCents(formData, "subscriptionPremium");
+  if ("invalid" in premium) {
+    return { fieldErrors: { subscriptionPremium: [tr.errors.amount] }, values };
+  }
+  const enterprise = optionalCents(formData, "subscriptionEnterprise");
+  if ("invalid" in enterprise) {
+    return { fieldErrors: { subscriptionEnterprise: [tr.errors.amount] }, values };
   }
   const delay = values.delay?.trim() ? Number(values.delay) : Number.NaN;
   if (!Number.isInteger(delay) || delay < 0 || delay > 180) {
@@ -145,6 +161,8 @@ export async function saveCommercialBonusSettings(
     p_prime_abonnement_centimes: subscription.cents,
     p_delai_validation_jours: delay,
     p_objectif_valides_mois: objective,
+    p_prime_abonnement_premium_centimes: premium.cents,
+    p_prime_abonnement_entreprise_centimes: enterprise.cents,
   });
   if (error) return { error: dbError(error), values };
   revalidatePath(PATH);

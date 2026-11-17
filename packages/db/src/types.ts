@@ -2491,6 +2491,8 @@ export type Database = {
           id: boolean;
           objectif_valides_mois: number | null;
           prime_abonnement_centimes: number | null;
+          prime_abonnement_entreprise_centimes: number | null;
+          prime_abonnement_premium_centimes: number | null;
           prime_validation_centimes: number | null;
           updated_at: string;
           updated_by: string | null;
@@ -2501,6 +2503,8 @@ export type Database = {
           id?: boolean;
           objectif_valides_mois?: number | null;
           prime_abonnement_centimes?: number | null;
+          prime_abonnement_entreprise_centimes?: number | null;
+          prime_abonnement_premium_centimes?: number | null;
           prime_validation_centimes?: number | null;
           updated_at?: string;
           updated_by?: string | null;
@@ -2510,6 +2514,8 @@ export type Database = {
           id?: boolean;
           objectif_valides_mois?: number | null;
           prime_abonnement_centimes?: number | null;
+          prime_abonnement_entreprise_centimes?: number | null;
+          prime_abonnement_premium_centimes?: number | null;
           prime_validation_centimes?: number | null;
           updated_at?: string;
           updated_by?: string | null;
@@ -7013,6 +7019,8 @@ export type Database = {
           p_delai_validation_jours?: number;
           p_objectif_valides_mois?: number;
           p_prime_abonnement_centimes?: number;
+          p_prime_abonnement_entreprise_centimes?: number;
+          p_prime_abonnement_premium_centimes?: number;
           p_prime_validation_centimes?: number;
         };
         Returns: undefined;
