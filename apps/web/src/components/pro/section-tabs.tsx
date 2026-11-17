@@ -49,8 +49,8 @@ export function SectionTabs({
   const entries = (Object.entries(tabs) as [string, string][]).filter(
     ([slug]) => !hidden.includes(slug),
   );
-  // Le bouton d'action est réservé à l'espace réel (pas aux exemples, ADR 0184).
-  const actionHref = action && base === "/pro" ? `${base}/${action.slug}` : null;
+  // Bouton d'action : dans l'espace réel comme dans les exemples (ADR 0364).
+  const actionHref = action ? `${base}/${action.slug}` : null;
   const onAction = actionHref !== null && pathname === actionHref;
   if (!onAction && !entries.some(([slug]) => pathname === `${base}/${slug}`)) return null;
   return (

@@ -172,21 +172,41 @@ export async function loadLibrary(
           : null,
     };
   });
-  const bySupply = supplyMap(supplyRows);
-  const byWork = new Map<string, ComponentRow[]>();
-  for (const c of (components ?? []) as ComponentRow[]) {
-    byWork.set(c.work_id, [...(byWork.get(c.work_id) ?? []), c]);
-  }
   return {
-    settings: libSettings,
     onboarded: Boolean(settings?.library_onboarded_at),
     seededCount: typeof seeded === "number" && seeded > 0 ? seeded : null,
-    supplies: supplyRows,
-    works: (works ?? []).map(({ menao_works, ...row }) => {
-      const w = {
-        ...row,
-        trade_code: (menao_works as { trade_code: string } | null)?.trade_code ?? null,
-      } as WorkRow;
+    ...pricedLibrary(
+      libSettings,
+      supplyRows,
+      (works ?? []).map(
+        ({ menao_works, ...row }) =>
+          ({
+            ...row,
+            trade_code: (menao_works as { trade_code: string } | null)?.trade_code ?? null,
+          }) as WorkRow,
+      ),
+      (components ?? []) as ComponentRow[],
+    ),
+  };
+}
+
+/**
+ * Ouvrages chiffrés (coût, prix, marge calculés par packages/core) à partir des lignes brutes :
+ * celles de la base, ou celles de la bibliothèque d'exemple (ADR 0364).
+ */
+export function pricedLibrary(
+  settings: LibrarySettings,
+  supplies: SupplyRow[],
+  works: readonly WorkRow[],
+  components: readonly ComponentRow[],
+): Pick<Library, "settings" | "supplies" | "works"> {
+  const bySupply = supplyMap(supplies);
+  const byWork = new Map<string, ComponentRow[]>();
+  for (const c of components) byWork.set(c.work_id, [...(byWork.get(c.work_id) ?? []), c]);
+  return {
+    settings,
+    supplies,
+    works: works.map((w) => {
       const parts = byWork.get(w.id) ?? [];
       return {
         ...w,
@@ -194,7 +214,7 @@ export async function loadLibrary(
         pricing: workPricing(
           w.manual_price_cents,
           parts.map(toComponent),
-          libSettings,
+          settings,
           bySupply,
           w.price_pick ?? "milieu",
         ),

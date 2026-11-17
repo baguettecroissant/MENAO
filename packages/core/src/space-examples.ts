@@ -11,6 +11,7 @@ import { HOURS_PRESETS, agendaItemsFrom, type AgendaItem, type HoursRange } from
 import type { ActivityChantier, ActivityPayment, ActivityQuote } from "./artisan-activity";
 import type { VoiceGauge } from "./ai-agents";
 import type { ExpenseRow } from "./expenses";
+import type { ComponentKind, LibrarySettings } from "./library";
 import type { MoneyOverview } from "./money-overview";
 import { REQUIRED_DOCUMENT_TYPES, type ArtisanOnboardingSnapshot } from "./onboarding";
 import type { ProfileHubFacts } from "./profile-hub";
@@ -1473,5 +1474,164 @@ export function exampleMoneyOverview(now: Date = new Date()): MoneyOverview {
         paidAt: dateOnly(now, -2),
       },
     ],
+  };
+}
+
+/** Fourniture, ouvrage et composant d'exemple : mêmes colonnes que la bibliothèque de l'artisan. */
+export type ExampleLibrarySupply = {
+  id: string;
+  designation: string;
+  reference: string | null;
+  supplier: string | null;
+  unit: QuoteUnit;
+  purchase_price_cents: number | null;
+  price_on: string | null;
+  waste_bp: number;
+};
+export type ExampleLibraryWork = {
+  id: string;
+  designation: string;
+  description: string | null;
+  unit: QuoteUnit;
+  line_type: "materiel" | "main_oeuvre" | "autre";
+  vat_rate_bp: number;
+  detailed: boolean;
+  manual_price_cents: number | null;
+  source: "devis" | "manuel";
+};
+export type ExampleLibraryComponent = {
+  work_id: string;
+  position: number;
+  kind: ComponentKind;
+  supply_id: string | null;
+  label: string | null;
+  quantity_milli: number;
+  cost_cents: number | null;
+};
+
+/**
+ * Bibliothèque d'exemple (ADR 0364) d'un plombier-chauffagiste : heure à 38 € de coût et 58 € de
+ * vente, fournitures × 1,30 ; six ouvrages composés (fournitures, heures, frais), dont un vendu à
+ * perte par un prix fixé à la main, et un prix d'achat ancien à vérifier.
+ */
+export function exampleLibrary(now: Date = new Date()): {
+  settings: LibrarySettings;
+  supplies: ExampleLibrarySupply[];
+  works: ExampleLibraryWork[];
+  components: ExampleLibraryComponent[];
+} {
+  const supplyId = (n: number) => `${PREFIX}8${String(n).padStart(2, "0")}`;
+  const workId = (n: number) => `${PREFIX}9${String(n).padStart(2, "0")}`;
+  const supply = (
+    n: number,
+    designation: string,
+    supplier: string,
+    unit: QuoteUnit,
+    purchase_price_cents: number,
+    daysAgo: number,
+    waste_bp = 0,
+  ): ExampleLibrarySupply => ({
+    id: supplyId(n),
+    designation,
+    reference: `EX-${1000 + n}`,
+    supplier,
+    unit,
+    purchase_price_cents,
+    price_on: dateOnly(now, -daysAgo),
+    waste_bp,
+  });
+  const supplies = [
+    supply(1, "Chauffe-eau électrique 200 litres", "Négoce d'exemple", "u", 31_500, 20),
+    supply(2, "Groupe de sécurité", "Négoce d'exemple", "u", 2_400, 20),
+    supply(3, "Mitigeur de lavabo", "Négoce d'exemple", "u", 6_200, 45),
+    supply(4, "WC suspendu avec bâti-support", "Comptoir d'exemple", "u", 28_900, 60),
+    supply(5, "Tube cuivre 16 mm", "Comptoir d'exemple", "ml", 780, 250, 1_000),
+    supply(6, "Receveur de douche extra-plat 90 × 120", "Comptoir d'exemple", "u", 24_500, 75),
+    supply(7, "Paroi de douche fixe 120 cm", "Comptoir d'exemple", "u", 26_000, 75),
+  ];
+  const works: ExampleLibraryWork[] = [];
+  const components: ExampleLibraryComponent[] = [];
+  const work = (
+    n: number,
+    designation: string,
+    unit: QuoteUnit,
+    parts: [kind: ComponentKind, ref: number | string, quantityMilli: number, costCents?: number][],
+    extra: Partial<ExampleLibraryWork> = {},
+  ) => {
+    works.push({
+      id: workId(n),
+      designation,
+      description: null,
+      unit,
+      line_type: "materiel",
+      vat_rate_bp: 1_000,
+      detailed: false,
+      manual_price_cents: null,
+      source: "manuel",
+      ...extra,
+    });
+    parts.forEach(([kind, ref, quantity_milli, cost], position) =>
+      components.push({
+        work_id: workId(n),
+        position,
+        kind,
+        supply_id: typeof ref === "number" ? supplyId(ref) : null,
+        label: typeof ref === "string" ? ref : null,
+        quantity_milli,
+        cost_cents: cost ?? null,
+      }),
+    );
+  };
+  work(
+    1,
+    "Remplacement d'un chauffe-eau électrique 200 litres",
+    "u",
+    [
+      ["fourniture", 1, 1_000],
+      ["fourniture", 2, 1_000],
+      ["heures", "Dépose et pose", 3_000],
+      ["frais", "Évacuation de l'ancien appareil", 1_000, 2_500],
+    ],
+    { source: "devis" },
+  );
+  work(2, "Pose d'un mitigeur de lavabo", "u", [
+    ["fourniture", 3, 1_000],
+    ["heures", "Pose", 1_000],
+  ]);
+  work(3, "Pose d'un WC suspendu", "u", [
+    ["fourniture", 4, 1_000],
+    ["heures", "Pose et raccordement", 4_000],
+  ]);
+  work(4, "Alimentation en cuivre 16 mm", "ml", [
+    ["fourniture", 5, 1_000],
+    ["heures", "Pose", 250],
+  ]);
+  work(5, "Création d'une douche à l'italienne", "u", [
+    ["fourniture", 6, 1_000],
+    ["fourniture", 7, 1_000],
+    ["heures", "Pose et raccordement", 9_000],
+  ]);
+  // Prix fixé à la main, resté en dessous du coût : la marge négative saute aux yeux.
+  work(
+    6,
+    "Recherche de fuite",
+    "forfait",
+    [
+      ["heures", "Recherche", 2_000],
+      ["frais", "Location de la caméra", 1_000, 4_500],
+    ],
+    { line_type: "main_oeuvre", manual_price_cents: 9_000 },
+  );
+  return {
+    settings: {
+      hourCostCents: 3_800,
+      hourPriceCents: 5_800,
+      supplyCoefBp: 13_000,
+      marginAlertBp: 2_000,
+      priceMaxAgeMonths: 6,
+    },
+    supplies,
+    works,
+    components,
   };
 }

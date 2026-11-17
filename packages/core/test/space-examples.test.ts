@@ -3,6 +3,7 @@ import { artisanTodo } from "../src/artisan-todo";
 import { requestsAwaitingAnswer } from "../src/requests";
 import { upcomingAgenda } from "../src/appointment";
 import { clientsAwaitingQuote } from "../src/chantier-state";
+import { workPricing } from "../src/library";
 import { lateOpenCount } from "../src/money-overview";
 import { monthToDateRevenue } from "../src/payment";
 import { secretaryFigures } from "../src/secretary-figures";
@@ -21,6 +22,7 @@ import {
   exampleHubFacts,
   exampleInbox,
   exampleInvoices,
+  exampleLibrary,
   exampleMessages,
   exampleMoneyOverview,
   examplePayments,
@@ -235,6 +237,52 @@ describe("exemples de l'espace artisan (ADR 0184)", () => {
     for (const m of [...example.todo, ...example.done]) {
       expect(m.caller_phone).toMatch(/^\+3360000000\d$/);
     }
+  });
+
+  it("bibliothèque : ouvrages chiffrés avec marge, fournitures dont un prix ancien", () => {
+    const library = exampleLibrary(SUMMER);
+    expect(library.works.length).toBeGreaterThanOrEqual(6);
+    expect(library.supplies.length).toBeGreaterThanOrEqual(6);
+    const supplies = new Map(
+      library.supplies.map((s) => [
+        s.id,
+        {
+          id: s.id,
+          purchasePriceCents: s.purchase_price_cents,
+          wasteBp: s.waste_bp,
+          publicRange: null,
+        },
+      ]),
+    );
+    const ids = new Set(library.works.map((w) => w.id));
+    for (const c of library.components) {
+      expect(ids.has(c.work_id)).toBe(true);
+      if (c.kind === "fourniture") expect(supplies.has(c.supply_id ?? "")).toBe(true);
+    }
+    const priced = library.works.map((w) =>
+      workPricing(
+        w.manual_price_cents,
+        library.components
+          .filter((c) => c.work_id === w.id)
+          .map((c) => ({
+            kind: c.kind,
+            supplyId: c.supply_id,
+            quantityMilli: c.quantity_milli,
+            costCents: c.cost_cents,
+          })),
+        library.settings,
+        supplies,
+      ),
+    );
+    // Chaque ouvrage a un prix ; la plupart ont une marge positive, un seul est à perte.
+    expect(priced.every((p) => p.priceCents !== null && p.priceCents > 0)).toBe(true);
+    expect(priced.filter((p) => (p.marginCents ?? 0) > 0).length).toBeGreaterThanOrEqual(4);
+    expect(priced.filter((p) => (p.marginCents ?? 0) < 0)).toHaveLength(1);
+    // Un prix d'achat de plus de six mois, à vérifier.
+    expect(library.supplies.some((s) => s.price_on !== null && s.price_on < "2026-01-01")).toBe(
+      true,
+    );
+    expect([...ids, ...supplies.keys()].every(isExampleId)).toBe(true);
   });
 
   it("suivi : un mois en cours et le précédent, des tranches dues, des retards", () => {
