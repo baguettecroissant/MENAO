@@ -8,7 +8,10 @@ import {
   checkoutNotice,
   engagementExitAllowed,
   monthlyEquivalentCents,
+  planAddedFeatures,
   planComparison,
+  planFeatureDiffers,
+  splitPlanComparison,
   planFeatureCell,
   subscriptionPayback,
 } from "../src/plans";
@@ -155,5 +158,73 @@ describe("subscriptionPayback (calculateur des formules, ADR 0265)", () => {
     expect(subscriptionPayback(15000, 100000, 0)).toBeNull();
     expect(subscriptionPayback(0, 100000, 25)).toBeNull();
     expect(subscriptionPayback(15000, 100000, 120)).toBeNull();
+  });
+});
+
+describe("comparatif « ce qui change » (ADR 0368)", () => {
+  const inclus = { kind: "inclus" } as const;
+  const absent = { kind: "absent" } as const;
+  const text = (value: string) => ({ kind: "texte", text: value }) as const;
+  const comparison = [
+    {
+      categorie: "Demandes",
+      items: [
+        { libelle: "Demandes vérifiées", detail: null, cells: [inclus, inclus, inclus] },
+        {
+          libelle: "Demandes par mois",
+          detail: null,
+          cells: [text("10"), text("25"), text("Illimitées")],
+        },
+        {
+          libelle: "Métiers",
+          detail: "Choisis",
+          cells: [text("2"), text("Illimités"), text("Illimités")],
+        },
+      ],
+    },
+    {
+      categorie: "Signature",
+      items: [{ libelle: "Signature", detail: "Avec un code", cells: [inclus, inclus, inclus] }],
+    },
+    {
+      categorie: "Plans",
+      items: [
+        { libelle: "Manon", detail: null, cells: [absent, inclus, inclus] },
+        { libelle: "DPGF", detail: null, cells: [absent, absent, inclus] },
+        { libelle: "Rien", detail: null, cells: [absent, absent, absent] },
+      ],
+    },
+  ];
+
+  it("une ligne diffère si une formule n'a pas la même valeur", () => {
+    expect(planFeatureDiffers([inclus, inclus, inclus])).toBe(false);
+    expect(planFeatureDiffers([text("2"), text("2"), text("2")])).toBe(false);
+    expect(planFeatureDiffers([text("2"), text("3"), text("3")])).toBe(true);
+    expect(planFeatureDiffers([absent, inclus, inclus])).toBe(true);
+    expect(planFeatureDiffers([inclus, text("oui"), inclus])).toBe(true);
+    expect(planFeatureDiffers([])).toBe(false);
+  });
+
+  it("sépare les différences (catégories vides retirées) des lignes communes", () => {
+    const split = splitPlanComparison(comparison);
+    expect(split.total).toBe(7);
+    expect(split.differences.map((g) => [g.categorie, g.items.map((i) => i.libelle)])).toEqual([
+      ["Demandes", ["Demandes par mois", "Métiers"]],
+      ["Plans", ["Manon", "DPGF"]],
+    ]);
+    expect(split.common).toEqual([
+      { libelle: "Demandes vérifiées", detail: null },
+      { libelle: "Signature", detail: "Avec un code" },
+      { libelle: "Rien", detail: null },
+    ]);
+  });
+
+  it("compte ce qu'une formule ajoute à une autre", () => {
+    // Premium ajoute à Base : demandes, métiers, Manon.
+    expect(planAddedFeatures(comparison, 0, 1)).toBe(3);
+    // Entreprise ajoute à Premium : demandes, DPGF (métiers identiques).
+    expect(planAddedFeatures(comparison, 1, 2)).toBe(2);
+    expect(planAddedFeatures(comparison, 1, 1)).toBe(0);
+    expect(planAddedFeatures(comparison, 0, 9)).toBe(0);
   });
 });

@@ -36,7 +36,30 @@ export async function loadPricing() {
     pricingPlans.map((plan) => plan.code),
   );
   const base = plans?.find((p) => p.ouverte) ?? plans?.[0] ?? null;
-  return { pricingPlans, comparison, baseCents: base?.prix_mensuel_ht_centimes ?? null };
+  const recommended = plans?.find((p) => p.recommandee) ?? null;
+  const facts: PlanFacts = {
+    minutes: limitNumber(recommended?.limites, ["agents", "voix_minutes"]),
+    requests: limitNumber(recommended?.limites, ["demandes_mois"]),
+    baseRequests: limitNumber(plans?.[0]?.limites, ["demandes_mois"]),
+    accounts: limitNumber(recommended?.limites, ["comptes"]),
+  };
+  return { pricingPlans, comparison, facts, baseCents: base?.prix_mensuel_ht_centimes ?? null };
+}
+
+/** Chiffres de la formule recommandée repris dans le comparatif (ADR 0368), lus dans `limites`. */
+export type PlanFacts = {
+  minutes: number | null;
+  requests: number | null;
+  baseRequests: number | null;
+  accounts: number | null;
+};
+
+function limitNumber(limites: unknown, path: readonly string[]): number | null {
+  let value: unknown = limites;
+  for (const key of path) {
+    value = value && typeof value === "object" ? (value as Record<string, unknown>)[key] : null;
+  }
+  return typeof value === "number" && value > 0 ? value : null;
 }
 
 /** Questions sur les objections (ADR 0265), reprises de la FAQ des artisans. */

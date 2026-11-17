@@ -8113,6 +8113,68 @@ export const fr = {
         notIncluded: "Non inclus",
         more: (n: number) => `Voir les ${n} fonctionnalités`,
         less: "Réduire le comparatif",
+        // Comparatif repensé (F-175, ADR 0368, maquette lot 70).
+        eyebrow: "Comparatif des formules",
+        heading: "Premium travaille pendant que vous êtes sur le chantier.",
+        lead: "Toutes les formules reçoivent des demandes vérifiées et encaissent sans commission. Premium ajoute une secrétaire au téléphone, des devis prêts d'avance et le suivi de votre argent.",
+        recommendedBadge: "Recommandé",
+        adds: (plan: string, base: string, n: number) =>
+          `${plan} : tout ${base}, plus ${n} fonctions.`,
+        addsLead: "Les six qui changent vos journées :",
+        tryPlan: (plan: string, months: number) => `Essayer ${plan} ${months} mois gratuits`,
+        tryShort: (plan: string) => `Essayer ${plan}`,
+        choose: (plan: string) => `Choisir ${plan}`,
+        yearly: (price: string) => `ou ${price} à l'année`,
+        swipe: "Faites glisser pour voir les six principales.",
+        highlights: {
+          secretary: {
+            title: "Manon décroche pour vous",
+            text: (minutes: string) =>
+              `Elle répond, note la demande et fixe le rendez-vous. ${minutes} minutes par mois.`,
+          },
+          requests: {
+            title: (n: number) => `Jusqu'à ${n} demandes par mois`,
+            text: (base: string, n: number) =>
+              `Au lieu de ${n} avec ${base}, et dans tous vos métiers.`,
+          },
+          quote: {
+            title: "Le devis est prêt avant vous",
+            text: "Un brouillon préparé dès la demande, avec les photos et votre catalogue.",
+          },
+          money: {
+            title: "Plus aucun paiement oublié",
+            text: "Ce qui vous est dû, les relances, l'échéancier des gros chantiers.",
+          },
+          margin: {
+            title: "Votre marge, chantier par chantier",
+            text: "Dépenses comparées au facturé, prix d'achat tenus à jour.",
+          },
+          team: {
+            title: "Toute l'équipe dedans",
+            text: (accounts: number) =>
+              `${accounts} comptes, planning partagé et un appel de démarrage.`,
+          },
+        },
+        detailTitle: "Le détail, formule par formule",
+        rowsLabel: "Lignes affichées",
+        showDiff: (n: number) => `Ce qui change (${n})`,
+        showAll: (n: number) => `Tout voir (${n})`,
+        summary: (diff: number, common: number) =>
+          `${diff} fonctions changent d'une formule à l'autre. Les ${common} autres sont incluses partout.`,
+        commonTitle: "Incluses dans toutes les formules",
+        commonLead: (n: number) => `${n} fonctions, de la demande au paiement, sans commission.`,
+        commonShow: "Voir le détail",
+        commonShowAll: (n: number) => `Voir les ${n}`,
+        notInPlan: (plan: string) => `Pas dans ${plan}`,
+        inPlan: (plan: string, value: string) => `${plan} : ${value}`,
+        withPlan: (plan: string) => `Avec ${plan}`,
+        planTabs: "Formule affichée",
+        moreGroups: (n: number) => `Voir les ${n} autres rubriques`,
+        footer:
+          "2 mois d'essai gratuits, puis au mois sans engagement. Aucune commission sur vos chantiers.",
+        guaranteeLabel: "Garantie de l'engagement :",
+        guarantee: (minRequests: number, months: number) =>
+          `à l'année, moins de ${minRequests} demandes ${months} mois de suite ? Vous partez sans frais.`,
       },
       plansNote:
         "Prix hors taxes. Frais de paiement de Stripe à votre charge sur les sommes encaissées. Toute mise en avant dans les résultats est signalée par la mention « Mis en avant ».",

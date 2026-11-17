@@ -21,17 +21,18 @@ select results_eq(
   'demandes par mois (10, 25, illimitées) et comptes (1, 3, 10)');
 select is(
   (select count(*)::int from public.plan_features where valeurs ->> 'base' = 'false'
-   and categorie = 'Paiements' and libelle = 'Acompte et solde payés en ligne'),
+   and categorie = 'Votre argent' and libelle = 'Acompte et solde payés en ligne'),
   0,
   'les paiements en ligne restent dans Base');
 
--- Catégorie « Assistants IA » (ADR 0265) : alignée sur les droits des formules (ADR 0231).
+-- Rubrique de Manon (ADR 0265, renommée par l'ADR 0368) : alignée sur les droits des formules
+-- (ADR 0231).
 select is(
-  (select count(*)::int from public.plan_features where categorie = 'Assistants IA'), 7,
-  'comparatif : 7 lignes « Assistants IA »');
+  (select count(*)::int from public.plan_features where categorie = 'Manon, votre secrétaire'), 6,
+  'comparatif : 6 lignes « Manon, votre secrétaire »');
 select is(
   (select valeurs ->> 'base' from public.plan_features
-   where categorie = 'Assistants IA' and libelle = 'Manon, secrétaire au téléphone'),
+   where categorie = 'Manon, votre secrétaire' and libelle = 'Manon, secrétaire au téléphone'),
   'false',
   'Manon au téléphone : pas dans Base, comme plans.limites.agents.secretaire');
 

@@ -112,19 +112,26 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   const comparison = compare.getByRole("table", {
     name: "Fonctionnalités incluses dans chaque formule",
   });
-  // Comparatif replié au départ, déplié d'un appui.
-  const more = compare.getByRole("button", { name: /^Voir les \d+ fonctionnalités$/ });
-  await expect(more).toHaveAttribute("aria-expanded", "false");
-  await more.click();
-  await expect(compare.getByRole("button", { name: "Réduire le comparatif" })).toHaveAttribute(
-    "aria-expanded",
-    "true",
-  );
+  // Comparatif repensé (ADR 0368) : Premium en avant, seulement ce qui change au départ, les
+  // fonctions communes en pastilles, « Tout voir » remet toutes les lignes.
+  await expect(
+    compare.getByRole("heading", { name: /^Premium : tout Base, plus \d+ fonctions\.$/ }),
+  ).toBeVisible();
+  const diffOnly = compare.getByRole("button", { name: /^Ce qui change \(\d+\)$/ });
+  await expect(diffOnly).toHaveAttribute("aria-pressed", "true");
   await expect(
     comparison.getByRole("rowheader", { name: /^Demandes reçues par mois/ }),
   ).toBeVisible();
   await expect(
     comparison.getByRole("rowheader", { name: /^Manon, secrétaire au téléphone/ }),
+  ).toBeVisible();
+  await expect(
+    comparison.getByRole("rowheader", { name: /^Signature électronique du client/ }),
+  ).toHaveCount(0);
+  await expect(comparison.getByText("Signature électronique du client")).toBeVisible();
+  await compare.getByRole("button", { name: /^Tout voir \(\d+\)$/ }).click();
+  await expect(
+    comparison.getByRole("rowheader", { name: /^Signature électronique du client/ }),
   ).toBeVisible();
   // Calculateur de rentabilité (ADR 0265) : Premium à 500 €, chantier de 4 500 € à 25 %.
   await expect(page.getByText("1 chantier tous les 2 mois")).toBeVisible();
