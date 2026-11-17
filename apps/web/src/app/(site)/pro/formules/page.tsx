@@ -30,7 +30,7 @@ export const revalidate = 3600;
  * les objections et l'appel final. Page à partager par les commerciaux.
  */
 export default async function PlansPage() {
-  const { pricingPlans, comparison } = await loadPricing();
+  const { pricingPlans, comparison, facts } = await loadPricing();
   const objections = proObjections();
 
   return (
@@ -76,7 +76,7 @@ export default async function PlansPage() {
           className="scroll-mt-24 px-4 pb-16 sm:px-6"
         >
           <div className="mx-auto flex max-w-6xl flex-col gap-8">
-            <PlanComparisonTable plans={pricingPlans} comparison={comparison} />
+            <PlanComparisonTable plans={pricingPlans} comparison={comparison} facts={facts} />
             <p className="mx-auto max-w-3xl text-center text-xs text-muted-foreground">
               {t.plansNote}
             </p>

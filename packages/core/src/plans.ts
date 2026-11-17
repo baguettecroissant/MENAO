@@ -136,3 +136,55 @@ export function planComparison(
   }
   return groups;
 }
+
+const sameCell = (a: PlanFeatureCell, b: PlanFeatureCell) =>
+  a.kind === b.kind && (a.kind !== "texte" || (b.kind === "texte" && a.text === b.text));
+
+/** Vrai si la ligne n'a pas la même valeur dans toutes les formules (ADR 0368). */
+export function planFeatureDiffers(cells: readonly PlanFeatureCell[]): boolean {
+  return cells.some((cell) => !sameCell(cell, cells[0] ?? cell));
+}
+
+export type PlanComparisonSplit = {
+  /** Les lignes qui changent d'une formule à l'autre, par catégorie (catégories vides retirées). */
+  differences: PlanComparison;
+  /** Les lignes identiques partout, dans l'ordre du comparatif. */
+  common: { libelle: string; detail: string | null }[];
+  total: number;
+};
+
+/**
+ * Comparatif « ce qui change » (ADR 0368) : les lignes qui différencient les formules d'un côté,
+ * celles incluses partout de l'autre.
+ */
+export function splitPlanComparison(comparison: PlanComparison): PlanComparisonSplit {
+  const differences: PlanComparison = [];
+  const common: PlanComparisonSplit["common"] = [];
+  let total = 0;
+  for (const group of comparison) {
+    const items = group.items.filter((item) => planFeatureDiffers(item.cells));
+    for (const item of group.items) {
+      total += 1;
+      if (!planFeatureDiffers(item.cells))
+        common.push({ libelle: item.libelle, detail: item.detail });
+    }
+    if (items.length > 0) differences.push({ categorie: group.categorie, items });
+  }
+  return { differences, common, total };
+}
+
+/**
+ * Nombre de lignes où la formule `to` apporte autre chose que la formule `from` (« Premium :
+ * tout Base, plus N fonctions », ADR 0368). Indices dans l'ordre des formules du comparatif.
+ */
+export function planAddedFeatures(comparison: PlanComparison, from: number, to: number): number {
+  let count = 0;
+  for (const group of comparison) {
+    for (const item of group.items) {
+      const a = item.cells[from];
+      const b = item.cells[to];
+      if (a && b && b.kind !== "absent" && !sameCell(a, b)) count += 1;
+    }
+  }
+  return count;
+}
