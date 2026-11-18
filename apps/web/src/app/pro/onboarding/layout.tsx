@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { MONITORED_DOCUMENT_TYPES, expiryStatus } from "@menao/core";
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
@@ -7,6 +7,7 @@ import { AppShell } from "@/components/app-shell/app-shell";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
+import { guideFromContext } from "@/lib/artisan/guide";
 import { getProShell } from "@/lib/artisan/space";
 import { signOut } from "@/lib/auth/actions";
 import { getShellAccount } from "@/lib/client/shell";
@@ -16,7 +17,10 @@ import { OnboardingHeader } from "./onboarding-header";
 export const metadata: Metadata = { title: `${fr.pro.onboarding.title} — MENAO` };
 
 export default async function OnboardingLayout({ children }: { children: ReactNode }) {
-  const { artisan, documents } = await getOnboardingContext();
+  const context = await getOnboardingContext();
+  const { artisan, documents } = context;
+  // Parcours guidé (ADR 0373), tant que le dossier se remplit.
+  const guide = guideFromContext(context);
   // F-51 : documents surveillés arrivant à échéance (ou expirés) sans renouvellement déposé.
   const toRenew =
     artisan.status === "valide" || artisan.status === "suspendu"
@@ -38,7 +42,18 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
   );
   const content = (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
-      <OnboardingHeader inProSpace={inProSpace} actions={signOutButton} />
+      {/* useSearchParams (document ouvert) : limite de Suspense demandée par Next. */}
+      <Suspense>
+        <OnboardingHeader
+          inProSpace={inProSpace}
+          actions={signOutButton}
+          guide={
+            guide.active
+              ? { steps: guide.steps, minutesLeft: guide.minutesLeft, ready: context.canSubmit }
+              : undefined
+          }
+        />
+      </Suspense>
       {artisan.status === "brouillon" && artisan.refusal_reason && (
         <Alert tone="error">{fr.pro.onboarding.status.complement(artisan.refusal_reason)}</Alert>
       )}

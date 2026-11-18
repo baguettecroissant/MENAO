@@ -1,19 +1,11 @@
-import { REQUIRED_DOCUMENT_TYPES } from "@menao/core";
-import {
-  ArrowRight,
-  Camera,
-  CircleCheck,
-  Clock,
-  FileText,
-  MapPin,
-  PenLine,
-  UserRound,
-} from "lucide-react";
+import { guideBlocks, type RequiredDocumentType } from "@menao/core";
+import { ArrowRight, Check, CircleCheck, Clock, MapPin } from "lucide-react";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Alert, ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
+import { guideFromContext, suiteHref } from "@/lib/artisan/guide";
 import { ClearSignupDraft } from "./clear-signup-draft";
 
 const t = fr.pro.signUp.welcome;
@@ -38,7 +30,19 @@ function initials(name: string): string {
  * l'INSEE, faite à la création du compte, y est signalé s'il pose problème.
  */
 export default async function ArtisanWelcomePage() {
-  const { supabase, artisan, tradeCodes } = await getOnboardingContext();
+  const context = await getOnboardingContext();
+  const { supabase, artisan, tradeCodes } = context;
+  // Les trois blocs du parcours guidé (ADR 0373), avec leur durée.
+  const guide = guideFromContext(context);
+  const blocks = guideBlocks(guide.steps);
+  const b = t.blocks;
+  const documentNames = guide.steps
+    .map((step) => b.documentNames[step.key as RequiredDocumentType])
+    .filter(Boolean)
+    .join(", ");
+  const kbisVerified = context.documents.some(
+    (doc) => doc.type === "kbis" && doc.source === "registre" && doc.status === "valide",
+  );
   const { data: trades } = await supabase
     .from("trades")
     .select("code, label")
@@ -54,7 +58,6 @@ export default async function ArtisanWelcomePage() {
         : artisan.sirene_active === false
           ? "inactive"
           : null;
-  const documents = fr.pro.onboarding.documents.types;
 
   return (
     // Refonte « Nette » (ADR 0254) : l'aperçu de la fiche à gauche, la dernière étape à droite.
@@ -102,20 +105,33 @@ export default async function ArtisanWelcomePage() {
       <section className="flex flex-col gap-4 rounded-card border border-border bg-surface p-6 shadow-card lg:p-7">
         <h2 className="text-[1.1875rem] leading-snug">{t.nextTitle}</h2>
         <p className="flex items-center gap-2 text-sm font-semibold text-primary-strong">
-          <Camera aria-hidden="true" className="size-4 shrink-0" />
+          <Clock aria-hidden="true" className="size-4 shrink-0" />
           {t.duration}
         </p>
-        <ul className="flex flex-col divide-y divide-border border-t border-border text-[0.9375rem]">
-          <NextItem icon={<PenLine aria-hidden="true" className="size-4" />}>{t.charter}</NextItem>
-          {REQUIRED_DOCUMENT_TYPES.map((type) => (
-            <NextItem key={type} icon={<FileText aria-hidden="true" className="size-4" />}>
-              {documents[type]}
-            </NextItem>
-          ))}
-          <NextItem icon={<UserRound aria-hidden="true" className="size-4" />}>{t.profil}</NextItem>
-        </ul>
+        <ol className="flex flex-col divide-y divide-border border-t border-border">
+          <Block n={1} title={b.charterTitle} minutes={b.minutes(blocks.charte)}>
+            {b.charterText}
+          </Block>
+          <Block
+            n={2}
+            title={b.documentsTitle(blocks.documents.count)}
+            minutes={b.minutes(blocks.documents.minutes)}
+          >
+            {documentNames.charAt(0).toUpperCase() + documentNames.slice(1)}
+            {kbisVerified && (
+              <span className="mt-1 flex items-center gap-1.5 text-[0.8125rem] font-semibold text-success">
+                <Check aria-hidden="true" className="size-4 shrink-0" strokeWidth={3} />
+                {b.kbisDone}
+              </span>
+            )}
+          </Block>
+          <Block n={3} title={b.profilTitle} minutes={b.minutes(blocks.profil)}>
+            {b.profilText}
+          </Block>
+        </ol>
+        <p className="text-sm text-muted-foreground">{t.skipHint}</p>
         <div className="sticky bottom-0 -mx-6 mt-1 border-t border-border bg-surface px-6 pt-3 pb-4 lg:static lg:mx-0 lg:border-0 lg:p-0">
-          <ButtonLink href="/pro/onboarding" size="lg" block>
+          <ButtonLink href={suiteHref()} size="lg" block>
             {t.cta}
             <ArrowRight aria-hidden="true" className="size-5" />
           </ButtonLink>
@@ -126,13 +142,31 @@ export default async function ArtisanWelcomePage() {
   );
 }
 
-function NextItem({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+/** Un des trois blocs de la suite : numéro, titre, ce qu'il contient, durée indicative. */
+function Block({
+  n,
+  title,
+  minutes,
+  children,
+}: {
+  n: number;
+  title: string;
+  minutes: string;
+  children: ReactNode;
+}) {
   return (
-    <li className="flex items-center gap-3 py-2.5">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-input bg-background text-label">
-        {icon}
+    <li className="flex items-start gap-3 py-3">
+      <span
+        aria-hidden="true"
+        className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground text-sm font-bold text-white"
+      >
+        {n}
       </span>
-      <span className="font-semibold">{children}</span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="font-semibold">{title}</span>
+        <span className="text-sm text-muted-foreground">{children}</span>
+      </span>
+      <span className="shrink-0 pt-0.5 text-xs font-semibold text-muted-foreground">{minutes}</span>
     </li>
   );
 }

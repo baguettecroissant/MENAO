@@ -2,7 +2,9 @@
 
 import {
   REQUIRED_DOCUMENT_TYPES,
+  isGuideStepKey,
   onboardingProgress,
+  type GuideStepKey,
   type ConnectTokenPrefill,
   type ConnectTokens,
   type DocumentPrefill,
@@ -37,6 +39,14 @@ const t = fr.pro.onboarding;
 
 function refresh() {
   revalidatePath("/pro/onboarding", "layout");
+}
+
+/**
+ * Suite d'une étape enregistrée (ADR 0373) : pendant le parcours guidé, l'étape suivante ; pour
+ * une étape déjà faite que l'artisan est revenu modifier, « Mon dossier ».
+ */
+function continueAfter(step: GuideStepKey, wasDone: boolean): never {
+  redirect((wasDone ? "/pro/onboarding" : `/pro/onboarding/suite?apres=${step}`) as Route);
 }
 
 /** Remplace le SIRET (possible tant que la fiche est en brouillon : garde-fou en base). */
@@ -141,7 +151,7 @@ export async function saveCompany(_prev: FormState, formData: FormData): Promise
       : snapshot.raisonSociale,
   }).entreprise;
   refresh();
-  if (done) redirect("/pro/onboarding" as Route);
+  if (done) continueAfter("entreprise", onboardingProgress(snapshot).entreprise);
   return { success: t.saved };
 }
 
@@ -158,7 +168,7 @@ export async function saveTrades(_prev: FormState, formData: FormData): Promise<
   // Budget minimum des demandes (ADR 0164), facultatif : vérifié en base.
   const budgetMinimum = text(formData, "budgetMinimum") ?? "";
 
-  const { supabase } = await getOnboardingContext();
+  const { supabase, progress } = await getOnboardingContext();
   // Spécialités d'un métier décoché : ignorées plutôt que refusées.
   const { data: allowed } = await supabase
     .from("work_types")
@@ -183,7 +193,7 @@ export async function saveTrades(_prev: FormState, formData: FormData): Promise<
   if (budgetError) return { fieldErrors: { budgetMinimum: [fr.errors.generic] } };
 
   refresh();
-  redirect("/pro/onboarding" as Route);
+  continueAfter("metiers", progress.metiers);
 }
 
 export async function addCertification(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -225,14 +235,14 @@ export async function saveZone(_prev: FormState, formData: FormData): Promise<Fo
     if (!(RADIUS_OPTIONS_KM as readonly number[]).includes(radius)) {
       return { fieldErrors: { radiusKm: [messages.radiusInvalid] } };
     }
-    const { supabase } = await getOnboardingContext();
+    const { supabase, progress } = await getOnboardingContext();
     const { error } = await supabase.rpc("set_artisan_zone", {
       p_mode: "rayon",
       p_radius_km: radius,
     });
     if (error) return { error: fr.errors.generic };
     refresh();
-    redirect("/pro/onboarding" as Route);
+    continueAfter("zone", progress.zone);
   }
 
   const jsonList = (name: string): unknown => {
@@ -255,14 +265,14 @@ export async function saveZone(_prev: FormState, formData: FormData): Promise<Fo
     if (!choice.success) {
       return { fieldErrors: z.flattenError(choice.error).fieldErrors };
     }
-    const { supabase } = await getOnboardingContext();
+    const { supabase, progress } = await getOnboardingContext();
     const { error } = await supabase.rpc("set_artisan_zone", {
       p_mode: choice.data.mode,
       ...("territories" in choice.data ? { p_territoires: choice.data.territories } : {}),
     });
     if (error) return { error: fr.errors.generic };
     refresh();
-    redirect("/pro/onboarding" as Route);
+    continueAfter("zone", progress.zone);
   }
 
   const base = {
@@ -287,7 +297,7 @@ export async function saveZone(_prev: FormState, formData: FormData): Promise<Fo
     return { fieldErrors: errors };
   }
 
-  const { supabase } = await getOnboardingContext();
+  const { supabase, progress } = await getOnboardingContext();
   const z0 = parsed.data;
   const { error } =
     z0.mode === "communes"
@@ -304,7 +314,7 @@ export async function saveZone(_prev: FormState, formData: FormData): Promise<Fo
   if (error) return { error: fr.errors.generic };
 
   refresh();
-  redirect("/pro/onboarding" as Route);
+  continueAfter("zone", progress.zone);
 }
 
 type UploadStatus = keyof typeof t.upload.status;
@@ -354,6 +364,9 @@ export async function processUpload(_prev: FormState, formData: FormData): Promi
   if (status !== "ok") return { error: t.upload.status[status] };
 
   refresh();
+  // Parcours guidé (ADR 0373) : « Déposer et continuer » mène au document suivant.
+  const after = text(formData, "suite");
+  if (isGuideStepKey(after)) continueAfter(after, false);
   return { success: t.upload.status.ok };
 }
 
@@ -391,6 +404,8 @@ export async function savePresentation(_prev: FormState, formData: FormData): Pr
     .eq("id", artisan.id);
   if (error) return { error: fr.errors.generic, values };
   refresh();
+  // Parcours guidé (ADR 0373) : « Enregistrer et continuer ».
+  if (text(formData, "suite")) continueAfter("profil", false);
   return { success: t.saved };
 }
 
@@ -431,7 +446,9 @@ export async function submitOnboarding(): Promise<FormState> {
   const { supabase } = await getOnboardingContext();
   const { error } = await supabase.rpc("submit_artisan_onboarding");
   refresh();
-  return error ? { error: t.submit.error } : {};
+  if (error) return { error: t.submit.error };
+  // « Dossier envoyé » (ADR 0373) : la suite pendant la vérification.
+  redirect("/pro/onboarding/envoye" as Route);
 }
 
 type BillingStatus = keyof typeof t.plans.errors | "ok";

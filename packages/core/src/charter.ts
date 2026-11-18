@@ -5,6 +5,8 @@
  * TODO(legal): faire valider la charte par l'avocat (sanctions au regard du règlement P2B UE 2019/1150,
  * clause de non-contournement sans limite de durée, rôle de médiateur, challenge avec lots) et
  * l'annexer aux CGV artisans.
+ * TODO(legal): sur le site, l'artisan accepte la charte partie par partie (ADR 0373) et non plus
+ * règle par règle ; faire confirmer que ce geste suffit comme preuve d'acceptation.
  */
 
 /** Version signée : une nouvelle version demandera une nouvelle signature (artisan_charter_acceptances). */

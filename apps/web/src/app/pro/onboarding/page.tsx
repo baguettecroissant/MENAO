@@ -179,7 +179,11 @@ export default async function OnboardingIndexPage() {
         </>
       )}
 
-      {editable && <p className="max-w-3xl leading-relaxed text-label">{d.lead}</p>}
+      {editable && (
+        <p className="max-w-3xl leading-relaxed text-label">
+          {canSubmit ? t.guide.readyLead : d.lead}
+        </p>
+      )}
       {/* « Avant de commencer » (ADR 0347) : tant que l'artisan n'a déposé aucune pièce (le Kbis
           vérifié au registre, créé à l'inscription, ne compte pas). */}
       {/* Tant qu'aucun document n'est déposé : la vidéo de présentation (ADR 0349). La liste « Avant

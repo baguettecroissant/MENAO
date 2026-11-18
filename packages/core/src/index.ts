@@ -6,6 +6,7 @@ export * from "./legal";
 export * from "./siret";
 export * from "./sirene";
 export * from "./onboarding";
+export * from "./onboarding-guide";
 export * from "./files";
 export * from "./expiry";
 export * from "./billing";

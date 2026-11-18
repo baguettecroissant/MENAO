@@ -5,6 +5,7 @@ import { ButtonLink, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { deletePortfolioPhoto } from "@/lib/artisan/actions";
 import { getOnboardingContext } from "@/lib/artisan/context";
+import { guideAround, guideFromContext } from "@/lib/artisan/guide";
 import { PortfolioUpload } from "./portfolio-upload";
 import { PresentationForm } from "./presentation-form";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
@@ -18,8 +19,11 @@ const t = fr.pro.onboarding.profile;
 const MAX_PHOTOS = PORTFOLIO_MAX_PHOTOS;
 
 export default async function ProfileStepPage() {
-  const { supabase, userId, artisan, avatarPath, photos, tradeCodes, territoryCodes } =
-    await getOnboardingContext();
+  const context = await getOnboardingContext();
+  const { supabase, userId, artisan, avatarPath, photos, tradeCodes, territoryCodes } = context;
+  // Parcours guidé (ADR 0373) : « Enregistrer et continuer » en bas, tant que le dossier se remplit.
+  const guide = guideFromContext(context);
+  const around = guide.active ? guideAround(guide, "profil") : null;
   const publicUrl = (bucket: string, path: string) =>
     supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
   // « Proposer un texte » : métiers et qualification RGE en cours, pour la présentation proposée.
@@ -86,7 +90,15 @@ export default async function ProfileStepPage() {
         />
 
         <Card>
-          <PresentationForm presentation={artisan.presentation} draft={draft} />
+          <PresentationForm
+            presentation={artisan.presentation}
+            draft={draft}
+            guide={
+              around
+                ? { backHref: around.backHref, nextNote: fr.pro.onboarding.guide.nextDossier }
+                : undefined
+            }
+          />
         </Card>
 
         <Card>
@@ -129,11 +141,14 @@ export default async function ProfileStepPage() {
             )}
           </section>
         </Card>
-        {/* Retour au dossier en bas de page aussi : le lien du haut est loin après les envois. */}
-        <ButtonLink href="/pro/onboarding" variant="outline" className="self-start">
-          <ArrowLeft aria-hidden="true" className="size-4" />
-          {fr.pro.onboarding.documents.backToDossier}
-        </ButtonLink>
+        {/* Retour au dossier en bas de page aussi : le lien du haut est loin après les envois. Dans
+            le parcours guidé, la barre du bas mène à la suite. */}
+        {!around && (
+          <ButtonLink href="/pro/onboarding" variant="outline" className="self-start">
+            <ArrowLeft aria-hidden="true" className="size-4" />
+            {fr.pro.onboarding.documents.backToDossier}
+          </ButtonLink>
+        )}
       </div>
       <aside className="overflow-hidden rounded-card border border-border bg-surface shadow-card lg:sticky lg:top-6">
         <p className="flex items-center gap-1.5 border-b border-border bg-background px-4 py-2.5 text-sm font-semibold text-muted-foreground">
