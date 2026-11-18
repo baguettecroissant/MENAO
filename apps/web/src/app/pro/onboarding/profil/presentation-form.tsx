@@ -1,8 +1,10 @@
 "use client";
 
 import { PRESENTATION_MIN_LENGTH } from "@menao/core";
-import { Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
+import type { Route } from "next";
 import { useActionState, useState } from "react";
+import { GuideBar } from "@/components/pro/guide-bar";
 import { Alert, Button } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { savePresentation } from "@/lib/artisan/actions";
@@ -19,10 +21,13 @@ const t = fr.pro.onboarding.profile;
 export function PresentationForm({
   presentation,
   draft,
+  guide,
 }: {
   presentation: string | null;
   /** Présentation proposée (presentationDraft). */
   draft: string;
+  /** Parcours guidé (ADR 0373) : le bouton passe dans la barre du bas et mène à la suite. */
+  guide?: { backHref: Route; nextNote: string };
 }) {
   const [state, action, pending] = useActionState(savePresentation, initialFormState);
   const [value, setValue] = useState(
@@ -89,9 +94,21 @@ export function PresentationForm({
           {error}
         </p>
       )}
-      <Button type="submit" disabled={pending} className="sm:w-auto sm:self-start sm:px-6">
-        {t.presentationSave}
-      </Button>
+      {guide ? (
+        <>
+          <input type="hidden" name="suite" value="profil" />
+          <GuideBar backHref={guide.backHref} note={guide.nextNote}>
+            <Button type="submit" size="lg" disabled={pending}>
+              {fr.pro.onboarding.guide.saveAndContinue}
+              <ArrowRight aria-hidden="true" className="size-5" />
+            </Button>
+          </GuideBar>
+        </>
+      ) : (
+        <Button type="submit" disabled={pending} className="sm:w-auto sm:self-start sm:px-6">
+          {t.presentationSave}
+        </Button>
+      )}
     </form>
   );
 }

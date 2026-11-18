@@ -1,4 +1,5 @@
 import {
+  DOCUMENT_HELP,
   MONITORED_DOCUMENT_TYPES,
   REQUIRED_DOCUMENT_TYPES,
   daysUntil,
@@ -7,8 +8,12 @@ import {
   registryCheckPending,
   type RequiredDocumentType,
 } from "@menao/core";
-import { Alert, ButtonLink, Card } from "@/components/ui";
-import { Check, Clock, Lock } from "lucide-react";
+import { Alert, ButtonLink, Card, focusRing } from "@/components/ui";
+import { ArrowRight, Check, ChevronRight, Clock, Lock, Mail, ShieldCheck } from "lucide-react";
+import type { Route } from "next";
+import Link from "next/link";
+import { GuideBar } from "@/components/pro/guide-bar";
+import { guideAround, guideFromContext, suiteHref } from "@/lib/artisan/guide";
 import { DocumentHelpDisclosure, DocumentHelpSteps } from "@/components/pro/document-help";
 import { HelpVideo } from "@/components/pro/help-video";
 import { RegistryAutoCheck } from "@/components/pro/registry-auto-check";
@@ -19,6 +24,7 @@ import { recheckRegistry, setDecennaleExempt } from "@/lib/artisan/actions";
 import { DocumentUpload } from "./document-upload";
 
 const t = fr.pro.onboarding.documents;
+const g = fr.pro.onboarding.guide;
 const dateFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "UTC" });
 const formatDate = (d: string) => dateFormat.format(new Date(d));
 
@@ -41,7 +47,8 @@ export default async function DocumentsStepPage({
   const { type: only } = await searchParams;
   const types = REQUIRED_DOCUMENT_TYPES.filter((type) => !only || type === only);
   const focused = types.length === 1;
-  const { supabase, userId, artisan, documents, tradeCodes } = await getOnboardingContext();
+  const context = await getOnboardingContext();
+  const { supabase, userId, artisan, documents, tradeCodes } = context;
   // Métiers déclarés, proposés avec la décennale (ADR 0116).
   const { data: trades } = await supabase
     .from("trades")
@@ -52,6 +59,10 @@ export default async function DocumentsStepPage({
   const onboarding = artisan.status === "brouillon" || artisan.status === "refuse";
   // Artisan validé ou suspendu : renouvellement des documents surveillés (F-51).
   const renewal = artisan.status === "valide" || artisan.status === "suspendu";
+  // Parcours guidé (ADR 0373) : une pièce par écran, la suite dans la barre du bas.
+  const guided = focused && onboarding ? types[0] : undefined;
+  const around = guided ? guideAround(guideFromContext(context), guided) : null;
+  const nextNote = around?.next ? g.next(g.names[around.next]) : g.nextDossier;
 
   // URL signées de courte durée (5 min) : les documents restent privés (spec F-43).
   const paths = documents.map((d) => d.storage_path);
@@ -99,7 +110,7 @@ export default async function DocumentsStepPage({
   // Refonte « Nette » (ADR 0254) : une pièce à gauche, ce que l'équipe vérifie à droite.
   const cards = (
     <div className="flex flex-col gap-6">
-      {focused && onboarding && types[0] && counted.includes(types[0]) && (
+      {focused && !guided && onboarding && types[0] && counted.includes(types[0]) && (
         <span className="self-start rounded-pill bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary-strong">
           {t.position(counted.indexOf(types[0]) + 1, counted.length)}
         </span>
@@ -113,8 +124,9 @@ export default async function DocumentsStepPage({
               ? t.photoHint
               : t.photoHintOther}
       </p>
-      {/* « Bien photographier un document » (ADR 0349), pendant l'inscription. */}
-      {onboarding && <HelpVideo id="v05-photo" />}
+      {/* « Bien photographier un document » (ADR 0349), pendant l'inscription ; dans le parcours
+          guidé, sous la pièce, avec le reste de l'aide. */}
+      {onboarding && !guided && <HelpVideo id="v05-photo" />}
       {artisan.status === "en_verification" && (
         <Alert tone="success">{fr.pro.onboarding.upload.status.locked}</Alert>
       )}
@@ -123,8 +135,14 @@ export default async function DocumentsStepPage({
         return (
           <Card key={type}>
             <section aria-labelledby={`doc-${type}`} className="flex flex-col gap-4">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <h2 id={`doc-${type}`} className="text-lg">
+              <div
+                className={
+                  guided && !current && !exempt && !registryPending
+                    ? "sr-only"
+                    : "flex flex-wrap items-start justify-between gap-2"
+                }
+              >
+                <h2 id={`doc-${type}`} className={guided ? "sr-only" : "text-lg"}>
                   {t.types[type]}
                 </h2>
                 <span
@@ -226,7 +244,7 @@ export default async function DocumentsStepPage({
                   </form>
                 </div>
               )}
-              {type === "decennale" && onboarding && (
+              {type === "decennale" && onboarding && (!guided || exempt) && (
                 <div className="flex flex-col gap-2 rounded-card bg-primary-softer p-4 text-sm">
                   {exempt ? (
                     <Alert tone="info">{t.exemptDeclared}</Alert>
@@ -247,22 +265,86 @@ export default async function DocumentsStepPage({
                   </form>
                 </div>
               )}
-              {help && (
+              {help && !guided && (
                 // Page d'une pièce sur ordinateur : l'aide est dans la colonne de droite.
                 <DocumentHelpDisclosure type={type} className={focused ? "lg:hidden" : ""} />
               )}
-              {canUpload && !(type === "decennale" && exempt) && (
+              {canUpload && !(type === "decennale" && exempt) ? (
                 <DocumentUpload
                   type={type}
                   userId={userId}
                   trades={type === "decennale" ? (trades ?? []) : undefined}
                   label={renewal ? t.renew : current ? t.replace : t.send}
+                  guide={
+                    guided && around
+                      ? {
+                          step: type,
+                          backHref: around.backHref,
+                          skipHref: suiteHref(type),
+                          // Pièce déjà déposée : rien à passer, on continue.
+                          skipLabel: current ? g.continue : g.skip,
+                          skipNote: current ? undefined : g.skipNote,
+                          nextNote,
+                        }
+                      : undefined
+                  }
                 />
+              ) : (
+                guided &&
+                around && (
+                  // Rien à déposer (Kbis vérifié au registre, métier non soumis) : on continue.
+                  <GuideBar backHref={around.backHref} note={nextNote}>
+                    <ButtonLink href={suiteHref(type)} size="lg" block>
+                      {g.continue}
+                      <ArrowRight aria-hidden="true" className="size-5" />
+                    </ButtonLink>
+                  </GuideBar>
+                )
               )}
             </section>
           </Card>
         );
       })}
+      {guided && (
+        // L'aide en lignes à ouvrir (ADR 0373) : la photo, où trouver la pièce, l'assureur, et
+        // le cas des métiers non soumis à la décennale.
+        <div className="flex flex-col gap-3">
+          <HelpVideo id="v05-photo" />
+          {stateOf(guided).help && <DocumentHelpDisclosure type={guided} className="lg:hidden" />}
+          {stateOf(guided).help && DOCUMENT_HELP[guided].insurerRequest && (
+            <Link
+              href={`/pro/onboarding/documents/assureur?type=${guided}` as Route}
+              className={`flex min-h-touch items-center gap-3 rounded-input border border-border bg-surface px-4 py-3 hover:bg-background ${focusRing}`}
+            >
+              <Mail aria-hidden="true" className="size-5 shrink-0 text-label" />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="font-semibold">{g.notAtHand}</span>
+                <span className="text-sm text-muted-foreground">{g.notAtHandHint}</span>
+              </span>
+              <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+            </Link>
+          )}
+          {guided === "decennale" && !exempt && (
+            <form action={setDecennaleExempt}>
+              <input type="hidden" name="value" value="oui" />
+              <button
+                type="submit"
+                className={`flex min-h-touch w-full items-center gap-3 rounded-input border border-border bg-surface px-4 py-3 text-left hover:bg-background ${focusRing}`}
+              >
+                <ShieldCheck aria-hidden="true" className="size-5 shrink-0 text-label" />
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="font-semibold">{t.exemptDeclare}</span>
+                  <span className="text-sm text-muted-foreground">{t.exemptText}</span>
+                </span>
+                <ChevronRight
+                  aria-hidden="true"
+                  className="size-5 shrink-0 text-muted-foreground"
+                />
+              </button>
+            </form>
+          )}
+        </div>
+      )}
     </div>
   );
   if (!focused) return <div className="max-w-3xl">{cards}</div>;
@@ -277,7 +359,7 @@ export default async function DocumentsStepPage({
             <DocumentHelpSteps type={focusedType} />
           </div>
         )}
-        {focusedType && (
+        {focusedType && !guided && (
           // Pas de « region » ici : la page d'une pièce n'en compte qu'une (la pièce elle-même).
           <div className={sheetCard}>
             <h2 className="text-[1.0625rem]">{t.checksTitle}</h2>
@@ -295,7 +377,10 @@ export default async function DocumentsStepPage({
           <Lock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
           {fr.pro.onboarding.dossier.privacy}
         </p>
-        {onboarding && focusedType && stateOf(focusedType).help && !stateOf(focusedType).current ? (
+        {guided ? null : onboarding &&
+          focusedType &&
+          stateOf(focusedType).help &&
+          !stateOf(focusedType).current ? (
           // « Déposer plus tard » (maquette du lot 61) : un vrai bouton, MENAO relance par e-mail.
           <div className={sheetCard}>
             <h2 className="text-[1.0625rem]">{fr.pro.onboarding.help.laterTitle}</h2>

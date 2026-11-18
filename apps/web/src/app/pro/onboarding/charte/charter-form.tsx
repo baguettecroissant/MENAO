@@ -8,8 +8,9 @@ import {
   ENGAGEMENT_TEXT,
   ENGAGEMENT_VERSION,
 } from "@menao/core";
-import { ArrowRight, Check, Hand } from "lucide-react";
-import { useActionState, useState, type FormEvent, type ReactNode } from "react";
+import { ArrowDown, ArrowLeft, ArrowRight, Check, Hand, ListChecks, Pencil } from "lucide-react";
+import Link from "next/link";
+import { useActionState, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
   CHARTER_TOTAL,
   CharterHero,
@@ -17,11 +18,13 @@ import {
   EngagementBlock,
   PrincipleCard,
   PromisesSection,
-  RuleContent,
   SectionExtras,
   SectionHeader,
   SectionIcon,
 } from "@/components/pro/charter/charter-parts";
+import { GuideBar } from "@/components/pro/guide-bar";
+import { HelpVideo } from "@/components/pro/help-video";
+import { Button, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { initialFormState } from "@/lib/auth/form";
 import { acceptCharter, type CharterDestination } from "@/lib/artisan/charter-actions";
@@ -29,18 +32,31 @@ import { SignaturePad } from "./signature-pad";
 
 const t = fr.pro.onboarding.charter;
 const T = CHARTER_TEXT;
-const sectionCodes = CHARTER_SECTIONS.map((s, si) =>
-  s.rules.map((_, ri) => `R${si + 1}.${ri + 1}`),
-);
+const PARTS = CHARTER_SECTIONS.length;
+// Après les parties de la charte : ce que MENAO promet, l'engagement, la signature.
+const PROMISES = PARTS;
+const ENGAGEMENT = PARTS + 1;
+const SIGNATURE = PARTS + 2;
+const SCREENS = PARTS + 3;
+const shortTitle = (title: string) => title.split(" :")[0] ?? title;
+const SCREEN_NAMES = [
+  ...CHARTER_SECTIONS.map((section) => shortTitle(section.title)),
+  t.promisesShort,
+  t.engagementShort,
+  t.signatureShort,
+];
+const siretDigits = (value: string) => value.replace(/\s/g, "");
+const siretValid = (value: string) => /^\d{14}$/.test(siretDigits(value));
 
 const inputClass =
   "min-h-12 w-full min-w-0 rounded-input border-[1.5px] border-border bg-surface px-3 py-2.5 font-medium focus:border-primary focus:outline-none";
 
 /**
- * Charte qualité à lire et signer (ADR 0104), d'après la maquette V5 : chaque règle est cochée,
- * l'artisan certifie son engagement (ADR 0117), puis signe avec son nom, son entreprise, son SIRET
- * et un tracé. Les erreurs sont
- * listées en une phrase avant l'envoi ; la base refait les contrôles.
+ * Charte qualité à lire et signer (ADR 0104), une partie par écran (ADR 0373) : le texte de la
+ * charte V5 est inchangé, l'artisan accepte chaque partie avec le bouton du bas, qui fait d'abord
+ * défiler jusqu'à la dernière règle. Suivent ce que MENAO promet, l'engagement de l'artisan
+ * (ADR 0117), puis la signature avec son nom, son entreprise, son SIRET et un tracé. Les
+ * 25 numéros de règles sont envoyés avec la signature ; la base refait les contrôles.
  */
 export function CharterForm({
   defaults,
@@ -54,257 +70,403 @@ export function CharterForm({
     acceptCharter.bind(null, destination),
     initialFormState,
   );
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [screen, setScreen] = useState(0);
+  // Parties acceptées, dans l'ordre : les règles des `accepted` premières parties.
+  const [accepted, setAccepted] = useState(0);
+  const [engagement, setEngagement] = useState(false);
   const [name, setName] = useState(defaults.name);
   const [company, setCompany] = useState(defaults.company);
   const [siret, setSiret] = useState(defaults.siret);
+  // Nom, entreprise et SIRET déjà connus : un récapitulatif, « Modifier » rouvre les champs.
+  const [editing, setEditing] = useState(
+    !defaults.name.trim() || !defaults.company.trim() || !siretValid(defaults.siret),
+  );
   const [agree, setAgree] = useState(false);
-  const [engagement, setEngagement] = useState(false);
   const [signature, setSignature] = useState("");
   const [clientError, setClientError] = useState<string | null>(null);
+  // Fin de l'écran atteinte : « Lire la suite » devient le bouton qui accepte.
+  const [atEnd, setAtEnd] = useState(false);
+  const end = useRef<HTMLDivElement>(null);
+  const top = useRef<HTMLDivElement>(null);
 
-  const n = CHARTER_RULES.filter((r) => checked[r.code]).length;
-  const count = (si: number) => sectionCodes[si]?.filter((c) => checked[c]).length ?? 0;
-  const firstUnchecked = CHARTER_SECTIONS.find((_, si) =>
-    sectionCodes[si]?.some((c) => !checked[c]),
-  )?.id;
+  useEffect(() => {
+    const target = end.current;
+    if (!target) return;
+    // La barre du bas couvre le pied de l'écran : la fin doit en dépasser pour compter.
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) setAtEnd(true);
+      },
+      { rootMargin: "0px 0px -140px 0px" },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [screen]);
 
-  function toggle(code: string) {
-    setChecked((prev) => ({ ...prev, [code]: !prev[code] }));
+  function go(next: number) {
+    setAtEnd(false);
+    setClientError(null);
+    // Le tracé ne survit pas au changement d'écran : il sera refait.
+    if (screen === SIGNATURE) setSignature("");
+    setScreen(next);
+    window.scrollTo({ top: 0 });
+    top.current?.focus({ preventScroll: true });
+  }
+
+  const section = CHARTER_SECTIONS[screen];
+  const sectionAccepted = screen < accepted;
+  const nextName = SCREEN_NAMES[screen + 1];
+  const reading = screen <= ENGAGEMENT && !atEnd && !sectionAccepted;
+
+  function advance() {
+    if (reading) {
+      window.scrollBy({ top: window.innerHeight * 0.7, behavior: "smooth" });
+      return;
+    }
+    if (screen < PARTS) setAccepted((n) => Math.max(n, screen + 1));
+    if (screen === ENGAGEMENT) setEngagement(true);
+    go(screen + 1);
   }
 
   function validate(event: FormEvent<HTMLFormElement>) {
     const missing: string[] = [];
-    if (n < CHARTER_TOTAL) missing.push(t.missing.rules(CHARTER_TOTAL - n));
+    if (accepted < PARTS)
+      missing.push(
+        t.missing.rules(CHARTER_SECTIONS.slice(accepted).flatMap((s) => s.rules).length),
+      );
     if (!name.trim()) missing.push(t.missing.name);
     if (!company.trim()) missing.push(t.missing.company);
-    const s = siret.replace(/\s/g, "");
-    if (s.length !== 14 || /\D/.test(s)) missing.push(t.missing.siret);
+    if (!siretValid(siret)) missing.push(t.missing.siret);
     if (!signature) missing.push(t.missing.signature);
     if (!engagement) missing.push(t.missing.engagement);
     if (!agree) missing.push(t.missing.agree);
     if (missing.length) {
       event.preventDefault();
       setClientError(`${t.missingPrefix}${missing.join(", ")}.`);
-      if (n < CHARTER_TOTAL && firstUnchecked)
-        document.getElementById(firstUnchecked)?.scrollIntoView({ behavior: "smooth" });
+      if (!name.trim() || !company.trim() || !siretValid(siret)) setEditing(true);
       return;
     }
     setClientError(null);
   }
 
   const error = clientError ?? state.error;
+  const back =
+    screen > 0 ? (
+      <Button type="button" variant="secondary" block={false} onClick={() => go(screen - 1)}>
+        <ArrowLeft aria-hidden="true" className="size-4" />
+        {t.back}
+      </Button>
+    ) : undefined;
+
+  const header = (
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-center gap-3">
+        {screen > 0 ? (
+          <button
+            type="button"
+            onClick={() => go(screen - 1)}
+            aria-label={t.previousPart}
+            className={`flex size-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-strong transition-colors hover:bg-primary-soft/70 ${focusRing}`}
+          >
+            <ArrowLeft aria-hidden="true" className="size-5" />
+          </button>
+        ) : (
+          destination === "onboarding" && (
+            <Link
+              href="/pro/onboarding"
+              aria-label={fr.pro.onboarding.guide.dossier}
+              className={`flex size-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-strong transition-colors hover:bg-primary-soft/70 ${focusRing}`}
+            >
+              <ArrowLeft aria-hidden="true" className="size-5" />
+            </Link>
+          )
+        )}
+        <div
+          role="progressbar"
+          aria-label={t.partsLabel}
+          aria-valuemin={1}
+          aria-valuemax={SCREENS}
+          aria-valuenow={screen + 1}
+          className="flex min-w-0 flex-1 gap-1.5"
+        >
+          {SCREEN_NAMES.map((label, i) => (
+            <span
+              key={label}
+              className={`h-1.5 flex-1 rounded-pill ${
+                i <= screen ? "bg-foreground" : "bg-border-strong/60"
+              }`}
+            />
+          ))}
+        </div>
+        {destination === "onboarding" && screen > 0 && (
+          <Link
+            href="/pro/onboarding"
+            className={`inline-flex min-h-touch shrink-0 items-center gap-1.5 rounded-sm text-sm font-semibold text-primary-strong underline-offset-2 hover:underline ${focusRing}`}
+          >
+            <ListChecks aria-hidden="true" className="size-4" />
+            {fr.pro.onboarding.guide.dossier}
+          </Link>
+        )}
+      </div>
+      <div className="flex flex-wrap justify-between gap-x-4 text-[0.8125rem] font-semibold text-muted-foreground">
+        <span>{t.part(screen + 1, SCREENS, SCREEN_NAMES[screen] ?? "")}</span>
+        <span>{t.partTag}</span>
+      </div>
+    </div>
+  );
+
+  const nextNote = nextName ? t.nextPart(nextName) : undefined;
 
   return (
-    <div className="flex flex-col gap-5 pb-28">
-      <CharterHero />
+    <div ref={top} tabIndex={-1} className="flex flex-col gap-5 outline-none">
+      {header}
 
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)]">
-        <nav
-          aria-label={t.summary}
-          className="rounded-card border border-border bg-surface p-4 shadow-card"
-        >
-          <h3 className="font-semibold">{t.progressTitle}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{t.progressCount(n, CHARTER_TOTAL)}</p>
-          <ul className="mt-2.5 flex flex-col gap-0.5">
-            {CHARTER_SECTIONS.map((s, si) => {
-              const done = count(si) === s.rules.length;
-              return (
-                <li key={s.id}>
-                  <a
-                    href={`#${s.id}`}
-                    className="flex items-center gap-2.5 rounded-input px-2 py-2 text-sm font-semibold hover:bg-primary-softer"
-                  >
-                    <Dot done={done} label={si + 1} />
-                    {s.title.split(" :")[0]}
-                    <span className="ml-auto text-xs font-normal text-muted-foreground tabular-nums">
-                      {count(si)}/{s.rules.length}
-                    </span>
-                  </a>
-                </li>
-              );
-            })}
-            {[
-              ["engagement", t.navPromises],
-              ["signature", t.navSignature],
-            ].map(([id, label], i) => (
-              <li key={id}>
-                <a
-                  href={`#${id}`}
-                  className="flex items-center gap-2.5 rounded-input px-2 py-2 text-sm font-semibold hover:bg-primary-softer"
-                >
-                  <Dot done={false} label={CHARTER_SECTIONS.length + 1 + i} />
-                  {label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <PrincipleCard />
-      </div>
-
-      {CHARTER_SECTIONS.map((section, si) => {
-        const done = count(si) === section.rules.length;
-        return (
+      {section && (
+        <>
+          {screen === 0 && (
+            <>
+              <CharterHero howTo={t.howToParts} />
+              {destination === "onboarding" && (
+                <div className="max-w-md">
+                  <HelpVideo id="v04-charte" />
+                </div>
+              )}
+              <PrincipleCard />
+            </>
+          )}
           <section
-            key={section.id}
             id={section.id}
             aria-labelledby={`h-${section.id}`}
-            className="scroll-mt-24 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
+            className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
           >
             <SectionHeader
               section={section}
-              index={si}
+              index={screen}
               state={
-                <span
-                  className={`rounded-pill px-2.5 py-1 text-xs font-bold whitespace-nowrap ${
-                    done ? "bg-success-soft text-success" : "bg-background text-muted-foreground"
-                  }`}
-                >
-                  {done ? t.validated : `${count(si)} / ${section.rules.length}`}
-                </span>
+                sectionAccepted ? (
+                  <span className="rounded-pill bg-success-soft px-2.5 py-1 text-xs font-bold whitespace-nowrap text-success">
+                    {t.validated}
+                  </span>
+                ) : undefined
               }
             />
             <SectionExtras section={section} />
             <ul className="mt-3.5 flex flex-col gap-2">
-              {section.rules.map((rule, ri) => {
-                const code = `R${si + 1}.${ri + 1}`;
-                const on = !!checked[code];
-                return (
-                  <li key={code}>
-                    <button
-                      type="button"
-                      role="checkbox"
-                      aria-checked={on}
-                      aria-label={t.ruleLabel(code, rule.title)}
-                      onClick={() => toggle(code)}
-                      className={`flex w-full items-start gap-3 rounded-input border-[1.5px] p-3 text-left transition-colors ${
-                        on
-                          ? "border-foreground bg-background"
-                          : "border-border bg-surface hover:border-primary/40"
-                      }`}
-                    >
-                      <RuleContent code={code} {...rule} checked={on} />
-                    </button>
-                  </li>
-                );
-              })}
+              {section.rules.map((rule, ri) => (
+                <li
+                  key={rule.title}
+                  className={`flex flex-col gap-1 rounded-input border-[1.5px] p-3 ${
+                    sectionAccepted ? "border-foreground bg-background" : "border-border bg-surface"
+                  }`}
+                >
+                  <RuleLine
+                    code={`R${screen + 1}.${ri + 1}`}
+                    title={rule.title}
+                    tag={rule.tag}
+                    accepted={sectionAccepted}
+                  />
+                  <span className="text-sm text-muted-foreground">{rule.text}</span>
+                </li>
+              ))}
             </ul>
           </section>
-        );
-      })}
+        </>
+      )}
 
-      <PromisesSection index={CHARTER_SECTIONS.length + 1} />
-      <CheerSection />
+      {screen === PROMISES && (
+        <>
+          <PromisesSection index={PARTS + 1} />
+          <CheerSection />
+        </>
+      )}
 
-      <form
-        id="signature"
-        action={action}
-        onSubmit={validate}
-        aria-labelledby="h-sig"
-        className="flex scroll-mt-24 flex-col gap-3.5 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
-        noValidate
-      >
-        <div className="flex items-start gap-3.5">
-          <SectionIcon icon={Hand} />
-          <div>
-            <h2 id="h-sig" className="text-xl font-bold tracking-tight">
-              {CHARTER_SECTIONS.length + 2}. {T.signatureTitle}
-            </h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">{T.signatureWhy}</p>
-          </div>
-        </div>
-        <input type="hidden" name="version" value={CHARTER_VERSION} />
-        {CHARTER_RULES.filter((r) => checked[r.code]).map((r) => (
-          <input key={r.code} type="hidden" name="rule" value={r.code} />
-        ))}
-        <input type="hidden" name="signature" value={signature} />
-        {agree && <input type="hidden" name="agree" value="on" />}
-        <input type="hidden" name="engagementVersion" value={ENGAGEMENT_VERSION} />
-        {engagement && <input type="hidden" name="engagement" value="on" />}
-        <EngagementBlock>
-          <CheckButton checked={engagement} onToggle={() => setEngagement((v) => !v)}>
-            <b>{ENGAGEMENT_TEXT.agreeTitle}</b>
-          </CheckButton>
-        </EngagementBlock>
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-          <label className="flex flex-col gap-1.5 text-sm font-bold">
-            {t.name}
-            <input
-              name="name"
-              type="text"
-              autoComplete="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t.namePlaceholder}
-              className={inputClass}
-            />
-          </label>
-          <label className="flex flex-col gap-1.5 text-sm font-bold">
-            {t.company}
-            <input
-              name="company"
-              type="text"
-              autoComplete="organization"
-              value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              placeholder={t.companyPlaceholder}
-              className={inputClass}
-            />
-          </label>
-          <label className="flex flex-col gap-1.5 text-sm font-bold">
-            {t.siret}
-            <input
-              name="siret"
-              type="text"
-              inputMode="numeric"
-              value={siret}
-              onChange={(e) => setSiret(e.target.value)}
-              placeholder={t.siretPlaceholder}
-              className={inputClass}
-            />
-          </label>
-        </div>
-        <SignaturePad onChange={setSignature} />
-        <CheckButton checked={agree} onToggle={() => setAgree((v) => !v)}>
-          <b>{T.agreeTitle}</b>
-          <span className="text-sm text-muted-foreground">{T.agreeText}</span>
-        </CheckButton>
-        <p role="alert" className="text-sm font-semibold text-danger">
-          {error}
-        </p>
-        <button
-          type="submit"
-          disabled={pending}
-          className="flex min-h-14 w-full items-center justify-center gap-2 rounded-pill bg-primary px-6 font-bold text-white hover:bg-primary-hover disabled:bg-[#c9cfdf]"
+      {screen === ENGAGEMENT && <EngagementBlock />}
+
+      {screen < SIGNATURE && (
+        <>
+          <div ref={end} aria-hidden="true" className="h-px" />
+          <GuideBar back={back} note={reading ? undefined : nextNote}>
+            <Button
+              type="button"
+              size="lg"
+              variant={reading ? "outline" : "primary"}
+              onClick={advance}
+              className="h-auto py-2.5 text-balance"
+            >
+              {reading ? (
+                <>
+                  {t.readMore}
+                  <ArrowDown aria-hidden="true" className="size-5" />
+                </>
+              ) : (
+                <>
+                  {screen === ENGAGEMENT
+                    ? ENGAGEMENT_TEXT.agreeTitle
+                    : section && !sectionAccepted
+                      ? t.acceptRules(section.rules.length)
+                      : t.continueReading}
+                  {screen !== ENGAGEMENT && <ArrowRight aria-hidden="true" className="size-5" />}
+                </>
+              )}
+            </Button>
+          </GuideBar>
+        </>
+      )}
+
+      {screen === SIGNATURE && (
+        <form
+          id="signature"
+          action={action}
+          onSubmit={validate}
+          aria-labelledby="h-sig"
+          className="flex flex-col gap-3.5 rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
+          noValidate
         >
-          {t.submit}
-          <ArrowRight aria-hidden="true" className="size-5" strokeWidth={2.4} />
-        </button>
-      </form>
-
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center gap-3.5">
-          <p className="min-w-0 flex-1 text-sm text-muted-foreground">
-            <b className="text-foreground tabular-nums">
-              {n} / {CHARTER_TOTAL}
-            </b>{" "}
-            {t.dockSuffix}
-            {n < CHARTER_TOTAL ? t.dockTodo : t.dockDone}
+          <div className="flex items-start gap-3.5">
+            <SectionIcon icon={Hand} />
+            <div>
+              <h2 id="h-sig" className="text-xl font-bold tracking-tight">
+                {T.signatureTitle}
+              </h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">{T.signatureWhy}</p>
+            </div>
+          </div>
+          <input type="hidden" name="version" value={CHARTER_VERSION} />
+          {CHARTER_RULES.filter((rule) => Number(rule.code.slice(1).split(".")[0]) <= accepted).map(
+            (rule) => (
+              <input key={rule.code} type="hidden" name="rule" value={rule.code} />
+            ),
+          )}
+          <input type="hidden" name="signature" value={signature} />
+          {agree && <input type="hidden" name="agree" value="on" />}
+          <input type="hidden" name="engagementVersion" value={ENGAGEMENT_VERSION} />
+          {engagement && <input type="hidden" name="engagement" value="on" />}
+          {editing ? (
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+              <label className="flex flex-col gap-1.5 text-sm font-bold">
+                {t.name}
+                <input
+                  name="name"
+                  type="text"
+                  autoComplete="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t.namePlaceholder}
+                  className={inputClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm font-bold">
+                {t.company}
+                <input
+                  name="company"
+                  type="text"
+                  autoComplete="organization"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  placeholder={t.companyPlaceholder}
+                  className={inputClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm font-bold">
+                {t.siret}
+                <input
+                  name="siret"
+                  type="text"
+                  inputMode="numeric"
+                  value={siret}
+                  onChange={(e) => setSiret(e.target.value)}
+                  placeholder={t.siretPlaceholder}
+                  className={inputClass}
+                />
+              </label>
+            </div>
+          ) : (
+            <div
+              role="group"
+              aria-label={t.signer}
+              className="flex items-center gap-3 rounded-input border-[1.5px] border-border bg-background px-3.5 py-3"
+            >
+              <input type="hidden" name="name" value={name} />
+              <input type="hidden" name="company" value={company} />
+              <input type="hidden" name="siret" value={siret} />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <b>{name}</b>
+                <span className="text-sm text-muted-foreground">
+                  {company} · {t.recap.siret} {siretDigits(siret)}
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className={`inline-flex min-h-touch shrink-0 items-center gap-1.5 rounded-sm text-sm font-bold text-primary-strong hover:underline ${focusRing}`}
+              >
+                <Pencil aria-hidden="true" className="size-4" />
+                {t.edit}
+              </button>
+            </div>
+          )}
+          <SignaturePad onChange={setSignature} />
+          <CheckButton checked={agree} onToggle={() => setAgree((v) => !v)}>
+            <b>{T.agreeTitle}</b>
+            <span className="text-sm text-muted-foreground">{T.agreeText}</span>
+          </CheckButton>
+          <p role="alert" className="text-sm font-semibold text-danger">
+            {error}
           </p>
-          <a
-            href={`#${firstUnchecked ?? "signature"}`}
-            className="flex min-h-12 items-center justify-center rounded-pill bg-primary px-5 text-sm font-bold whitespace-nowrap text-white hover:bg-primary-hover"
-          >
-            {firstUnchecked ? t.nextRule : t.toSignature}
-          </a>
-        </div>
-      </div>
+          <GuideBar back={back}>
+            <Button type="submit" size="lg" disabled={pending}>
+              {t.submit}
+              <ArrowRight aria-hidden="true" className="size-5" strokeWidth={2.4} />
+            </Button>
+          </GuideBar>
+        </form>
+      )}
+
+      <p className="sr-only" aria-live="polite">
+        {t.progressCount(
+          CHARTER_SECTIONS.slice(0, accepted).flatMap((s) => s.rules).length,
+          CHARTER_TOTAL,
+        )}
+      </p>
     </div>
   );
 }
 
-/** Case à cocher de la signature (acceptation de la charte, engagement de l'artisan). */
+/** Numéro, titre et étiquette d'une règle ; le numéro passe au sombre une fois la partie acceptée. */
+function RuleLine({
+  code,
+  title,
+  tag,
+  accepted,
+}: {
+  code: string;
+  title: string;
+  tag?: string;
+  accepted: boolean;
+}) {
+  return (
+    <span className="flex flex-wrap items-center gap-2">
+      <span
+        className={`flex h-6 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-xs font-extrabold tabular-nums ${
+          accepted ? "bg-foreground text-white" : "bg-primary-soft text-primary-strong"
+        }`}
+      >
+        {accepted && <Check aria-hidden="true" className="size-3" strokeWidth={3.4} />}
+        {code}
+      </span>
+      <b className="leading-snug">
+        {title}
+        {tag && (
+          <span className="ml-1.5 inline-block rounded-md bg-warning-soft px-2 py-0.5 align-[1px] text-xs font-bold text-warning">
+            {tag}
+          </span>
+        )}
+      </b>
+    </span>
+  );
+}
+
+/** Case à cocher de la signature (acceptation de la charte). */
 function CheckButton({
   checked,
   onToggle,
@@ -336,20 +498,5 @@ function CheckButton({
       </span>
       <span className="flex flex-col gap-1">{children}</span>
     </button>
-  );
-}
-
-function Dot({ done, label }: { done: boolean; label: number }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`flex size-[22px] shrink-0 items-center justify-center rounded-full border-2 text-[11px] font-extrabold ${
-        done
-          ? "border-foreground bg-foreground text-white"
-          : "border-primary/40 text-primary-strong"
-      }`}
-    >
-      {done ? <Check className="size-3" strokeWidth={3.4} /> : label}
-    </span>
   );
 }

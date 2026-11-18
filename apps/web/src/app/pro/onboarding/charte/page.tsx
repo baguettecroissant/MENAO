@@ -1,6 +1,7 @@
 import { SignedCharter } from "@/components/pro/charter/signed-charter";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
+import { suiteHref } from "@/lib/artisan/guide";
 import { CharterDone } from "./charter-done";
 import { CharterForm } from "./charter-form";
 
@@ -49,7 +50,7 @@ export default async function CharterPage({
     <div className="max-w-3xl">
       <CharterDone
         charter={charter}
-        continueHref="/pro/onboarding"
+        continueHref={suiteHref("charte")}
         continueLabel={t.next}
         rereadHref="/pro/onboarding/charte?relire=1"
       />

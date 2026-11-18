@@ -53,7 +53,9 @@ export function SectionIcon({ icon: Icon }: { icon: LucideIcon }) {
   );
 }
 
-export function CharterHero() {
+export function CharterHero({
+  howTo,
+}: { /** Mode d'emploi de l'écran, s'il diffère (lecture par parties). */ howTo?: string } = {}) {
   return (
     <section className="flex flex-col gap-4 rounded-hero border border-border bg-surface p-6 sm:p-7">
       <span className="text-xs font-bold tracking-[0.06em] text-primary-strong uppercase">
@@ -109,7 +111,7 @@ export function CharterHero() {
       </p>
       <p className="flex items-start gap-2.5 rounded-input bg-background px-4 py-3 text-sm text-muted-foreground">
         <Hand aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-        <span>{T.howTo(CHARTER_TOTAL)}</span>
+        <span>{howTo ?? T.howTo(CHARTER_TOTAL)}</span>
       </p>
     </section>
   );

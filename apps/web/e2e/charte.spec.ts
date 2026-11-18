@@ -1,3 +1,4 @@
+import { acceptCharterParts, drawSignature } from "./charter";
 import { expect, test } from "./test";
 
 // Artisan validé inscrit avant la charte qualité (ADR 0109) : compte fictif du seed
@@ -17,22 +18,10 @@ test("artisan déjà inscrit : charte demandée à l'entrée de l'espace pro, pu
   await expect(page).toHaveURL(/\/pro\/charte$/);
 
   // Même lecture et même signature qu'à l'inscription (ADR 0104).
-  const rules = page.getByRole("checkbox", { name: /^Règle R\d+\.\d+ :/ });
-  await expect(rules).toHaveCount(25);
-  for (const rule of await rules.all()) await rule.click();
+  await acceptCharterParts(page);
   await expect(page.getByLabel("Entreprise")).toHaveValue("CHARTE EXEMPLE");
   await page.getByLabel("N° SIRET").fill("00000001800010");
-  const pad = page.getByLabel("Zone de signature : signe avec le doigt ou la souris");
-  await pad.scrollIntoViewIfNeeded();
-  const box = await pad.boundingBox();
-  if (!box) throw new Error("zone de signature introuvable");
-  await page.mouse.move(box.x + 30, box.y + 90);
-  await page.mouse.down();
-  await page.mouse.move(box.x + 150, box.y + 40, { steps: 8 });
-  await page.mouse.move(box.x + 280, box.y + 100, { steps: 8 });
-  await page.mouse.up();
-  // Engagement de l'artisan (ADR 0117), certifié avec la même signature.
-  await page.getByRole("checkbox", { name: /certifie sur l'honneur/ }).click();
+  await drawSignature(page);
   await page.getByRole("checkbox", { name: /accepte la Charte qualité Menao/ }).click();
   await page.getByRole("button", { name: /Signer et rejoindre MENAO/ }).click();
 

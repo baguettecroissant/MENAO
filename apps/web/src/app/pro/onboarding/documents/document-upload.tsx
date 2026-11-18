@@ -1,6 +1,7 @@
 "use client";
 
 import type { RequiredDocumentType } from "@menao/core";
+import type { ComponentProps } from "react";
 import { CheckboxField, Field } from "@/components/ui";
 import { UploadForm } from "@/components/upload-form";
 import { fr } from "@/i18n/fr";
@@ -12,12 +13,15 @@ export function DocumentUpload({
   userId,
   label,
   trades,
+  guide,
 }: {
   type: RequiredDocumentType;
   userId: string;
   label: string;
   /** Décennale : métiers de l'artisan, à cocher s'ils sont couverts (ADR 0116). */
   trades?: { code: string; label: string }[];
+  /** Parcours guidé (ADR 0373) : barre du bas « Déposer et continuer ». */
+  guide?: ComponentProps<typeof UploadForm>["guide"];
 }) {
   const id = (name: string) => `${type}-${name}`;
   return (
@@ -30,6 +34,7 @@ export function DocumentUpload({
       submitLabel={label}
       camera
       readAs={type}
+      guide={guide}
     >
       {(errors) => (
         <>

@@ -10,12 +10,14 @@ import {
   type ReadableDocumentType,
 } from "@menao/core";
 import { documentMetadataSchema, type UploadPurpose } from "@menao/validation";
-import { Camera, FileCheck, FileUp, ImageUp } from "lucide-react";
+import { ArrowRight, Camera, FileCheck, FileUp, ImageUp } from "lucide-react";
+import type { Route } from "next";
 import { useActionState, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { z } from "zod";
 import { AvatarFramer } from "@/components/avatar-framer";
 import { AiWorking } from "@/components/ai-working";
-import { Alert, Button } from "@/components/ui";
+import { GuideBar } from "@/components/pro/guide-bar";
+import { Alert, Button, ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { processUpload, readDocument } from "@/lib/artisan/actions";
 import type { FormState } from "@/lib/auth/form";
@@ -70,6 +72,22 @@ type UploadFormProps = {
    * compte » d'un particulier passe la sienne (ADR 0360).
    */
   process?: (prev: FormState, formData: FormData) => Promise<FormState>;
+  /**
+   * Parcours guidé du dossier (ADR 0373) : les champs n'apparaissent qu'une fois le document
+   * choisi et lu, et le bouton d'envoi passe dans la barre du bas, « Déposer et continuer ». Sans
+   * fichier choisi, la barre propose de passer à la suite.
+   */
+  guide?: {
+    /** Étape déposée, renvoyée à l'action pour aller à la suivante. */
+    step: string;
+    backHref: Route;
+    /** Sans fichier : « Passer pour l'instant », ou « Continuer » si une pièce est déjà déposée. */
+    skipHref: Route;
+    skipLabel: string;
+    skipNote?: string;
+    /** « Suite : RC Pro ». */
+    nextNote: string;
+  };
 };
 
 /**
@@ -93,6 +111,7 @@ export function UploadForm({
   readAs,
   dropLabel,
   process = processUpload,
+  guide,
 }: UploadFormProps) {
   const form = useRef<HTMLFormElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -254,8 +273,9 @@ export function UploadForm({
       framed.current = null;
       setFramedUrl(null);
     }
-    // Le champ fichier est vidé après l'envoi : l'aperçu de la zone de dépôt aussi.
-    if (dropLabel) {
+    // Le champ fichier est vidé après l'envoi : l'aperçu de la zone de dépôt aussi, et dans le
+    // parcours guidé le nom du fichier choisi (la barre du bas en dépend).
+    if (dropLabel || guide) {
       setChosen(null);
       setPreview(null);
     }
@@ -517,10 +537,47 @@ export function UploadForm({
           )}
         </div>
       )}
-      {readAs ? fields : null}
-      <Button type="submit" disabled={pending} className="sm:w-auto sm:self-start sm:px-6">
-        {pending ? t.sending : submitLabel}
-      </Button>
+      {readAs ? (
+        guide ? (
+          // Champs gardés dans la page (la lecture les remplit), montrés une fois le fichier choisi.
+          <div hidden={!chosen} className={chosen ? "flex flex-col gap-4" : undefined}>
+            <div className="flex flex-col gap-0.5">
+              <p className="font-semibold">{fr.pro.onboarding.guide.checkRead}</p>
+              <p className="text-sm text-muted-foreground">
+                {fr.pro.onboarding.guide.checkReadHint}
+              </p>
+            </div>
+            {fields}
+          </div>
+        ) : (
+          fields
+        )
+      ) : null}
+      {guide ? (
+        <>
+          <input type="hidden" name="suite" value={guide.step} />
+          <GuideBar
+            backHref={guide.backHref}
+            note={chosen ? guide.nextNote : (guide.skipNote ?? guide.nextNote)}
+          >
+            {chosen ? (
+              <Button type="submit" size="lg" disabled={pending || reading?.step === "reading"}>
+                {pending ? t.sending : fr.pro.onboarding.guide.depositAndContinue}
+                <ArrowRight aria-hidden="true" className="size-5" />
+              </Button>
+            ) : (
+              <ButtonLink href={guide.skipHref} variant="outline" size="lg" block>
+                {guide.skipLabel}
+                <ArrowRight aria-hidden="true" className="size-5" />
+              </ButtonLink>
+            )}
+          </GuideBar>
+        </>
+      ) : (
+        <Button type="submit" disabled={pending} className="sm:w-auto sm:self-start sm:px-6">
+          {pending ? t.sending : submitLabel}
+        </Button>
+      )}
     </form>
   );
 }

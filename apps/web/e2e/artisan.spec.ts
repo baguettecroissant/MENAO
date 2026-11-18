@@ -1,5 +1,6 @@
 import { expect, test } from "./test";
 import { dates, fakeSiret, files, mockCompanySearch, mockGeocoding } from "./fixtures";
+import { acceptCharterParts, drawSignature } from "./charter";
 import { authCodeFor } from "./mailpit";
 
 // Données fictives uniquement (domaine .test, tranche ARCEP fiction, SIRET du faux serveur Sirene).
@@ -66,9 +67,20 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(page.getByText("MENUISERIE EXEMPLE")).toBeVisible();
   await expect(page.getByText("Menuisier", { exact: true })).toBeVisible();
   await expect(page.getByText(/30 km autour de 1 Rue de l'Exemple 06000 Nice/)).toBeVisible();
-  await page.getByRole("link", { name: "Faire vérifier mon entreprise" }).click();
+  // La suite annoncée (ADR 0373) : dix minutes, trois blocs, le Kbis déjà vérifié au registre.
+  await expect(page.getByText("Environ 10 minutes, en photo depuis votre téléphone")).toBeVisible();
+  await expect(page.getByText("Vos 4 documents")).toBeVisible();
+  await expect(
+    page.getByText("Décennale, RC Pro, pièce d'identité, attestation URSSAF"),
+  ).toBeVisible();
+  await expect(page.getByText("Kbis : déjà vérifié au registre, rien à déposer")).toBeVisible();
+  // « Commencer » ouvre la première étape du parcours guidé : la charte.
+  await page.getByRole("link", { name: "Commencer" }).click();
+  await expect(page).toHaveURL(/\/pro\/onboarding\/charte$/);
+  await expect(page.getByText("Partie 1 sur 9 · Réactivité")).toBeVisible();
 
   // « Faire vérifier mon entreprise » (ADR 0111) : entreprise, métiers et zone déjà faits.
+  await page.getByRole("link", { name: "Mon dossier" }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding$/);
   await expect(
     page.getByRole("heading", { level: 1, name: "Faire vérifier mon entreprise" }),
@@ -130,33 +142,38 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.getByRole("link", { name: /Charte qualité MENAO/ }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding\/charte$/);
 
-  // Étape 4 — charte qualité (ADR 0104) : 25 règles cochées, tracé de signature, accord
+  // Étape 4 — charte qualité (ADR 0104), une partie par écran (ADR 0373) : chaque partie
+  // acceptée avec le bouton du bas, puis l'engagement, le tracé de signature et l'accord.
   await expect(page.getByRole("heading", { name: /Rejoindre Menao/ })).toBeVisible();
+  await acceptCharterParts(page);
+  // Nom, entreprise et SIRET déjà connus : un récapitulatif, sans champ à remplir.
+  await expect(page.getByRole("group", { name: "Signataire" })).toContainText("MENUISERIE EXEMPLE");
   await page.getByRole("button", { name: /Signer et rejoindre MENAO/ }).click();
   await expect(page.getByRole("alert").filter({ hasText: "Pour signer" })).toContainText(
-    "coche les 25 règle(s) restante(s)",
+    "signe dans le cadre, coche l’acceptation de la charte",
   );
-  const rules = page.getByRole("checkbox", { name: /^Règle R\d+\.\d+ :/ });
-  await expect(rules).toHaveCount(25);
-  for (const rule of await rules.all()) await rule.click();
-  await expect(page.getByText("25 / 25")).toBeVisible();
-  await expect(page.getByLabel("N° SIRET")).not.toHaveValue("");
-  const pad = page.getByLabel("Zone de signature : signe avec le doigt ou la souris");
-  await pad.scrollIntoViewIfNeeded();
-  const box = await pad.boundingBox();
-  if (!box) throw new Error("zone de signature introuvable");
-  await page.mouse.move(box.x + 30, box.y + 90);
-  await page.mouse.down();
-  await page.mouse.move(box.x + 150, box.y + 40, { steps: 8 });
-  await page.mouse.move(box.x + 280, box.y + 100, { steps: 8 });
-  await page.mouse.up();
-  // Engagement de l'artisan (ADR 0117), certifié avec la même signature.
-  await page.getByRole("checkbox", { name: /certifie sur l'honneur/ }).click();
+  await drawSignature(page);
   await page.getByRole("checkbox", { name: /accepte la Charte qualité Menao/ }).click();
   await page.getByRole("button", { name: /Signer et rejoindre MENAO/ }).click();
   await expect(page.getByRole("heading", { name: /Tu fais partie de Menao/ })).toBeVisible();
   await expect(page.getByText("25 / 25 (R1.1 à R6.2)")).toBeVisible();
+  // La suite du parcours : le premier document à déposer, avec sa barre du bas.
   await page.getByRole("link", { name: /Continuer : mes documents/ }).click();
+  await expect(page).toHaveURL(/\/pro\/onboarding\/documents\?type=decennale$/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Attestation d'assurance décennale" }),
+  ).toBeVisible();
+  await expect(page.getByText("Étape 2 sur 6 · Décennale")).toBeVisible();
+  // Rien à remplir avant d'avoir choisi le fichier ; sans la pièce, on passe à la suivante.
+  await expect(page.getByLabel("Assureur")).toBeHidden();
+  await expect(page.getByRole("link", { name: /Je ne l'ai pas sous la main/ })).toHaveAttribute(
+    "href",
+    "/pro/onboarding/documents/assureur?type=decennale",
+  );
+  await page.getByRole("link", { name: "Passer pour l'instant" }).click();
+  await expect(page).toHaveURL(/\/pro\/onboarding\/documents\?type=rc_pro$/);
+  await expect(page.getByText("Étape 3 sur 6 · RC Pro")).toBeVisible();
+  await page.getByRole("link", { name: "Mon dossier" }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding$/);
   await expect(page.getByRole("link", { name: /Charte qualité MENAO.*Signée/ })).toBeVisible();
 
@@ -185,17 +202,20 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
     "https://www.autoentrepreneur.urssaf.fr",
   );
   const urssaf = page.getByRole("region", { name: "Attestation de vigilance URSSAF" });
-  await urssaf.getByLabel("Date d'émission").fill(dates.recent);
-  await urssaf.getByLabel("Code de sécurité").fill("URSSAF-0001");
+  // Les champs n'apparaissent qu'une fois le fichier choisi (ADR 0373).
+  await expect(urssaf.getByLabel("Date d'émission")).toBeHidden();
   await urssaf.getByLabel("Fichier").setInputFiles(files.fakePdf);
-  await urssaf.getByRole("button", { name: "Déposer le document" }).click();
-  await expect(urssaf.getByRole("alert")).toContainText("n'est pas accepté");
   await urssaf.getByLabel("Date d'émission").fill(dates.recent);
   await urssaf.getByLabel("Code de sécurité").fill("URSSAF-0001");
+  await urssaf.getByRole("button", { name: "Déposer et continuer" }).click();
+  await expect(urssaf.getByRole("alert")).toContainText("n'est pas accepté");
   await urssaf.getByLabel("Fichier").setInputFiles(files.pdf);
-  await urssaf.getByRole("button", { name: "Déposer le document" }).click();
-  await expect(urssaf.getByText("Déposé, en attente de vérification")).toBeVisible();
-  await page.getByRole("link", { name: "Retour à mon dossier" }).click();
+  await urssaf.getByLabel("Date d'émission").fill(dates.recent);
+  await urssaf.getByLabel("Code de sécurité").fill("URSSAF-0001");
+  // « Déposer et continuer » : la pièce déposée, l'étape suivante s'ouvre (la fiche).
+  await urssaf.getByRole("button", { name: "Déposer et continuer" }).click();
+  await expect(page).toHaveURL(/\/pro\/onboarding\/profil$/);
+  await page.getByRole("link", { name: "Mon dossier" }).click();
   await expect(
     page.getByRole("link", { name: /Attestation de vigilance URSSAF.*Déposé/ }),
   ).toBeVisible();
@@ -274,8 +294,6 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
     .fill(
       "Menuisier depuis huit ans dans les Alpes-Maritimes, je pose fenêtres, portes et placards sur mesure avec soin.",
     );
-  await page.getByRole("button", { name: "Enregistrer la présentation" }).click();
-  await expect(page.getByText("Enregistré.")).toBeVisible();
 
   const portfolio = page.getByRole("region", { name: "Photos de réalisations" });
   // Plusieurs photos à la fois, envoyées l'une après l'autre dès le choix.
@@ -283,9 +301,23 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(portfolio.getByText("2 photos ajoutées.")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("img", { name: "Réalisation 2" })).toBeVisible();
 
-  // Envoi du dossier : ensuite, documents figés
-  await page.goto("/pro/onboarding");
+  // Dernière étape du parcours (ADR 0373) : « Enregistrer et continuer » ramène au dossier, qui
+  // sert de récapitulatif avant l'envoi.
+  await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
+  await expect(page).toHaveURL(/\/pro\/onboarding$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Tout est prêt" })).toBeVisible();
+
+  // Envoi du dossier : « Dossier envoyé », avec la suite ; ensuite, documents figés.
   await page.getByRole("button", { name: "Envoyer mon dossier en vérification" }).click();
+  await expect(page).toHaveURL(/\/pro\/onboarding\/envoye$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Dossier envoyé" })).toBeVisible();
+  await expect(page.getByText("ne touche jamais l'argent de vos chantiers")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Choisir ma formule" })).toHaveAttribute(
+    "href",
+    "/pro/onboarding/formule",
+  );
+  await page.getByRole("link", { name: "Plus tard" }).click();
+  await expect(page).toHaveURL(/\/pro\/onboarding$/);
   await expect(page.getByRole("main").getByRole("status").first()).toContainText(
     "en cours de vérification",
   );
