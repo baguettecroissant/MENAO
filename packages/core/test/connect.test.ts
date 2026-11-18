@@ -6,6 +6,7 @@ import {
   connectOnboardingOpen,
   planChoiceOpen,
   connectRequirementGroups,
+  subscriptionCheckoutOpen,
 } from "../src/connect";
 
 describe("ouverture du compte de paiement (ADR 0353)", () => {
@@ -24,6 +25,15 @@ describe("ouverture du compte de paiement (ADR 0353)", () => {
     expect(planChoiceOpen("valide")).toBe(false);
     expect(planChoiceOpen("refuse")).toBe(false);
     expect(planChoiceOpen("radie")).toBe(false);
+  });
+
+  it("abonnement payable sans attendre la validation (ADR 0370)", () => {
+    expect(subscriptionCheckoutOpen("brouillon")).toBe(true);
+    expect(subscriptionCheckoutOpen("en_verification")).toBe(true);
+    expect(subscriptionCheckoutOpen("valide")).toBe(true);
+    expect(subscriptionCheckoutOpen("refuse")).toBe(false);
+    expect(subscriptionCheckoutOpen("suspendu")).toBe(false);
+    expect(subscriptionCheckoutOpen("radie")).toBe(false);
   });
 });
 

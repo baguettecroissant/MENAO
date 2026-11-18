@@ -71,6 +71,15 @@ export function planChoiceOpen(status: string): boolean {
   return status === "brouillon" || status === "en_verification";
 }
 
+/**
+ * L'abonnement se paie dès le début du dossier, sans attendre la validation (ADR 0370) : carte ou
+ * IBAN enregistrés, rien n'est prélevé pendant l'essai. La visibilité attend toujours la
+ * validation (`artisanVisibility`) ; un dossier refusé est désabonné par l'équipe.
+ */
+export function subscriptionCheckoutOpen(status: string): boolean {
+  return status === "brouillon" || status === "en_verification" || status === "valide";
+}
+
 export type VisibilityCondition = "validation" | "abonnement" | "paiements";
 
 /**

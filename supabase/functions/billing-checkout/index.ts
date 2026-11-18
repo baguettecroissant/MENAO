@@ -1,5 +1,5 @@
 // Edge Function billing-checkout (F-15) : ouvre une session Stripe Checkout d'abonnement pour
-// l'artisan connecté, dont le dossier est validé. Web uniquement (CLAUDE.md règle 10).
+// l'artisan connecté, dès le début de son dossier (ADR 0370). Web uniquement (CLAUDE.md règle 10).
 // Au mois ou à l'année (ADR 0200) : l'engagement et sa date de début s'affichent près du bouton.
 import {
   TRIAL_DAYS,
@@ -7,6 +7,7 @@ import {
   subscriptionGrantsAccess,
   type SubscriptionStatus,
 } from "../../../packages/core/src/billing.ts";
+import { subscriptionCheckoutOpen } from "../../../packages/core/src/connect.ts";
 import {
   BILLING_PERIODS,
   annualPriceCents,
@@ -23,7 +24,8 @@ Deno.serve(async (req) => {
   const ctx = await currentArtisan(req, admin);
   if (!ctx) return json({ status: "forbidden" }, 403);
   const { user, artisan } = ctx;
-  if (artisan.status !== "valide") return json({ status: "not_validated" }, 403);
+  // Sans attendre la validation (ADR 0370) : rien n'est prélevé pendant l'essai.
+  if (!subscriptionCheckoutOpen(artisan.status)) return json({ status: "not_validated" }, 403);
 
   const body = (await req.json().catch(() => ({}))) as {
     plan?: string;
