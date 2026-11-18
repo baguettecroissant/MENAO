@@ -1,21 +1,18 @@
 import type { Metadata } from "next";
-import { BulletList, LegalPage } from "@/components/site/content-page";
-import { fr } from "@/i18n/fr";
-
-const t = fr.pages.cookies;
+import { LegalPage } from "@/components/site/content-page";
+import { LegalBody } from "@/components/site/legal-body";
+import { cookies } from "@/content/legal";
 
 export const metadata: Metadata = {
-  title: `${t.title} — MENAO`,
+  title: `${cookies.title} — MENAO`,
   alternates: { canonical: "/cookies" },
 };
 
-// TODO(legal) : texte à faire valider par l'avocat. Un bandeau de consentement sera ajouté avant
-// tout cookie non indispensable (mesure d'audience PostHog), refus aussi simple que l'acceptation.
-export default function CookiesPage() {
+// TODO(legal) : version provisoire, à faire valider par l'avocat avant l'ouverture (ADR 0377).
+export default function Page() {
   return (
-    <LegalPage path="/cookies" title={t.title} intro={t.intro}>
-      <BulletList items={t.items} />
-      <p className="text-foreground/90">{t.monitoring}</p>
+    <LegalPage path="/cookies" title={cookies.title} intro={cookies.intro}>
+      <LegalBody document={cookies} />
     </LegalPage>
   );
 }

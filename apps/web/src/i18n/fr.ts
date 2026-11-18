@@ -1852,29 +1852,6 @@ export const fr = {
       follow: "Suivre la réponse dans « Mes échanges avec MENAO »",
       privacy: "Votre adresse e-mail sert uniquement à vous répondre.",
     },
-    legalNotice: {
-      title: "Mentions légales",
-      editorTitle: "Éditeur du site",
-      editor:
-        "[À compléter : dénomination sociale, forme juridique, capital, siège social, RCS, numéro de TVA, téléphone, adresse e-mail.]",
-      directorTitle: "Directeur de la publication",
-      director: "[À compléter.]",
-      hostTitle: "Hébergement",
-      host: [
-        "Site web : Vercel Inc., 440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis (fonctions exécutées dans l'Union européenne).",
-        "Données : Supabase Inc., hébergement des bases de données dans l'Union européenne.",
-      ],
-    },
-    cookies: {
-      title: "Politique cookies",
-      intro: "MENAO utilise uniquement les cookies nécessaires au fonctionnement du site.",
-      items: [
-        "Cookies de session (Supabase) : ils maintiennent votre connexion et votre recherche en cours. Indispensables, ils ne nécessitent pas votre consentement.",
-        "Aucun cookie publicitaire ni de mesure d'audience n'est déposé à ce jour. Si nous en utilisions, votre consentement serait demandé au préalable, et le refus serait aussi simple que l'acceptation.",
-      ],
-      monitoring:
-        "Suivi des erreurs : en cas de plantage, des informations techniques (navigateur, page, message d'erreur) sont transmises à notre outil de suivi Sentry, sans donnée personnelle ni cookie.",
-    },
   },
   search: {
     // Demande préparée au téléphone par Manon (F-77, ADR 0227) : page du lien de l'e-mail.
@@ -3699,6 +3676,8 @@ export const fr = {
     terms: "Conditions générales d'utilisation",
     privacy: "Politique de confidentialité",
     cgv: "Conditions générales de vente artisans",
+    // Textes des pages légales : `apps/web/src/content/legal` (F-180, ADR 0377).
+    version: (date: string) => `Version du ${date}`,
   },
   pro: {
     /** Gamification artisan (F-24) : maquettes « Mon grade Menao », mêmes textes que l'application. */
