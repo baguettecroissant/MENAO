@@ -20,9 +20,14 @@ export function dossierGuide(dossier: Dossier): DossierGuide {
   const kbisFromRegistry = dossier.documents.some(
     (doc) => doc.type === "kbis" && doc.source === "registre" && doc.status === "valide",
   );
-  const steps = guideSteps(dossier.snapshot, { kbisFromRegistry });
+  // Pas d'étape « formule » dans l'application : aucun achat d'abonnement (règle 10).
+  const steps = guideSteps(dossier.snapshot, { kbisFromRegistry, withPlan: false });
   return {
-    active: dossier.status === "brouillon" || dossier.status === "refuse",
+    // Jusqu'à la validation (ADR 0376) : les attestations et les paiements suivent l'envoi.
+    active:
+      dossier.status === "brouillon" ||
+      dossier.status === "refuse" ||
+      dossier.status === "en_verification",
     steps,
     minutesLeft: guideMinutesLeft(steps),
   };
@@ -35,6 +40,11 @@ export function guideHref(key: GuideStepKey): Href {
   if (key === "zone") return "/pro-zone";
   if (key === "charte") return "/pro-charte";
   if (key === "profil") return "/pro-profil-public";
+  // Les trois attestations (ADR 0376) : la liste des documents, en attendant leur écran à trois.
+  if (key === "attestations") return "/pro-documents";
+  if (key === "paiements") return "/pro-paiements";
+  // Jamais proposée par le parcours de l'application (règle 10) : retour au dossier.
+  if (key === "formule") return "/pro";
   return { pathname: "/pro-document", params: { type: key } };
 }
 

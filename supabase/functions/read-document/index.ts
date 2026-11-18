@@ -26,7 +26,8 @@ import { env } from "../_shared/env.ts";
 const MAX_PER_HOUR = 30;
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 /** Dépôt de documents ouvert : inscription (brouillon, refus) ou renouvellement (F-51). */
-const OPEN_STATUSES = new Set(["brouillon", "refuse", "valide", "suspendu"]);
+// Dossier envoyé compris : les attestations se déposent aussi pendant la vérification (ADR 0376).
+const OPEN_STATUSES = new Set(["brouillon", "refuse", "en_verification", "valide", "suspendu"]);
 
 const rawSchema = z.object({
   type_document: z.string(),

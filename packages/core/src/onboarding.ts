@@ -25,6 +25,26 @@ export const REQUIRED_DOCUMENT_TYPES = [
 ] as const;
 export type RequiredDocumentType = (typeof REQUIRED_DOCUMENT_TYPES)[number];
 
+/**
+ * Inscription progressive (ADR 0376) : le dossier part à l'équipe avec le Kbis et la pièce
+ * d'identité ; les trois attestations se déposent quand l'artisan les a, avant ou après l'envoi.
+ * Elles restent obligatoires pour la mise en ligne : l'équipe ne valide un dossier que complet.
+ */
+export const SEND_DOCUMENT_TYPES = [
+  "kbis",
+  "identite",
+] as const satisfies readonly RequiredDocumentType[];
+export const ATTESTATION_TYPES = [
+  "decennale",
+  "rc_pro",
+  "urssaf",
+] as const satisfies readonly RequiredDocumentType[];
+export type AttestationType = (typeof ATTESTATION_TYPES)[number];
+
+export function isAttestationType(value: unknown): value is AttestationType {
+  return typeof value === "string" && (ATTESTATION_TYPES as readonly string[]).includes(value);
+}
+
 /** Le Kbis (ou extrait INSEE/RNE) doit dater de moins de 3 mois (F-14). */
 export const KBIS_MAX_AGE_MONTHS = 3;
 /** L'attestation de vigilance URSSAF vaut 6 mois à compter de son émission (ADR 0115). */
@@ -131,7 +151,8 @@ export function onboardingProgress(
     metiers: a.tradeCount > 0,
     zone,
     charte: a.charterAccepted,
-    documents: requiredDocumentTypes(a).every((t) => documentIsValid(t, a.documents[t], today)),
+    // Documents de l'envoi seulement (ADR 0376). Miroir SQL : app.send_documents_complete.
+    documents: SEND_DOCUMENT_TYPES.every((t) => documentIsValid(t, a.documents[t], today)),
     // Image facultative (ADR 0355) : la présentation suffit. Miroir SQL : onboarding_missing_steps.
     profil: a.presentationLength >= PRESENTATION_MIN_LENGTH,
     paiements: a.connectChargesEnabled,
@@ -139,7 +160,30 @@ export function onboardingProgress(
   };
 }
 
-/** Envoi du dossier en vérification : étapes jusqu'au profil terminées, charte comprise (contrôle refait en base). */
+/** Attestations exigées pour la mise en ligne : sans la décennale pour un artisan « non soumis ». */
+export function requiredAttestationTypes(a: { decennaleExempt: boolean }): AttestationType[] {
+  return ATTESTATION_TYPES.filter((type) => type !== "decennale" || !a.decennaleExempt);
+}
+
+/**
+ * Attestations déposées (en attente ou validées, en cours de validité) sur celles exigées.
+ * « 1 sur 3 » ; un artisan « non soumis » à la décennale en a deux à fournir.
+ */
+export function attestationsProgress(
+  a: Pick<ArtisanOnboardingSnapshot, "documents" | "decennaleExempt">,
+  today: Date = new Date(),
+): { done: number; total: number } {
+  const types = requiredAttestationTypes(a);
+  return {
+    done: types.filter((t) => documentIsValid(t, a.documents[t], today)).length,
+    total: types.length,
+  };
+}
+
+/**
+ * Envoi du dossier en vérification : entreprise, métiers, zone, charte, Kbis, pièce d'identité et
+ * fiche (contrôle refait en base). Les attestations n'en font plus partie (ADR 0376).
+ */
 export function canSubmitOnboarding(
   a: ArtisanOnboardingSnapshot,
   today: Date = new Date(),
@@ -174,17 +218,17 @@ export function documentState(
 }
 
 /**
- * Éléments du dossier à terminer avant l'envoi (ADR 0111) : entreprise, métiers et zone (un seul
- * élément, faits à l'inscription), la charte, chaque document exigé, puis le profil public.
+ * Éléments du dossier à terminer avant l'envoi (ADR 0111, 0376) : entreprise, métiers et zone (un
+ * seul élément, faits à l'inscription), la charte, le Kbis, la pièce d'identité, puis la fiche.
  */
-export function dossierItemCount(a: { decennaleExempt: boolean }): number {
-  return 3 + requiredDocumentTypes(a).length;
+export function dossierItemCount(): number {
+  return 3 + SEND_DOCUMENT_TYPES.length;
 }
 
 export function dossierItemsLeft(a: ArtisanOnboardingSnapshot, today: Date = new Date()): number {
   const p = onboardingProgress(a, today);
   const items = [p.entreprise && p.metiers && p.zone, p.charte, p.profil];
-  const documents = requiredDocumentTypes(a).map((t) => documentIsValid(t, a.documents[t], today));
+  const documents = SEND_DOCUMENT_TYPES.map((t) => documentIsValid(t, a.documents[t], today));
   return [...items, ...documents].filter((done) => !done).length;
 }
 
@@ -193,7 +237,7 @@ export type DossierGroupProgress = { done: number; total: number };
 
 /**
  * Les éléments du dossier par groupe : l'entreprise (entreprise, métiers et zone, puis la charte),
- * les documents exigés, puis la fiche (profil public). Même compte que `dossierItemsLeft`.
+ * les documents de l'envoi, puis la fiche (profil public). Même compte que `dossierItemsLeft`.
  */
 export function dossierGroups(
   a: ArtisanOnboardingSnapshot,
@@ -204,7 +248,7 @@ export function dossierGroups(
   profile: DossierGroupProgress;
 } {
   const p = onboardingProgress(a, today);
-  const types = requiredDocumentTypes(a);
+  const types = SEND_DOCUMENT_TYPES;
   return {
     company: {
       done: [p.entreprise && p.metiers && p.zone, p.charte].filter(Boolean).length,

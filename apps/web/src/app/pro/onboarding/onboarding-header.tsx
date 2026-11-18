@@ -36,8 +36,8 @@ const STEP_VIDEOS: Partial<Record<OnboardingStep, HelpVideoId>> = {
 export type GuideHeader = {
   steps: GuideStep[];
   minutesLeft: number;
-  /** Tout est fait : « Mon dossier » devient le récapitulatif avant l'envoi. */
-  ready: boolean;
+  /** Attestations exigées : deux pour un artisan « non soumis » à la décennale, sinon trois. */
+  attestations: number;
 };
 
 /**
@@ -56,19 +56,23 @@ export function OnboardingHeader({
   guide?: GuideHeader;
 }) {
   const pathname = usePathname();
+  const attestationCount = guide?.attestations ?? 3;
   const type = useSearchParams().get("type");
   const step = ONBOARDING_STEPS.find((s) => pathname.startsWith(`/pro/onboarding/${s.key}`))?.key;
-  // « Dossier envoyé » a son propre titre.
-  if (pathname.startsWith("/pro/onboarding/envoye")) return null;
+  // Les trois attestations sur un seul écran (ADR 0376) : une étape du parcours sans étape
+  // du dossier à elle (elles font partie des documents).
+  const attestations = pathname.startsWith("/pro/onboarding/attestations");
   const guideKey: GuideStepKey | null = !guide
     ? null
-    : step === "documents"
-      ? isGuideStepKey(type)
-        ? type
-        : null
-      : isGuideStepKey(step)
-        ? step
-        : null;
+    : attestations
+      ? "attestations"
+      : step === "documents"
+        ? isGuideStepKey(type)
+          ? type
+          : null
+        : isGuideStepKey(step)
+          ? step
+          : null;
   const position = guide && guideKey ? guidePosition(guide.steps, guideKey) : null;
   // La charte à signer se lit partie par partie, avec son propre avancement.
   if (guide && guideKey === "charte" && !guide.steps.find((s) => s.key === "charte")?.done)
@@ -79,13 +83,15 @@ export function OnboardingHeader({
   const document = step === "documents" && guideKey && position ? guideKey : null;
   const title = document
     ? t.documents.types[document as keyof typeof t.documents.types]
-    : step
-      ? (page?.title ?? t.steps[step as OnboardingStep])
-      : inProSpace
-        ? fr.pro.space.file
-        : guide?.ready
-          ? g.readyTitle
-          : t.dossier.title;
+    : attestations
+      ? g.attestations.title(attestationCount)
+      : step
+        ? (page?.title ?? t.steps[step as OnboardingStep])
+        : inProSpace
+          ? fr.pro.space.file
+          : guide
+            ? g.path.title
+            : t.dossier.title;
   const previous = guide && guideKey ? previousGuideStep(guide.steps, guideKey) : null;
 
   return (
@@ -127,7 +133,6 @@ export function OnboardingHeader({
           </div>
           <div className="flex flex-wrap justify-between gap-x-4 text-[0.8125rem] font-semibold text-muted-foreground">
             <span>{g.step(position.index, position.total, g.names[guideKey])}</span>
-            {guide.minutesLeft > 0 && <span>{g.left(guide.minutesLeft)}</span>}
           </div>
         </div>
       ) : (

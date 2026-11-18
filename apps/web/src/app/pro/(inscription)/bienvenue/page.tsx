@@ -1,4 +1,4 @@
-import { guideBlocks, type RequiredDocumentType } from "@menao/core";
+import { guideBlocks } from "@menao/core";
 import { ArrowRight, Check, CircleCheck, Clock, MapPin } from "lucide-react";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
@@ -36,10 +36,6 @@ export default async function ArtisanWelcomePage() {
   const guide = guideFromContext(context);
   const blocks = guideBlocks(guide.steps);
   const b = t.blocks;
-  const documentNames = guide.steps
-    .map((step) => b.documentNames[step.key as RequiredDocumentType])
-    .filter(Boolean)
-    .join(", ");
   const kbisVerified = context.documents.some(
     (doc) => doc.type === "kbis" && doc.source === "registre" && doc.status === "valide",
   );
@@ -117,7 +113,7 @@ export default async function ArtisanWelcomePage() {
             title={b.documentsTitle(blocks.documents.count)}
             minutes={b.minutes(blocks.documents.minutes)}
           >
-            {documentNames.charAt(0).toUpperCase() + documentNames.slice(1)}
+            {b.documentsText}
             {kbisVerified && (
               <span className="mt-1 flex items-center gap-1.5 text-[0.8125rem] font-semibold text-success">
                 <Check aria-hidden="true" className="size-4 shrink-0" strokeWidth={3} />

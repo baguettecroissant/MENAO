@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   ONBOARDING_STEPS,
+  attestationsProgress,
   canSubmitOnboarding,
   documentIsValid,
   documentState,
   dossierItemCount,
   dossierItemsLeft,
   dossierGroups,
+  requiredAttestationTypes,
   requiredDocumentTypes,
   firstIncompleteStep,
   onboardingProgress,
@@ -196,7 +198,7 @@ describe("documents (F-14 étape 4)", () => {
     );
   });
 
-  it("étape documents terminée avec les 5 documents valides", () => {
+  it("étape documents terminée avec le Kbis et la pièce d'identité (ADR 0376)", () => {
     expect(onboardingProgress({ ...etapes123, documents: documentsOk }, today).documents).toBe(
       true,
     );
@@ -204,10 +206,19 @@ describe("documents (F-14 étape 4)", () => {
     expect(onboardingProgress({ ...etapes123, documents: sansIdentite }, today).documents).toBe(
       false,
     );
+    const { kbis: _sansKbis, ...sansKbis } = documentsOk;
+    expect(onboardingProgress({ ...etapes123, documents: sansKbis }, today).documents).toBe(false);
+    // Les attestations ne retardent plus l'envoi : elles comptent pour la mise en ligne.
     const { urssaf: _sansUrssaf, ...sansUrssaf } = documentsOk;
-    expect(onboardingProgress({ ...etapes123, documents: sansUrssaf }, today).documents).toBe(
-      false,
-    );
+    expect(onboardingProgress({ ...etapes123, documents: sansUrssaf }, today).documents).toBe(true);
+    expect(attestationsProgress({ ...etapes123, documents: sansUrssaf }, today)).toEqual({
+      done: 2,
+      total: 3,
+    });
+    expect(attestationsProgress({ ...etapes123, documents: documentsOk }, today)).toEqual({
+      done: 3,
+      total: 3,
+    });
   });
 });
 
@@ -274,8 +285,8 @@ describe("« Faire vérifier mon entreprise » (ADR 0111)", () => {
   });
 
   it("compte les éléments restant avant l'envoi", () => {
-    expect(dossierItemCount(vide)).toBe(8);
-    expect(dossierItemsLeft(vide, today)).toBe(8);
+    expect(dossierItemCount()).toBe(5);
+    expect(dossierItemsLeft(vide, today)).toBe(5);
     const profilFait = {
       ...entrepriseOk,
       tradeCount: 1,
@@ -284,17 +295,15 @@ describe("« Faire vérifier mon entreprise » (ADR 0111)", () => {
       radiusKm: 20,
       charterAccepted: true,
     };
-    expect(dossierItemsLeft(profilFait, today)).toBe(6);
+    expect(dossierItemsLeft(profilFait, today)).toBe(3);
+    // Sans aucune attestation : le dossier peut déjà partir (ADR 0376).
     const complet = {
       ...profilFait,
       hasAvatar: true,
       presentationLength: 120,
       documents: {
         kbis: { status: "en_attente" as const, dateEmission: "2026-09-20", dateFin: null },
-        decennale: { status: "en_attente" as const, dateEmission: null, dateFin: "2027-06-30" },
-        rc_pro: { status: "en_attente" as const, dateEmission: null, dateFin: "2027-06-30" },
         identite: { status: "en_attente" as const, dateEmission: null, dateFin: null },
-        urssaf: { status: "en_attente" as const, dateEmission: "2026-09-20", dateFin: null },
       },
     };
     expect(dossierItemsLeft(complet, today)).toBe(0);
@@ -304,7 +313,7 @@ describe("« Faire vérifier mon entreprise » (ADR 0111)", () => {
   it("répartit les éléments par groupe (ADR 0254)", () => {
     expect(dossierGroups(vide, today)).toEqual({
       company: { done: 0, total: 2 },
-      documents: { done: 0, total: 5 },
+      documents: { done: 0, total: 2 },
       profile: { done: 0, total: 1 },
     });
     const profilFait = {
@@ -320,8 +329,7 @@ describe("« Faire vérifier mon entreprise » (ADR 0111)", () => {
     };
     const groups = dossierGroups(profilFait, today);
     expect(groups.company).toEqual({ done: 2, total: 2 });
-    expect(groups.documents).toEqual({ done: 1, total: 5 });
-    expect(dossierGroups({ ...vide, decennaleExempt: true }, today).documents.total).toBe(4);
+    expect(groups.documents).toEqual({ done: 1, total: 2 });
     const left = dossierItemsLeft(profilFait, today);
     const g = Object.values(groups);
     expect(g.reduce((n, x) => n + x.total - x.done, 0)).toBe(left);
@@ -330,15 +338,18 @@ describe("« Faire vérifier mon entreprise » (ADR 0111)", () => {
   it("« non soumis » à la décennale : elle n'est pas exigée (ADR 0116)", () => {
     const exempt = { ...vide, decennaleExempt: true };
     expect(requiredDocumentTypes(exempt)).toEqual(["kbis", "rc_pro", "identite", "urssaf"]);
-    expect(dossierItemCount(exempt)).toBe(7);
+    expect(requiredAttestationTypes(exempt)).toEqual(["rc_pro", "urssaf"]);
     const { decennale: _sans, ...sansDecennale } = documentsOk;
     expect(
-      onboardingProgress({ ...etapes123, decennaleExempt: true, documents: sansDecennale }, today)
-        .documents,
-    ).toBe(true);
-    expect(onboardingProgress({ ...etapes123, documents: sansDecennale }, today).documents).toBe(
-      false,
-    );
+      attestationsProgress(
+        { ...etapes123, decennaleExempt: true, documents: sansDecennale },
+        today,
+      ),
+    ).toEqual({ done: 2, total: 2 });
+    expect(attestationsProgress({ ...etapes123, documents: sansDecennale }, today)).toEqual({
+      done: 2,
+      total: 3,
+    });
   });
 });
 

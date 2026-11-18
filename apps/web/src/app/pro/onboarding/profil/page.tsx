@@ -96,7 +96,12 @@ export default async function ProfileStepPage() {
             draft={draft}
             guide={
               around
-                ? { backHref: around.backHref, nextNote: fr.pro.onboarding.guide.nextDossier }
+                ? {
+                    backHref: around.backHref,
+                    nextNote: around.next
+                      ? fr.pro.onboarding.guide.next(fr.pro.onboarding.guide.nextNames[around.next])
+                      : fr.pro.onboarding.guide.nextEnd,
+                  }
                 : undefined
             }
           />

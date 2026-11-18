@@ -15,8 +15,8 @@ const DAY_MS = 86_400_000;
 
 /**
  * Dossiers artisans, onglet « Inscriptions en cours » (ADR 0283, ancienne page « Inscriptions
- * bloquées », ADR 0219) : dossier pas encore envoyé, compléments attendus, ou dossier
- * validé sans paiements ni formule ; étapes manquantes, attente et relances automatiques
+ * bloquées », ADR 0219) : dossier pas encore envoyé, compléments attendus, dossier envoyé dont
+ * les attestations manquent encore (ADR 0376), ou dossier validé sans paiements ni formule ; étapes manquantes, attente et relances automatiques
  * envoyées depuis le début de l'attente. Les plus anciennes d'abord.
  */
 export default async function AdminStalledSignupsPage() {
@@ -88,6 +88,8 @@ export default async function AdminStalledSignupsPage() {
                         row.derniere_relance
                           ? dateFormat.format(new Date(row.derniere_relance))
                           : null,
+                        // Quatre rappels pour les attestations (ADR 0376), trois sinon.
+                        row.etat === "attestations" ? 4 : 3,
                       )}
                     </td>
                   </tr>

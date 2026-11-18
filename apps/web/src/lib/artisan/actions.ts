@@ -36,6 +36,7 @@ import { env } from "@/env";
 import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
 import { invokeRgeCheck } from "@/lib/rge";
+import { sendWhenReady } from "./auto-send";
 import { getOnboardingContext } from "./context";
 import { guideFromContext } from "./guide";
 
@@ -47,9 +48,12 @@ function refresh() {
 
 /**
  * Suite d'une étape enregistrée (ADR 0373) : pendant le parcours guidé, l'étape suivante ; pour
- * une étape déjà faite que l'artisan est revenu modifier, « Mon dossier ».
+ * une étape déjà faite que l'artisan est revenu modifier, « Mon inscription ». Le dossier part
+ * d'abord à l'équipe s'il peut partir (ADR 0376).
  */
 async function continueAfter(step: GuideStepKey, wasDone: boolean): Promise<never> {
+  await sendWhenReady();
+  refresh();
   if (wasDone) redirect("/pro/onboarding" as Route);
   // Le contexte lu avant l'enregistrement suffit : seules les étapes d'après comptent. La page
   // est donnée directement : la redirection d'une action vers la route « suite » ne s'achève pas.
@@ -373,9 +377,12 @@ export async function processUpload(_prev: FormState, formData: FormData): Promi
   if (status !== "ok") return { error: t.upload.status[status] };
 
   refresh();
-  // Parcours guidé (ADR 0373) : « Déposer et continuer » mène au document suivant.
+  // Le dossier part dès qu'il peut partir (ADR 0376), que le dépôt vienne du parcours ou non.
+  if (purpose === "document") await sendWhenReady();
+  // Parcours guidé (ADR 0373) : « Déposer et continuer » mène à l'étape suivante.
   const after = text(formData, "suite");
   if (isGuideStepKey(after)) return continueAfter(after, false);
+  if (purpose === "document") refresh();
   return { success: t.upload.status.ok };
 }
 
@@ -429,6 +436,8 @@ export async function savePresentation(_prev: FormState, formData: FormData): Pr
   refresh();
   // Parcours guidé (ADR 0373) : « Enregistrer et continuer ».
   if (text(formData, "suite")) return continueAfter("profil", false);
+  await sendWhenReady();
+  refresh();
   return { success: t.saved };
 }
 
@@ -470,8 +479,8 @@ export async function submitOnboarding(): Promise<FormState> {
   const { error } = await supabase.rpc("submit_artisan_onboarding");
   refresh();
   if (error) return { error: t.submit.error };
-  // « Dossier envoyé » (ADR 0373) : la suite pendant la vérification.
-  redirect("/pro/onboarding/envoye" as Route);
+  // Retour à « Mon inscription » (ADR 0376), qui montre la suite : formule, attestations, paiements.
+  redirect("/pro/onboarding" as Route);
 }
 
 type BillingStatus = keyof typeof t.plans.errors | "ok";

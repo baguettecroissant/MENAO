@@ -1,3 +1,4 @@
+import { GuideStepBar } from "@/components/pro/guide-step-bar";
 import {
   ANNUAL_FREE_MONTHS,
   ENGAGEMENT_GUARANTEE,
@@ -30,7 +31,17 @@ const euros = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
  * Étape 7 — formule et abonnement (Stripe Billing, web uniquement) : au mois sans engagement ou à
  * l'année payée d'avance (ADR 0200), engagement et date du premier paiement affichés avant de payer.
  */
-export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onboarding/formule">) {
+export default async function PlanStepPage(props: PageProps<"/pro/onboarding/formule">) {
+  return (
+    <>
+      <PlanStepContent {...props} />
+      {/* Parcours guidé (ADR 0376) : continuer, ou remettre l'étape à plus tard. */}
+      <GuideStepBar step="formule" />
+    </>
+  );
+}
+
+async function PlanStepContent({ searchParams }: PageProps<"/pro/onboarding/formule">) {
   const params = await searchParams;
   const { supabase, artisan, subscription, snapshot } = await getOnboardingContext();
   const { data: plans } = await supabase

@@ -1,5 +1,5 @@
 -- Décennale et métiers (ADR 0116) : « non soumis » déclaré par l'artisan tant que le dossier
--- n'est pas envoyé ; décennale alors ni exigée à l'envoi, ni pour rester actif ; métiers couverts
+-- n'est pas validé (ADR 0376) ; décennale alors ni exigée à l'envoi, ni pour rester actif ; métiers couverts
 -- enregistrés avec l'attestation ; documents incomplets toujours détectés.
 begin;
 create extension if not exists pgtap with schema extensions;
@@ -37,8 +37,15 @@ select is((select decennale_non_soumis from public.artisans where user_id = 'c60
 
 select pg_temp.connecter('c6000000-0000-4000-8000-000000000003');
 set local role authenticated;
-select throws_ok($$ select public.set_decennale_non_soumis(true) $$, '22023',
-  'Le dossier ne peut plus être modifié.', 'impossible une fois le dossier envoyé');
+-- Inscription progressive (ADR 0376) : l'attestation se dépose aussi après l'envoi, la déclaration
+-- reste donc possible tant que l'équipe n'a pas validé le dossier.
+select lives_ok($$ select public.set_decennale_non_soumis(true) $$, 'encore possible une fois le dossier envoyé');
+reset role;
+update public.artisans set status = 'valide' where user_id = 'c6000000-0000-4000-8000-000000000003';
+select pg_temp.connecter('c6000000-0000-4000-8000-000000000003');
+set local role authenticated;
+select throws_ok($$ select public.set_decennale_non_soumis(false) $$, '22023',
+  'Le dossier ne peut plus être modifié.', 'impossible une fois le dossier validé');
 reset role;
 
 -- ---------- Quatre documents sans décennale ----------

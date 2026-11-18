@@ -78,6 +78,12 @@ type UploadFormProps = {
    * choisi et lu, et le bouton d'envoi passe dans la barre du bas, « Déposer et continuer ». Sans
    * fichier choisi, la barre propose de passer à la suite.
    */
+  /**
+   * Écran des trois attestations (ADR 0376) : comme dans le parcours guidé, les champs et le
+   * bouton n'apparaissent qu'une fois le document choisi, mais sans barre du bas (elle est à la
+   * page).
+   */
+  fieldsAfterFile?: boolean;
   guide?: {
     /** Étape déposée, renvoyée à l'action pour aller à la suivante. */
     step: string;
@@ -113,7 +119,9 @@ export function UploadForm({
   dropLabel,
   process = processUpload,
   guide,
+  fieldsAfterFile = false,
 }: UploadFormProps) {
+  const fieldsLater = Boolean(guide) || fieldsAfterFile;
   const form = useRef<HTMLFormElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
@@ -279,7 +287,7 @@ export function UploadForm({
     }
     // Le champ fichier est vidé après l'envoi : l'aperçu de la zone de dépôt aussi, et dans le
     // parcours guidé le nom du fichier choisi (la barre du bas en dépend).
-    if (dropLabel || guide) {
+    if (dropLabel || guide || fieldsAfterFile) {
       setChosen(null);
       setPreview(null);
     }
@@ -542,7 +550,7 @@ export function UploadForm({
         </div>
       )}
       {readAs ? (
-        guide ? (
+        fieldsLater ? (
           // Champs gardés dans la page (la lecture les remplit), montrés une fois le fichier choisi.
           <div hidden={!chosen} className={chosen ? "flex flex-col gap-4" : undefined}>
             <div className="flex flex-col gap-0.5">
@@ -577,8 +585,12 @@ export function UploadForm({
             )}
           </GuideBar>
         </>
-      ) : (
-        <Button type="submit" disabled={pending} className="sm:w-auto sm:self-start sm:px-6">
+      ) : fieldsAfterFile && !chosen ? null : (
+        <Button
+          type="submit"
+          disabled={pending || (fieldsAfterFile && reading?.step === "reading")}
+          className="sm:w-auto sm:self-start sm:px-6"
+        >
           {pending ? t.sending : submitLabel}
         </Button>
       )}

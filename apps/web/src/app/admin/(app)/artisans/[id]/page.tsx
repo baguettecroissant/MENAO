@@ -1,5 +1,5 @@
 import {
-  REQUIRED_DOCUMENT_TYPES,
+  requiredDocumentTypes,
   adminReviewChecklist,
   artisanPageUrl,
   artisanVisibility,
@@ -244,7 +244,10 @@ export default async function AdminArtisanPage({
   const pending = artisan.status === "en_verification";
   // Documents examinables : dossier en vérification, ou renouvellement d'un artisan validé/suspendu.
   const reviewable = pending || artisan.status === "valide" || artisan.status === "suspendu";
-  const allDocsValid = REQUIRED_DOCUMENT_TYPES.every((type) => {
+  // Sans la décennale pour un artisan « non soumis » (ADR 0116), comme le contrôle de la base.
+  const allDocsValid = requiredDocumentTypes({
+    decennaleExempt: artisan.decennale_non_soumis,
+  }).every((type) => {
     const d = docs.find((x) => x.type === type && x.status === "valide");
     return (
       d?.status === "valide" &&
