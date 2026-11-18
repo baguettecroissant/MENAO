@@ -2,7 +2,9 @@
 
 import {
   REQUIRED_DOCUMENT_TYPES,
+  guideStepPath,
   isGuideStepKey,
+  nextGuideStep,
   onboardingProgress,
   type GuideStepKey,
   type ConnectTokenPrefill,
@@ -34,6 +36,7 @@ import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
 import { invokeRgeCheck } from "@/lib/rge";
 import { getOnboardingContext } from "./context";
+import { guideFromContext } from "./guide";
 
 const t = fr.pro.onboarding;
 
@@ -45,8 +48,13 @@ function refresh() {
  * Suite d'une étape enregistrée (ADR 0373) : pendant le parcours guidé, l'étape suivante ; pour
  * une étape déjà faite que l'artisan est revenu modifier, « Mon dossier ».
  */
-function continueAfter(step: GuideStepKey, wasDone: boolean): never {
-  redirect((wasDone ? "/pro/onboarding" : `/pro/onboarding/suite?apres=${step}`) as Route);
+async function continueAfter(step: GuideStepKey, wasDone: boolean): Promise<never> {
+  if (wasDone) redirect("/pro/onboarding" as Route);
+  // Le contexte lu avant l'enregistrement suffit : seules les étapes d'après comptent. La page
+  // est donnée directement : la redirection d'une action vers la route « suite » ne s'achève pas.
+  const guide = guideFromContext(await getOnboardingContext());
+  const next = guide.active ? nextGuideStep(guide.steps, step) : null;
+  redirect((next ? guideStepPath(next) : "/pro/onboarding") as Route);
 }
 
 /** Remplace le SIRET (possible tant que la fiche est en brouillon : garde-fou en base). */
@@ -151,7 +159,7 @@ export async function saveCompany(_prev: FormState, formData: FormData): Promise
       : snapshot.raisonSociale,
   }).entreprise;
   refresh();
-  if (done) continueAfter("entreprise", onboardingProgress(snapshot).entreprise);
+  if (done) return continueAfter("entreprise", onboardingProgress(snapshot).entreprise);
   return { success: t.saved };
 }
 
@@ -193,7 +201,7 @@ export async function saveTrades(_prev: FormState, formData: FormData): Promise<
   if (budgetError) return { fieldErrors: { budgetMinimum: [fr.errors.generic] } };
 
   refresh();
-  continueAfter("metiers", progress.metiers);
+  return continueAfter("metiers", progress.metiers);
 }
 
 export async function addCertification(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -242,7 +250,7 @@ export async function saveZone(_prev: FormState, formData: FormData): Promise<Fo
     });
     if (error) return { error: fr.errors.generic };
     refresh();
-    continueAfter("zone", progress.zone);
+    return continueAfter("zone", progress.zone);
   }
 
   const jsonList = (name: string): unknown => {
@@ -272,7 +280,7 @@ export async function saveZone(_prev: FormState, formData: FormData): Promise<Fo
     });
     if (error) return { error: fr.errors.generic };
     refresh();
-    continueAfter("zone", progress.zone);
+    return continueAfter("zone", progress.zone);
   }
 
   const base = {
@@ -314,7 +322,7 @@ export async function saveZone(_prev: FormState, formData: FormData): Promise<Fo
   if (error) return { error: fr.errors.generic };
 
   refresh();
-  continueAfter("zone", progress.zone);
+  return continueAfter("zone", progress.zone);
 }
 
 type UploadStatus = keyof typeof t.upload.status;
@@ -366,7 +374,7 @@ export async function processUpload(_prev: FormState, formData: FormData): Promi
   refresh();
   // Parcours guidé (ADR 0373) : « Déposer et continuer » mène au document suivant.
   const after = text(formData, "suite");
-  if (isGuideStepKey(after)) continueAfter(after, false);
+  if (isGuideStepKey(after)) return continueAfter(after, false);
   return { success: t.upload.status.ok };
 }
 
@@ -405,7 +413,7 @@ export async function savePresentation(_prev: FormState, formData: FormData): Pr
   if (error) return { error: fr.errors.generic, values };
   refresh();
   // Parcours guidé (ADR 0373) : « Enregistrer et continuer ».
-  if (text(formData, "suite")) continueAfter("profil", false);
+  if (text(formData, "suite")) return continueAfter("profil", false);
   return { success: t.saved };
 }
 

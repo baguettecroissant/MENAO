@@ -18,9 +18,11 @@ lignes, Kbis compris alors que le registre l'avait déjà vérifié.
    (ADR 0217), la décennale pour un artisan « non soumis » (ADR 0116). `nextGuideStep` donne la
    première étape à faire après celle qu'on quitte ; à la fin, « Mon dossier ».
 2. **La suite passe par une route.** `/pro/onboarding/suite?apres=<étape>` calcule l'étape
-   suivante côté serveur et y redirige. Les enregistrements (dépôt d'un document, présentation,
-   charte signée) y mènent ; une étape déjà faite que l'artisan revient modifier ramène à
-   « Mon dossier », comme avant.
+   suivante côté serveur et y redirige : les liens (« Commencer », « Passer pour l'instant »,
+   suite de la charte) y mènent. Les enregistrements (dépôt d'un document, présentation) calculent
+   la page suivante eux-mêmes et y redirigent directement : la redirection d'une action serveur
+   vers une route sans page ne s'achève pas dans le navigateur. Une étape déjà faite que l'artisan
+   revient modifier ramène à « Mon dossier », comme avant.
 3. **Une barre en bas, toujours au même endroit** (`GuideBar`) : le bouton qui fait avancer,
    ce qui suit (« Suite : RC Pro »), « Retour » sur ordinateur. En haut : l'étape précédente,
    « Étape 2 sur 6 », le temps restant et « Mon dossier », qui reste la vue d'ensemble et l'écran
