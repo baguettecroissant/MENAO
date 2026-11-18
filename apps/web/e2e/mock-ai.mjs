@@ -156,6 +156,8 @@ function documentReading(content) {
     numero: "LU-0001",
     couverture: "France métropolitaine",
     siren: null,
+    // Date fictive, lue sur la pièce d'identité seulement (ADR 0375).
+    date_naissance: expected === "identite" ? "1980-01-01" : null,
   });
 }
 

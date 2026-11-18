@@ -1,8 +1,19 @@
-import type { DocumentPrefill, DocumentReadingWarning, ReadableDocumentType } from "@menao/core";
+import {
+  plausibleBirthDate,
+  type DocumentPrefill,
+  type DocumentReadingWarning,
+  type ReadableDocumentType,
+} from "@menao/core";
 import { supabase } from "./supabase";
 
 export type DocumentReadResult =
-  | { status: "ok"; fields: DocumentPrefill; warnings: DocumentReadingWarning[] }
+  | {
+      status: "ok";
+      fields: DocumentPrefill;
+      warnings: DocumentReadingWarning[];
+      /** Pièce d'identité : date de naissance lue (ADR 0375), gardée sur le téléphone. */
+      birthDate?: string;
+    }
   | { status: "unavailable" };
 
 /**
@@ -17,7 +28,14 @@ export async function readDocument(
     status: string;
     fields?: DocumentPrefill;
     warnings?: DocumentReadingWarning[];
+    birthDate?: string;
   }>("read-document", { body: { path, type } });
   if (error || data?.status !== "ok") return { status: "unavailable" };
-  return { status: "ok", fields: data.fields ?? {}, warnings: data.warnings ?? [] };
+  const birthDate = type === "identite" ? plausibleBirthDate(data.birthDate) : null;
+  return {
+    status: "ok",
+    fields: data.fields ?? {},
+    warnings: data.warnings ?? [],
+    ...(birthDate ? { birthDate } : {}),
+  };
 }

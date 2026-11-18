@@ -9,6 +9,7 @@ import { PaymentsPanel } from "@/components/pro/payments-panel";
 import { StripeChecklist } from "@/components/pro/onboarding-help";
 import { StripeOnboarding } from "@/components/pro/stripe-onboarding";
 import { fr } from "@/i18n/fr";
+import { forgetBirthDate } from "@/lib/birth-date-memo";
 import { openHostedPage } from "@/lib/hosted";
 import {
   createConnect,
@@ -57,6 +58,8 @@ function PaymentsScreen() {
       setMessage(failed.error);
       return;
     }
+    // Partie chez Stripe : la date de naissance gardée sur le téléphone n'a plus d'usage.
+    void forgetBirthDate();
     setEmbedded(true);
   }
 

@@ -2,11 +2,12 @@
 
 import { type ConnectTokenPrefill, completeConnectPrefill, type ConnectDetails } from "@menao/core";
 import { connectDetailsSchema } from "@menao/validation";
-import { type FormEvent, useState, useTransition } from "react";
+import { type FormEvent, useState, useSyncExternalStore, useTransition } from "react";
 import { z } from "zod";
 import { Alert, Button, CheckboxField, Field } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { createConnectAccount } from "@/lib/artisan/actions";
+import { forgetBirthDate, recallBirthDate } from "@/lib/artisan/birth-date-memo";
 import { createConnectTokens } from "@/lib/artisan/connect-tokens";
 import { CONNECT_STRIPE_PATH } from "./stripe-link";
 
@@ -14,20 +15,32 @@ const t = fr.pro.onboarding.connect;
 
 type Errors = Record<string, string[] | undefined>;
 
+const noSubscribe = () => () => {};
+
 /**
  * Premier passage à l'étape Paiements (ADR 0215) : l'artisan saisit dans MENAO ce que Stripe
  * demanderait encore (date de naissance, adresse personnelle, IBAN, associé unique). Ces données
  * partent directement chez Stripe dans des jetons créés par le navigateur ; le compte est créé
  * pré-rempli, puis le formulaire Stripe intégré s'ouvre. Sans clé publique, un simple bouton.
+ * La date de naissance arrive remplie quand MENAO l'a lue sur la pièce d'identité déposée depuis
+ * ce navigateur (ADR 0375) ; elle n'est pas enregistrée et s'efface une fois envoyée à Stripe.
  */
 export function ConnectPrepareForm({
   prefill,
   today,
+  userId,
 }: {
   prefill: ConnectTokenPrefill | null;
   /** Date du jour (AAAA-MM-JJ, heure de Paris). */
   today: string;
+  userId: string;
 }) {
+  // Lue dans le navigateur après l'affichage (rien côté serveur).
+  const readBirthDate = useSyncExternalStore(
+    noSubscribe,
+    () => recallBirthDate(userId),
+    () => null,
+  );
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Errors>({});
@@ -46,8 +59,10 @@ export function ConnectPrepareForm({
           )
         : {};
       const result = await createConnectAccount(tokens, details?.website ?? null);
-      if (result.error) setError(result.error);
-      else window.location.assign(CONNECT_STRIPE_PATH);
+      if (result.error) return setError(result.error);
+      // Partie chez Stripe : la date de naissance gardée par le navigateur n'a plus d'usage.
+      forgetBirthDate(userId);
+      window.location.assign(CONNECT_STRIPE_PATH);
     });
   }
 
@@ -99,12 +114,16 @@ export function ConnectPrepareForm({
       {personal && (
         <>
           <Field
+            // Remonté quand la date lue arrive : le champ non contrôlé prend sa valeur de départ.
+            key={readBirthDate ?? "vide"}
             label={t.prepare.birthDate}
             name="birthDate"
             type="date"
             max={today}
             autoComplete="bday"
             required
+            defaultValue={readBirthDate ?? undefined}
+            hint={readBirthDate ? t.prepare.birthDateRead : undefined}
             errors={errors.birthDate}
           />
           <fieldset className="flex flex-col gap-3">

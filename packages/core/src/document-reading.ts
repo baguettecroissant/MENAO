@@ -32,6 +32,8 @@ export type RawDocumentReading = {
   numero: string | null;
   couverture: string | null;
   siren: string | null;
+  /** Pièce d'identité : date de naissance du titulaire (ADR 0375). Absent d'une ancienne réponse. */
+  date_naissance?: string | null;
 };
 
 /** Champs du formulaire de dépôt, pré-remplis avec ce qui a été lu. */
@@ -55,7 +57,16 @@ export type DocumentReading = {
   fields: DocumentPrefill;
   warnings: DocumentReadingWarning[];
   detected: DetectedDocumentType | null;
+  /**
+   * Date de naissance lue sur la pièce d'identité (ADR 0375), pour pré-remplir l'étape
+   * « Paiements ». Elle n'est pas un champ du dépôt et MENAO ne l'enregistre pas : elle reste sur
+   * l'appareil de l'artisan jusqu'à son envoi à Stripe.
+   */
+  birthDate?: string;
 };
+
+/** Âge minimal plausible du dirigeant : en dessous, la date lue est écartée. */
+export const BIRTH_DATE_MIN_AGE = 16;
 
 /** Champs du formulaire de chaque document (comme documentMetadataSchema). */
 export const DOCUMENT_PREFILL_FIELDS: Record<ReadableDocumentType, DocumentPrefillField[]> = {
@@ -85,6 +96,7 @@ export function documentReadingJsonSchema() {
     numero: nullable({ type: "string" }),
     couverture: nullable({ type: "string" }),
     siren: nullable({ type: "string" }),
+    date_naissance: nullable({ type: "string" }),
   };
   return {
     type: "object" as const,
@@ -94,15 +106,39 @@ export function documentReadingJsonSchema() {
   };
 }
 
-/** Date AAAA-MM-JJ qui existe au calendrier (pas de 31 avril), entre 1990 et 2100. */
-function calendarDate(value: string | null): string | undefined {
+/** Date AAAA-MM-JJ qui existe au calendrier (pas de 31 avril). */
+function existingDate(value: string | null | undefined): string | undefined {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
-  const year = Number(value.slice(0, 4));
-  if (year < 1990 || year > 2100) return undefined;
   const date = new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
     ? value
     : undefined;
+}
+
+/** Date d'un document : au calendrier, entre 1990 et 2100. */
+function calendarDate(value: string | null): string | undefined {
+  const date = existingDate(value);
+  if (!date) return undefined;
+  const year = Number(date.slice(0, 4));
+  return year < 1990 || year > 2100 ? undefined : date;
+}
+
+/**
+ * Date de naissance plausible : au calendrier, à partir de 1900, et d'une personne d'au moins
+ * 16 ans. `null` sinon (date mal lue, ou date du jour prise pour une naissance).
+ */
+export function plausibleBirthDate(
+  value: string | null | undefined,
+  today: Date = new Date(),
+): string | null {
+  const date = existingDate(value);
+  if (!date || date < "1900-01-01") return null;
+  const latest = new Date(
+    Date.UTC(today.getUTCFullYear() - BIRTH_DATE_MIN_AGE, today.getUTCMonth(), today.getUTCDate()),
+  )
+    .toISOString()
+    .slice(0, 10);
+  return date <= latest ? date : null;
 }
 
 function cleanText(value: string | null, max: number): string | undefined {
@@ -118,7 +154,7 @@ function cleanText(value: string | null, max: number): string | undefined {
 export function normalizeDocumentReading(
   raw: RawDocumentReading,
   expected: ReadableDocumentType,
-  { siret = null }: { siret?: string | null } = {},
+  { siret = null, today = new Date() }: { siret?: string | null; today?: Date } = {},
 ): DocumentReading {
   const detected = DETECTED_DOCUMENT_TYPES.find((type) => type === raw.type_document) ?? null;
   const warnings: DocumentReadingWarning[] = [];
@@ -149,7 +185,11 @@ export function normalizeDocumentReading(
       if (value) fields[field] = value;
     }
   }
-  return { fields, warnings, detected };
+  const birthDate =
+    expected === "identite" && raw.lisible && detected === expected
+      ? plausibleBirthDate(raw.date_naissance, today)
+      : null;
+  return { fields, warnings, detected, ...(birthDate ? { birthDate } : {}) };
 }
 
 /**

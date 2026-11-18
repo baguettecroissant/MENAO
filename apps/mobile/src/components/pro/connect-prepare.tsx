@@ -1,9 +1,10 @@
 import type { ConnectDetails, ConnectTokenPrefill } from "@menao/core";
 import { connectDetailsSchema } from "@menao/validation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
+import { recallBirthDate } from "@/lib/birth-date-memo";
 import { Button } from "@/ui";
 import { theme } from "@/ui/theme";
 import { CardHeading, FicheButton, FicheCard } from "./fiche-kit";
@@ -33,6 +34,21 @@ export function ConnectPrepare({
   onContinue: (details: ConnectDetails | null) => void;
 }) {
   const [birthDate, setBirthDate] = useState("");
+  // Date lue sur la pièce d'identité déposée depuis ce téléphone (ADR 0375) : elle remplit le
+  // champ tant que l'artisan n'y a rien saisi, et reste modifiable.
+  const [readBirthDate, setReadBirthDate] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void recallBirthDate().then((iso) => {
+      if (cancelled || !iso) return;
+      const french = iso.split("-").reverse().join("/");
+      setReadBirthDate(french);
+      setBirthDate((current) => current || french);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [sameAddress, setSameAddress] = useState(false);
   const [line1, setLine1] = useState("");
   const [postalCode, setPostalCode] = useState("");
@@ -94,6 +110,7 @@ export function ConnectPrepare({
             autoComplete="birthdate-full"
             textContentType="birthdate"
             maxLength={10}
+            hint={readBirthDate && birthDate === readBirthDate ? t.birthDateRead : undefined}
             error={error("birthDate")}
           />
           <View style={styles.group}>

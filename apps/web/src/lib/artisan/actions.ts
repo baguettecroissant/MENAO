@@ -6,6 +6,7 @@ import {
   isGuideStepKey,
   nextGuideStep,
   onboardingProgress,
+  plausibleBirthDate,
   type GuideStepKey,
   type ConnectTokenPrefill,
   type ConnectTokens,
@@ -379,7 +380,13 @@ export async function processUpload(_prev: FormState, formData: FormData): Promi
 }
 
 export type DocumentReadResult =
-  | { status: "ok"; fields: DocumentPrefill; warnings: DocumentReadingWarning[] }
+  | {
+      status: "ok";
+      fields: DocumentPrefill;
+      warnings: DocumentReadingWarning[];
+      /** Pièce d'identité : date de naissance lue (ADR 0375), gardée par le navigateur. */
+      birthDate?: string;
+    }
   | { status: "unavailable" };
 
 /**
@@ -394,9 +401,17 @@ export async function readDocument(path: string, type: string): Promise<Document
     status: string;
     fields?: DocumentPrefill;
     warnings?: DocumentReadingWarning[];
+    birthDate?: string;
   }>("read-document", { method: "POST", body: { path, type: documentType } });
   if (error || data?.status !== "ok") return { status: "unavailable" };
-  return { status: "ok", fields: data.fields ?? {}, warnings: data.warnings ?? [] };
+  // Relue ici aussi : seule une date plausible repart vers le navigateur.
+  const birthDate = documentType === "identite" ? plausibleBirthDate(data.birthDate) : null;
+  return {
+    status: "ok",
+    fields: data.fields ?? {},
+    warnings: data.warnings ?? [],
+    ...(birthDate ? { birthDate } : {}),
+  };
 }
 
 export async function savePresentation(_prev: FormState, formData: FormData): Promise<FormState> {

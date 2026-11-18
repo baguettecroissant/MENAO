@@ -20,6 +20,7 @@ import { GuideBar } from "@/components/pro/guide-bar";
 import { Alert, Button, ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { processUpload, readDocument } from "@/lib/artisan/actions";
+import { rememberBirthDate } from "@/lib/artisan/birth-date-memo";
 import type { FormState } from "@/lib/auth/form";
 import { discardRaw, resizeImage, uploadRaw } from "@/lib/upload/client";
 
@@ -236,6 +237,9 @@ export function UploadForm({
     const result = await readDocument(path, readAs);
     if (upload.current?.key !== key) return;
     if (result.status !== "ok") return setReading({ step: "failed" });
+    // Pièce d'identité : la date de naissance lue reste sur cet appareil, pour pré-remplir
+    // l'étape « Paiements » (ADR 0375).
+    if (readAs === "identite" && result.birthDate) rememberBirthDate(userId, result.birthDate);
     fill(readAs, result.fields);
     setReadValues(result.fields);
     setReading({
