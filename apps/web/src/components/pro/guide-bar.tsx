@@ -7,7 +7,8 @@ import { fr } from "@/i18n/fr";
 /**
  * Barre du bas du parcours guidé (ADR 0373) : le bouton qui fait avancer, toujours au même
  * endroit. Sur téléphone : l'indication, le bouton sur toute la largeur, puis l'action secondaire ;
- * sur ordinateur : « Retour » à gauche, le reste à droite. Elle réserve sa place en bas de page.
+ * sur ordinateur : « Retour » à gauche, le reste à droite. La page lui réserve sa place avec
+ * `GuideBarSpace`, posé en fin de page et jamais dans une carte (il y laisserait un vide).
  */
 export function GuideBar({
   backHref,
@@ -27,7 +28,6 @@ export function GuideBar({
 }) {
   return (
     <>
-      <div aria-hidden="true" className="h-32 sm:h-24" />
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3 sm:px-6">
           {back && <div className="hidden sm:block">{back}</div>}
@@ -54,4 +54,9 @@ export function GuideBar({
       </div>
     </>
   );
+}
+
+/** Place de la barre du bas, en fin de page : le dernier contenu ne passe pas dessous. */
+export function GuideBarSpace() {
+  return <div aria-hidden="true" className="h-28 sm:h-16" />;
 }

@@ -6,6 +6,7 @@ import { fr } from "@/i18n/fr";
 import { deletePortfolioPhoto } from "@/lib/artisan/actions";
 import { getOnboardingContext } from "@/lib/artisan/context";
 import { guideAround, guideFromContext } from "@/lib/artisan/guide";
+import { GuideBarSpace } from "@/components/pro/guide-bar";
 import { PortfolioUpload } from "./portfolio-upload";
 import { PresentationForm } from "./presentation-form";
 import { ArtisanPhoto } from "@/components/project/artisan-photo";
@@ -143,6 +144,7 @@ export default async function ProfileStepPage() {
         </Card>
         {/* Retour au dossier en bas de page aussi : le lien du haut est loin après les envois. Dans
             le parcours guidé, la barre du bas mène à la suite. */}
+        {around && <GuideBarSpace />}
         {!around && (
           <ButtonLink href="/pro/onboarding" variant="outline" className="self-start">
             <ArrowLeft aria-hidden="true" className="size-4" />

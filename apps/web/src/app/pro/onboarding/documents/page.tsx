@@ -12,7 +12,7 @@ import { Alert, ButtonLink, Card, focusRing } from "@/components/ui";
 import { ArrowRight, Check, ChevronRight, Clock, Lock, Mail, ShieldCheck } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import { GuideBar } from "@/components/pro/guide-bar";
+import { GuideBar, GuideBarSpace } from "@/components/pro/guide-bar";
 import { guideAround, guideFromContext, suiteHref } from "@/lib/artisan/guide";
 import { DocumentHelpDisclosure, DocumentHelpSteps } from "@/components/pro/document-help";
 import { HelpVideo } from "@/components/pro/help-video";
@@ -306,24 +306,10 @@ export default async function DocumentsStepPage({
         );
       })}
       {guided && (
-        // L'aide en lignes à ouvrir (ADR 0373) : la photo, où trouver la pièce, l'assureur, et
-        // le cas des métiers non soumis à la décennale.
+        // L'aide en lignes à ouvrir (ADR 0373). D'abord ce qui évite de chercher la pièce pour
+        // rien : les métiers non soumis à la décennale, puis le message pour l'assureur ; ensuite
+        // la photo et où trouver la pièce.
         <div className="flex flex-col gap-3">
-          <HelpVideo id="v05-photo" />
-          {stateOf(guided).help && <DocumentHelpDisclosure type={guided} className="lg:hidden" />}
-          {stateOf(guided).help && DOCUMENT_HELP[guided].insurerRequest && (
-            <Link
-              href={`/pro/onboarding/documents/assureur?type=${guided}` as Route}
-              className={`flex min-h-touch items-center gap-3 rounded-input border border-border bg-surface px-4 py-3 hover:bg-background ${focusRing}`}
-            >
-              <Mail aria-hidden="true" className="size-5 shrink-0 text-label" />
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="font-semibold">{g.notAtHand}</span>
-                <span className="text-sm text-muted-foreground">{g.notAtHandHint}</span>
-              </span>
-              <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
-            </Link>
-          )}
           {guided === "decennale" && !exempt && (
             <form action={setDecennaleExempt}>
               <input type="hidden" name="value" value="oui" />
@@ -343,8 +329,24 @@ export default async function DocumentsStepPage({
               </button>
             </form>
           )}
+          {stateOf(guided).help && DOCUMENT_HELP[guided].insurerRequest && (
+            <Link
+              href={`/pro/onboarding/documents/assureur?type=${guided}` as Route}
+              className={`flex min-h-touch items-center gap-3 rounded-input border border-border bg-surface px-4 py-3 hover:bg-background ${focusRing}`}
+            >
+              <Mail aria-hidden="true" className="size-5 shrink-0 text-label" />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="font-semibold">{g.notAtHand}</span>
+                <span className="text-sm text-muted-foreground">{g.notAtHandHint}</span>
+              </span>
+              <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+            </Link>
+          )}
+          <HelpVideo id="v05-photo" />
+          {stateOf(guided).help && <DocumentHelpDisclosure type={guided} className="lg:hidden" />}
         </div>
       )}
+      {guided && <GuideBarSpace />}
     </div>
   );
   if (!focused) return <div className="max-w-3xl">{cards}</div>;

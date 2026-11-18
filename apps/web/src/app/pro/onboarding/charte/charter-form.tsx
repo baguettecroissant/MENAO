@@ -22,7 +22,7 @@ import {
   SectionHeader,
   SectionIcon,
 } from "@/components/pro/charter/charter-parts";
-import { GuideBar } from "@/components/pro/guide-bar";
+import { GuideBar, GuideBarSpace } from "@/components/pro/guide-bar";
 import { HelpVideo } from "@/components/pro/help-video";
 import { Button, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -422,6 +422,7 @@ export function CharterForm({
         </form>
       )}
 
+      <GuideBarSpace />
       <p className="sr-only" aria-live="polite">
         {t.progressCount(
           CHARTER_SECTIONS.slice(0, accepted).flatMap((s) => s.rules).length,

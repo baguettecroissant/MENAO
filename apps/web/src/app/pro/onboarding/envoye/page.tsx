@@ -11,7 +11,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { GuideBar } from "@/components/pro/guide-bar";
+import { GuideBar, GuideBarSpace } from "@/components/pro/guide-bar";
 import { ButtonLink, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
@@ -70,6 +70,7 @@ export default async function DossierSentPage() {
         />
       </ul>
 
+      <GuideBarSpace />
       <GuideBar
         secondary={
           <ButtonLink href="/pro/onboarding" variant="ghost" block>
