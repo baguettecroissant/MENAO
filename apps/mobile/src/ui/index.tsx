@@ -1,5 +1,5 @@
 import { Check, CircleAlert, CircleCheck, Info, type LucideIcon } from "lucide-react-native";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode, type RefObject } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -9,6 +9,7 @@ import {
   Text,
   TextInput,
   View,
+  type ScrollViewInstance,
   type TextInputProps,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -31,6 +32,13 @@ const { colors, radius, font, spacing } = theme;
  * haut (barre de retour des écrans ouverts par-dessus les onglets) ; `band` le remplace par le
  * bandeau bleu des maquettes, qui couvre aussi la barre d'état.
  */
+export type ScreenScrollMetrics = { offset: number; viewport: number; content: number };
+export type ScreenScrollSource = "scroll" | "layout" | "content";
+export type ScreenScroll = {
+  ref: RefObject<ScrollViewInstance | null>;
+  onMetrics: (metrics: ScreenScrollMetrics, source: ScreenScrollSource) => void;
+};
+
 export function Screen({
   children,
   centered = false,
@@ -38,6 +46,7 @@ export function Screen({
   band,
   footer,
   onRefresh,
+  scroll,
 }: {
   children: ReactNode;
   centered?: boolean;
@@ -48,9 +57,19 @@ export function Screen({
   footer?: ReactNode;
   /** « Tirer pour actualiser » : recharge les données de l'écran. */
   onRefresh?: () => Promise<unknown>;
+  /**
+   * Suivi du défilement (charte lue partie par partie, ADR 0374) : la position, la hauteur visible
+   * et celle du contenu à chaque changement, et la liste pour la faire défiler.
+   */
+  scroll?: ScreenScroll;
 }) {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
+  const metrics = useRef({ offset: 0, viewport: 0, content: 0 });
+  function report(change: Partial<ScreenScrollMetrics>, source: ScreenScrollSource) {
+    metrics.current = { ...metrics.current, ...change };
+    scroll?.onMetrics(metrics.current, source);
+  }
   async function refresh() {
     if (!onRefresh) return;
     setRefreshing(true);
@@ -66,8 +85,19 @@ export function Screen({
       {band}
       {header && !band ? <View style={styles.header}>{header}</View> : null}
       <ScrollView
+        ref={scroll?.ref}
         contentContainerStyle={[styles.screen, centered && styles.centered]}
         keyboardShouldPersistTaps="handled"
+        scrollEventThrottle={scroll ? 64 : undefined}
+        onScroll={
+          scroll ? (e) => report({ offset: e.nativeEvent.contentOffset.y }, "scroll") : undefined
+        }
+        onLayout={
+          scroll ? (e) => report({ viewport: e.nativeEvent.layout.height }, "layout") : undefined
+        }
+        onContentSizeChange={
+          scroll ? (_, height) => report({ content: height }, "content") : undefined
+        }
         refreshControl={
           onRefresh ? (
             <RefreshControl

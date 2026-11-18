@@ -2,6 +2,8 @@ import {
   KBIS_MAX_AGE_MONTHS,
   REQUIRED_DOCUMENT_TYPES,
   URSSAF_MAX_AGE_MONTHS,
+  guidePosition,
+  nextGuideStep,
   prefillUpdates,
   type DocumentPrefill,
   type DocumentReadingWarning,
@@ -14,7 +16,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
-import { PageHead, PrivacyNote, SoftBanner } from "@/components/pro/dossier-kit";
+import { PageHead, PrivacyNote, SoftBanner, StepsBar } from "@/components/pro/dossier-kit";
 import { DocumentHelpButton, HelpVideoCard } from "@/components/pro/onboarding-help";
 import {
   CardHeading,
@@ -27,6 +29,7 @@ import { CheckRow, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { AiProgress } from "@/components/ai-progress";
 import { loadDossier, setDecennaleExempt } from "@/lib/artisan-dossier";
+import { dossierGuide, openNextStep } from "@/lib/dossier-guide";
 import { formatLongDate } from "@/lib/dates";
 import { verifySiret } from "@/lib/my-company";
 import { readDocument } from "@/lib/document-reading";
@@ -46,6 +49,7 @@ import { withTeamPermission } from "@/components/team-gate";
 const t = fr.proDocument;
 const r = fr.proDocument.reading;
 const d = fr.proDossier;
+const g = fr.proGuide;
 const { colors, font, radius, spacing } = theme;
 
 /** Fond « papier » derrière la photo du document (maquette « DocumentDossierApp »). */
@@ -73,6 +77,8 @@ function monthsAgo(months: number): string {
  * artisan validé (F-51). Refonte « Nette » (lot 9, maquette « DocumentDossierApp ») : grand titre,
  * photo du document en grand avec « Reprendre », bandeau de lecture automatique, champs arrondis
  * en 16 points, métiers couverts en cases bleu nuit et « Déposer le document » collé en bas.
+ * Pendant l'inscription, parcours guidé comme sur le site (ADR 0374) : « Étape 2 sur 6 », les champs
+ * une fois le document choisi, et en bas « Déposer et continuer » ou « Passer pour l'instant ».
  */
 function DocumentScreen() {
   const params = useLocalSearchParams<{ type?: string }>();
@@ -109,8 +115,23 @@ function DocumentScreen() {
       {t.registryVerified(formatLongDate(registry.date_emission ?? ""))}
     </Notice>
   ) : null;
+  // Parcours guidé (ADR 0374) tant que le dossier se remplit : position, temps restant, suite.
+  const guide = dossier && draft ? dossierGuide(dossier) : null;
+  const position = guide ? guidePosition(guide.steps, type) : null;
+  const nextStep = guide ? nextGuideStep(guide.steps, type) : null;
+  const nextNote = nextStep ? g.next(g.names[nextStep]) : g.nextDossier;
+  const deposited =
+    dossier?.documents.some((doc) => doc.type === type && doc.status !== "refuse") === true;
   const intro = (
     <>
+      {guide && position ? (
+        <StepsBar
+          label={g.step(position.index, position.total, g.names[type])}
+          step={position.index}
+          total={position.total}
+          text={guide.minutesLeft > 0 ? g.left(guide.minutesLeft) : ""}
+        />
+      ) : null}
       <PageHead title={d.documents[type]} lead={exempt || blocked ? null : t.photoHint} />
       {blocked}
       {!blocked && registryFailed ? (
@@ -136,15 +157,31 @@ function DocumentScreen() {
         after={exemptChoice}
         // « Où trouver ce document ? » (ADR 0348) ; le Kbis, seulement si le registre a échoué.
         help={type !== "kbis" || registryFailed !== null}
+        guided={guide ? { nextNote, deposited } : undefined}
       />
     );
   }
   return (
-    <FicheScreen>
+    <FicheScreen
+      footer={
+        // Rien à déposer (Kbis vérifié au registre, métier non soumis) : on continue.
+        guide ? (
+          <>
+            <Text style={styles.footerNote}>{nextNote}</Text>
+            <FicheButton label={g.continue} tall onPress={() => void continueGuide(type)} />
+          </>
+        ) : undefined
+      }
+    >
       {intro}
       {exemptChoice}
     </FicheScreen>
   );
+}
+
+/** Étape suivante du parcours ; sans suite (fin, ou dossier déjà envoyé), retour à l'écran d'avant. */
+async function continueGuide(type: RequiredDocumentType) {
+  if (!(await openNextStep(type))) router.back();
 }
 
 /** Kbis à envoyer après un contrôle au registre sans succès, avec sa raison (ADR 0217). */
@@ -206,6 +243,7 @@ function DocumentForm({
   intro,
   after,
   help,
+  guided,
 }: {
   type: RequiredDocumentType;
   trades: { code: string; label: string }[];
@@ -215,6 +253,8 @@ function DocumentForm({
   after: ReactNode;
   /** Ligne « Où trouver ce document ? » sous le titre. */
   help: boolean;
+  /** Parcours guidé (ADR 0374) : ce qui suit, et si une pièce est déjà déposée. */
+  guided?: { nextNote: string; deposited: boolean };
 }) {
   // Décennale : métiers couverts, tous cochés au départ (ADR 0116).
   const [covered, setCovered] = useState(() => new Set(trades.map((trade) => trade.code)));
@@ -336,7 +376,8 @@ function DocumentForm({
     setSending(false);
     if (status !== "ok")
       return setFailure(fr.search.upload[status] ?? fr.search.upload.unavailable);
-    router.back();
+    // Parcours guidé : le document suivant ; sinon (renouvellement, fin du parcours) retour.
+    await continueGuide(type);
   }
 
   return (
@@ -344,7 +385,31 @@ function DocumentForm({
       footer={
         <>
           {failure ? <Notice tone="error">{failure}</Notice> : null}
-          <FicheButton label={t.send} tall onPress={() => void send()} loading={sending} />
+          {guided && !photo ? (
+            // Sans la pièce sous la main, on n'est pas bloqué : l'étape suivante s'ouvre.
+            <>
+              <Text style={styles.footerNote}>
+                {guided.deposited ? guided.nextNote : g.skipNote}
+              </Text>
+              <FicheButton
+                label={guided.deposited ? g.continue : g.skip}
+                variant="secondary"
+                tall
+                onPress={() => void continueGuide(type)}
+              />
+            </>
+          ) : (
+            <>
+              {guided ? <Text style={styles.footerNote}>{guided.nextNote}</Text> : null}
+              <FicheButton
+                label={guided ? g.depositAndContinue : t.send}
+                tall
+                onPress={() => void send()}
+                loading={sending}
+                disabled={reading?.step === "reading"}
+              />
+            </>
+          )}
         </>
       }
     >
@@ -435,97 +500,102 @@ function DocumentForm({
         </>
       ) : null}
 
-      {type === "kbis" ? (
-        <DateTimeFields
-          date={values.dateEmission}
-          minDate={monthsAgo(KBIS_MAX_AGE_MONTHS)}
-          onDate={(dateEmission) => setValues((v) => ({ ...v, dateEmission }))}
-          dateLabel={t.dateEmission}
-          error={errors.dateEmission}
-        />
-      ) : null}
-      {insurance ? (
+      {/* Parcours guidé : rien à remplir avant d'avoir choisi le document, que MENAO lit. */}
+      {guided && !photo ? null : (
         <>
-          <ToolField
-            label={t.assureur}
-            value={values.assureur}
-            onChangeText={(assureur) => setValues((v) => ({ ...v, assureur }))}
-            error={errors.assureur}
-          />
-          <ToolField
-            label={t.numero}
-            value={values.numero}
-            onChangeText={(numero) => setValues((v) => ({ ...v, numero }))}
-            autoCapitalize="characters"
-            error={errors.numero}
-          />
-          <DateTimeFields
-            date={values.dateFin}
-            minDate={tomorrow()}
-            onDate={(dateFin) => setValues((v) => ({ ...v, dateFin }))}
-            dateLabel={t.dateFin}
-            error={errors.dateFin}
-          />
-        </>
-      ) : null}
-      {type === "decennale" ? (
-        <ToolField
-          label={t.couverture}
-          value={values.couverture}
-          onChangeText={(couverture) => setValues((v) => ({ ...v, couverture }))}
-          placeholder={t.couverturePlaceholder}
-          error={errors.couverture}
-        />
-      ) : null}
-      {type === "decennale" && trades.length > 0 ? (
-        <FicheCard padding={3.5} gap={0}>
-          <Text style={styles.coverageTitle}>{t.coverageLegend}</Text>
-          {trades.map((trade) => (
-            <CheckRow
-              key={trade.code}
-              label={trade.label}
-              checked={covered.has(trade.code)}
-              onChange={(checked) =>
-                setCovered((current) => {
-                  const next = new Set(current);
-                  if (checked) next.add(trade.code);
-                  else next.delete(trade.code);
-                  return next;
-                })
-              }
+          {type === "kbis" ? (
+            <DateTimeFields
+              date={values.dateEmission}
+              minDate={monthsAgo(KBIS_MAX_AGE_MONTHS)}
+              onDate={(dateEmission) => setValues((v) => ({ ...v, dateEmission }))}
+              dateLabel={t.dateEmission}
+              error={errors.dateEmission}
             />
-          ))}
-          <Text style={styles.hint}>{t.coverageHint}</Text>
-        </FicheCard>
-      ) : null}
-      {type === "urssaf" ? (
-        <>
-          <DateTimeFields
-            date={values.dateEmission}
-            minDate={monthsAgo(URSSAF_MAX_AGE_MONTHS)}
-            onDate={(dateEmission) => setValues((v) => ({ ...v, dateEmission }))}
-            dateLabel={t.dateEmissionUrssaf}
-            error={errors.dateEmission}
-          />
-          <ToolField
-            label={t.securityCode}
-            value={values.numero}
-            onChangeText={(numero) => setValues((v) => ({ ...v, numero }))}
-            autoCapitalize="characters"
-            hint={t.securityCodeHint}
-            error={errors.numero}
-          />
+          ) : null}
+          {insurance ? (
+            <>
+              <ToolField
+                label={t.assureur}
+                value={values.assureur}
+                onChangeText={(assureur) => setValues((v) => ({ ...v, assureur }))}
+                error={errors.assureur}
+              />
+              <ToolField
+                label={t.numero}
+                value={values.numero}
+                onChangeText={(numero) => setValues((v) => ({ ...v, numero }))}
+                autoCapitalize="characters"
+                error={errors.numero}
+              />
+              <DateTimeFields
+                date={values.dateFin}
+                minDate={tomorrow()}
+                onDate={(dateFin) => setValues((v) => ({ ...v, dateFin }))}
+                dateLabel={t.dateFin}
+                error={errors.dateFin}
+              />
+            </>
+          ) : null}
+          {type === "decennale" ? (
+            <ToolField
+              label={t.couverture}
+              value={values.couverture}
+              onChangeText={(couverture) => setValues((v) => ({ ...v, couverture }))}
+              placeholder={t.couverturePlaceholder}
+              error={errors.couverture}
+            />
+          ) : null}
+          {type === "decennale" && trades.length > 0 ? (
+            <FicheCard padding={3.5} gap={0}>
+              <Text style={styles.coverageTitle}>{t.coverageLegend}</Text>
+              {trades.map((trade) => (
+                <CheckRow
+                  key={trade.code}
+                  label={trade.label}
+                  checked={covered.has(trade.code)}
+                  onChange={(checked) =>
+                    setCovered((current) => {
+                      const next = new Set(current);
+                      if (checked) next.add(trade.code);
+                      else next.delete(trade.code);
+                      return next;
+                    })
+                  }
+                />
+              ))}
+              <Text style={styles.hint}>{t.coverageHint}</Text>
+            </FicheCard>
+          ) : null}
+          {type === "urssaf" ? (
+            <>
+              <DateTimeFields
+                date={values.dateEmission}
+                minDate={monthsAgo(URSSAF_MAX_AGE_MONTHS)}
+                onDate={(dateEmission) => setValues((v) => ({ ...v, dateEmission }))}
+                dateLabel={t.dateEmissionUrssaf}
+                error={errors.dateEmission}
+              />
+              <ToolField
+                label={t.securityCode}
+                value={values.numero}
+                onChangeText={(numero) => setValues((v) => ({ ...v, numero }))}
+                autoCapitalize="characters"
+                hint={t.securityCodeHint}
+                error={errors.numero}
+              />
+            </>
+          ) : null}
+          {type === "identite" ? (
+            <DateTimeFields
+              date={values.dateFin}
+              minDate={tomorrow()}
+              onDate={(dateFin) => setValues((v) => ({ ...v, dateFin }))}
+              dateLabel={t.dateFinIdentite}
+              error={errors.dateFin}
+            />
+          ) : null}
         </>
-      ) : null}
-      {type === "identite" ? (
-        <DateTimeFields
-          date={values.dateFin}
-          minDate={tomorrow()}
-          onDate={(dateFin) => setValues((v) => ({ ...v, dateFin }))}
-          dateLabel={t.dateFinIdentite}
-          error={errors.dateFin}
-        />
-      ) : null}
+      )}
       {after}
       <PrivacyNote text={d.privacy} />
     </FicheScreen>
@@ -533,6 +603,13 @@ function DocumentForm({
 }
 
 const styles = StyleSheet.create({
+  footerNote: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+    color: colors["muted-foreground"],
+  },
   readRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing(2) },
   readLabel: { fontFamily: font.regular, fontSize: 13, color: colors.label },
   readValue: { fontFamily: font.bold, fontSize: 14, color: colors.foreground },
