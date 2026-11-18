@@ -266,6 +266,9 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await avatar.getByRole("button", { name: "Envoyer la photo" }).click();
   await expect(page.getByRole("img", { name: "Photo de profil" })).toBeVisible();
 
+  // Présentation préremplie avec le brouillon de MENAO (ADR 0372), que l'artisan peut réécrire.
+  await expect(page.getByText(/^Nous avons écrit ce texte/)).toBeVisible();
+  await expect(page.getByLabel("Présentation")).not.toHaveValue("");
   await page
     .getByLabel("Présentation")
     .fill(

@@ -48,8 +48,9 @@ function PublicProfileScreen() {
 }
 
 /**
- * Présentation (100 caractères au moins), avec le compteur « 12 / 100 » et, tant que le minimum
- * n'est pas atteint, « Proposer un texte » : un brouillon que l'artisan relit et modifie.
+ * Présentation (100 caractères au moins), avec le compteur « 12 / 100 ». Sans présentation
+ * enregistrée, le champ arrive rempli avec le brouillon (ADR 0372) ; « Proposer un texte » le
+ * remet si l'artisan a tout effacé.
  * « Enregistrer la présentation » est collé en bas ; photo, réalisations et Google s'enregistrent
  * aussitôt.
  */
@@ -60,11 +61,14 @@ function PublicProfileContent({
   dossier: Dossier | null;
   onSaved: () => Promise<void>;
 }) {
-  const [value, setValue] = useState(dossier?.presentation ?? "");
+  // Présentation proposée (presentationDraft) : sans présentation enregistrée, le champ arrive
+  // rempli avec elle (ADR 0372), l'artisan relit et enregistre.
+  const draft = dossier?.presentationDraft ?? null;
+  const saved = dossier?.presentation?.trim() ? dossier.presentation : null;
+  const [value, setValue] = useState(saved ?? draft ?? "");
   const [error, setError] = useState<string | undefined>();
   const [sending, setSending] = useState(false);
-  // Présentation proposée (presentationDraft).
-  const draft = dossier?.presentationDraft ?? null;
+  const prefilled = !saved && !!draft && value === draft;
 
   async function save() {
     setSending(true);
@@ -102,6 +106,7 @@ function PublicProfileContent({
           hint={t.presentationHint(PRESENTATION_MIN_LENGTH, value.trim().length)}
           error={error}
         />
+        {prefilled ? <Text style={styles.prefilled}>{t.presentationPrefilled}</Text> : null}
         {draft && value.trim().length < PRESENTATION_MIN_LENGTH ? (
           <FicheButton
             label={t.presentationDraft}
@@ -331,6 +336,16 @@ function PortfolioCard() {
 }
 
 const styles = StyleSheet.create({
+  prefilled: {
+    fontFamily: font.regular,
+    fontSize: 13.5,
+    lineHeight: 19,
+    padding: spacing(3),
+    borderRadius: radius.input,
+    overflow: "hidden",
+    backgroundColor: colors["primary-soft"],
+    color: colors["primary-strong"],
+  },
   text: { fontFamily: font.regular, fontSize: 14, lineHeight: 20, color: colors.label },
   photoRow: { flexDirection: "row", alignItems: "center", gap: spacing(4) },
   photoText: { flex: 1, gap: spacing(2.5), alignItems: "flex-start" },

@@ -11,9 +11,10 @@ import { initialFormState } from "@/lib/auth/form";
 const t = fr.pro.onboarding.profile;
 
 /**
- * Présentation de la fiche publique (100 caractères au moins), avec un compteur « 12 / 100 » et,
- * tant que le minimum n'est pas atteint, « Proposer un texte » : un brouillon construit avec ce
- * que MENAO sait déjà, que l'artisan relit et modifie avant d'enregistrer.
+ * Présentation de la fiche publique (100 caractères au moins), avec un compteur « 12 / 100 ». Sans
+ * présentation enregistrée, le champ arrive rempli avec un brouillon construit avec ce que MENAO
+ * sait déjà (ADR 0372) : l'artisan relit, corrige s'il veut et enregistre. « Proposer un texte »
+ * le remet s'il a tout effacé.
  */
 export function PresentationForm({
   presentation,
@@ -24,7 +25,11 @@ export function PresentationForm({
   draft: string;
 }) {
   const [state, action, pending] = useActionState(savePresentation, initialFormState);
-  const [value, setValue] = useState(state.values?.presentation ?? presentation ?? "");
+  const [value, setValue] = useState(
+    state.values?.presentation ?? (presentation?.trim() ? presentation : draft),
+  );
+  // Brouillon affiché et pas encore enregistré : on le dit, pour qu'il soit relu.
+  const prefilled = !presentation?.trim() && draft.trim() !== "" && value === draft;
   const error = state.fieldErrors?.presentation?.[0];
   const length = value.trim().length;
 
@@ -38,6 +43,12 @@ export function PresentationForm({
       <p id="presentation-hint" className="text-sm text-muted-foreground">
         {t.presentationHint}
       </p>
+      {prefilled && (
+        <p className="flex items-start gap-2 rounded-input bg-primary-softer px-3 py-2.5 text-sm text-primary-strong">
+          <Sparkles aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          {t.presentationPrefilled}
+        </p>
+      )}
       <textarea
         id="presentation"
         name="presentation"

@@ -791,6 +791,8 @@ export const fr = {
         ? `${length} / ${min} caractères : votre expérience, vos spécialités, votre façon de travailler.`
         : `${length} caractères : votre expérience, vos spécialités, votre façon de travailler.`,
     presentationDraft: "Proposer un texte",
+    presentationPrefilled:
+      "Nous avons écrit ce texte avec les informations de votre entreprise. Relisez-le, modifiez-le si besoin, puis enregistrez.",
     save: "Enregistrer la présentation",
     saved: "Présentation enregistrée.",
     // Photos de réalisations (ADR 0124), comme sur le site.
