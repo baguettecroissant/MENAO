@@ -78,7 +78,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(page.getByText("Partie 1 sur 9 · Réactivité")).toBeVisible();
 
   // « Mon inscription » (ADR 0376) : un seul parcours de six étapes, la charte en premier.
-  await page.getByRole("link", { name: "Mon inscription" }).click();
+  await page.getByRole("main").getByRole("link", { name: "Mon inscription" }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding$/);
   await expect(page.getByRole("heading", { level: 1, name: "Votre inscription" })).toBeVisible();
   await expect(page.getByText("0 étape faite sur 6")).toBeVisible();
@@ -167,7 +167,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.getByRole("link", { name: "Passer pour l'instant" }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding\/profil$/);
   await expect(page.getByText("Étape 3 sur 6 · Votre fiche")).toBeVisible();
-  await page.getByRole("link", { name: "Mon inscription" }).click();
+  await page.getByRole("main").getByRole("link", { name: "Mon inscription" }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding$/);
   await expect(page.getByRole("link", { name: /Charte qualité MENAO.*Signée/ })).toBeVisible();
   await expect(page.getByText("1 étape faite sur 6")).toBeVisible();
@@ -318,7 +318,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   ).toBeVisible();
 
   // « Mon inscription » : dossier transmis, sans bouton « Envoyer ».
-  await page.getByRole("link", { name: "Mon inscription" }).click();
+  await page.getByRole("main").getByRole("link", { name: "Mon inscription" }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding$/);
   await expect(
     page.getByText("Dossier transmis à l'équipe MENAO : la vérification a commencé."),
