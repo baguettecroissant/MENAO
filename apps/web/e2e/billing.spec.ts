@@ -154,11 +154,11 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
     .toBe(true);
 });
 
-test("avant la validation, la formule se choisit sans paiement (ADR 0353)", async ({ page }) => {
+test("avant la validation, la formule se choisit et se paie déjà (ADR 0370)", async ({ page }) => {
   await signIn(page, "artisan@example.test");
   await page.goto("/pro/onboarding/formule");
   await expect(page.getByText("Rien n'est prélevé aujourd'hui.")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Choisir la formule/ }).first()).toBeVisible();
-  // Aucun bouton de paiement tant que l'entreprise n'est pas validée.
-  await expect(page.getByRole("button", { name: /au mois|à l'année/ })).toHaveCount(0);
+  // Paiement proposé sans attendre la validation ; l'ancien choix sans paiement a disparu.
+  await expect(page.getByRole("button", { name: "Choisir Premium au mois" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Choisir la formule/ })).toHaveCount(0);
 });

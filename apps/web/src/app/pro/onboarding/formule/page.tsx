@@ -20,7 +20,7 @@ import { ClientRemindersCard } from "@/components/pro/client-reminders-card";
 import { Alert, Card, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
-import { ChoosePlan, ManageSubscription, PickPlan } from "./plan-forms";
+import { ChoosePlan, ManageSubscription } from "./plan-forms";
 
 const t = fr.pro.onboarding.plans;
 const day = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" });
@@ -38,9 +38,10 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
     .select("code, nom, prix_mensuel_ht_centimes, avantages, ouverte, recommandee")
     .order("ordre");
 
-  // Avant la validation (ADR 0353) : la formule se choisit, sans rien payer.
+  // Avant la validation : la formule se choisit et se paie déjà (ADR 0353, ADR 0370), rien n'est
+  // prélevé pendant l'essai.
   const choosing = planChoiceOpen(artisan.status) && !subscription;
-  if (artisan.status !== "valide" && !choosing) {
+  if (artisan.status !== "valide" && !choosing && !subscription) {
     return (
       <Card>
         <p>{t.notValidated}</p>
@@ -207,7 +208,7 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
           <p className="flex items-start gap-3 rounded-card bg-primary-softer px-4 py-3.5 text-[0.9375rem] text-primary-strong">
             <Lock aria-hidden="true" className="mt-0.5 size-[1.125rem] shrink-0" />
             <span>
-              <b>{t.choice.freeTitle}</b> {t.choice.free}
+              <b>{t.choice.freeTitle}</b> {t.choice.free(firstPayment)}
             </span>
           </p>
         </>
@@ -232,8 +233,8 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
                   {t.recommended}
                 </span>
               )}
-              {/* Formule choisie avant la validation (ADR 0353), rappelée au moment de payer. */}
-              {!choosing && chosenCode === plan.code && (
+              {/* Formule choisie plus tôt (ADR 0353), rappelée au moment de payer. */}
+              {chosenCode === plan.code && (
                 <span className="absolute -top-3 right-5 rounded-chip bg-success px-2.5 py-1 text-xs font-bold text-white">
                   {t.choice.yours}
                 </span>
@@ -269,11 +270,7 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
                 ))}
               </ul>
               {plan.ouverte ? (
-                choosing ? (
-                  <PickPlan code={plan.code} nom={plan.nom} chosen={chosenCode === plan.code} />
-                ) : (
-                  <ChoosePlan code={plan.code} nom={plan.nom} />
-                )
+                <ChoosePlan code={plan.code} nom={plan.nom} />
               ) : (
                 <p className="text-center text-muted-foreground">{t.soon}</p>
               )}
@@ -298,7 +295,6 @@ export default async function PlanStepPage({ searchParams }: PageProps<"/pro/onb
           )}
         </li>
       </ul>
-      {choosing && <p className="text-sm text-muted-foreground">{t.choice.period}</p>}
       <p className="text-sm text-muted-foreground">{t.vatNote}</p>
     </div>
   );

@@ -460,17 +460,6 @@ async function invokeBilling(
   return { error: t.plans.errors[status === "ok" ? "unavailable" : status] };
 }
 
-/** Avant la validation : garde la formule choisie, sans paiement (ADR 0353). */
-export async function choosePlan(_prev: FormState, formData: FormData): Promise<FormState> {
-  const plan = z.enum(["base", "premium", "entreprise"]).safeParse(text(formData, "plan"));
-  if (!plan.success) return { error: t.plans.errors.plan_unavailable };
-  const { supabase } = await getOnboardingContext();
-  const { error } = await supabase.rpc("artisan_choose_plan", { p_plan: plan.data });
-  if (error) return { error: t.plans.choice.error };
-  revalidatePath("/pro/onboarding", "layout");
-  return {};
-}
-
 /** Ouvre Stripe Checkout pour la formule choisie (web uniquement, CLAUDE.md règle 10). */
 export async function startCheckout(_prev: FormState, formData: FormData): Promise<FormState> {
   const plan = z.enum(["base", "premium", "entreprise"]).safeParse(text(formData, "plan"));

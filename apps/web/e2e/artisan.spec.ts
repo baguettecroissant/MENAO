@@ -289,8 +289,8 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.goto("/pro/onboarding/documents");
   await expect(page.getByRole("button", { name: /Déposer|Remplacer/ })).toHaveCount(0);
 
-  // Paiements et formule ouverts sans attendre la validation (ADR 0353) : la formule se choisit
-  // sans rien payer.
+  // Paiements et formule ouverts sans attendre la validation (ADR 0353) : la formule se paie déjà,
+  // rien n'est prélevé pendant l'essai (ADR 0370).
   await page.goto("/pro/onboarding");
   await expect(page.getByRole("heading", { name: "À faire en attendant" })).toBeVisible();
   // Ce qui est facultatif est proposé dans le dossier (ADR 0354).
@@ -300,10 +300,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   ).toBeVisible();
   await page.goto("/pro/onboarding/formule");
   await expect(page.getByText("Rien n'est prélevé aujourd'hui.")).toBeVisible();
-  await page.getByRole("button", { name: "Choisir la formule Premium" }).click();
-  await expect(page.getByText("Formule choisie")).toBeVisible();
-  await page.goto("/pro/onboarding");
-  await expect(page.getByRole("link", { name: /Choisir votre formule.*Choisie/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Choisir Premium au mois" })).toBeVisible();
   await page.goto("/pro/onboarding/paiements");
   await expect(page.getByText("ne touche jamais l'argent de vos chantiers")).toBeVisible();
   await expect(

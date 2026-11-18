@@ -8897,9 +8897,8 @@ export const fr = {
         paiementsHintNow: "Vous pouvez le faire dès maintenant : Stripe vérifie pendant ce temps",
         formuleTitle: "Choisir votre formule",
         formuleHint: "Vous pouvez le faire dès maintenant",
-        formuleHintChoice: "Choisissez maintenant, rien n'est prélevé avant la validation",
-        formuleHintChosen: (nom: string) =>
-          `${nom} · le paiement vous sera proposé à la validation`,
+        formuleHintChoice: "Dès maintenant, rien n'est prélevé pendant l'essai",
+        formuleHintChosen: (nom: string) => `${nom} · il reste à enregistrer votre carte`,
       },
       steps: {
         entreprise: "Entreprise",
@@ -9441,15 +9440,11 @@ export const fr = {
           "Le choix de la formule n'est pas disponible pour ce dossier. Une question ? Écrivez à l'équipe MENAO depuis l'aide.",
         // Avant la validation (ADR 0353) : la formule se choisit sans rien payer.
         choice: {
-          intro: "Choisissez maintenant, pendant que votre dossier avance.",
+          intro: "Choisissez votre formule maintenant, pendant que votre dossier avance.",
           freeTitle: "Rien n'est prélevé aujourd'hui.",
-          free: "Votre choix est enregistré. Le paiement vous sera proposé le jour où MENAO valide votre entreprise, et vous pourrez encore changer de formule à ce moment-là.",
-          choose: "Choisir cette formule",
-          chooseLabel: (nom: string) => `Choisir la formule ${nom}`,
-          chosen: "Formule choisie",
+          free: (date: string) =>
+            `Vous enregistrez votre carte ou votre IBAN : le premier prélèvement a lieu à la fin des 2 mois d'essai, le ${date}. Si votre dossier n'est pas validé, MENAO annule votre abonnement avant tout prélèvement.`,
           yours: "Votre choix",
-          period: "Le choix au mois ou à l'année se fait au moment du paiement.",
-          error: "Votre choix n'a pas pu être enregistré. Réessayez dans un instant.",
         },
         perMonth: "HT / mois",
         priceHt: (euros: string) => `${euros} €`,
@@ -9508,7 +9503,8 @@ export const fr = {
         cancelAtPeriodEnd: (date: string) => `Résiliation programmée le ${date}.`,
         vatNote: "Prix hors taxes ; TVA de 20 % appliquée sur la facture.",
         errors: {
-          not_validated: "Votre dossier doit d'abord être validé par l'équipe MENAO.",
+          not_validated:
+            "Votre dossier ne permet pas de souscrire pour le moment. Écrivez à l'équipe MENAO depuis l'aide.",
           plan_unavailable: "Cette formule n'est pas encore disponible.",
           already_subscribed: "Vous avez déjà un abonnement : gérez-le depuis le portail.",
           no_customer: "Aucun abonnement à gérer pour le moment.",
