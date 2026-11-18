@@ -102,7 +102,7 @@ export function DossierScreen() {
 
   const { progress, snapshot } = dossier;
   const editable = dossier.status === "brouillon" || dossier.status === "refuse";
-  const total = dossierItemCount(snapshot);
+  const total = dossierItemCount();
   const done = total - dossier.itemsLeft;
   const groups = dossierGroups(snapshot);
   const profileDone = progress.entreprise && progress.metiers && progress.zone;

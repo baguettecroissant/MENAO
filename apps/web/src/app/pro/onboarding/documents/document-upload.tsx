@@ -14,6 +14,7 @@ export function DocumentUpload({
   label,
   trades,
   guide,
+  fieldsAfterFile,
 }: {
   type: RequiredDocumentType;
   userId: string;
@@ -22,6 +23,8 @@ export function DocumentUpload({
   trades?: { code: string; label: string }[];
   /** Parcours guidé (ADR 0373) : barre du bas « Déposer et continuer ». */
   guide?: ComponentProps<typeof UploadForm>["guide"];
+  /** Écran des trois attestations : champs et bouton une fois le document choisi. */
+  fieldsAfterFile?: boolean;
 }) {
   const id = (name: string) => `${type}-${name}`;
   return (
@@ -35,6 +38,7 @@ export function DocumentUpload({
       camera
       readAs={type}
       guide={guide}
+      fieldsAfterFile={fieldsAfterFile}
     >
       {(errors) => (
         <>

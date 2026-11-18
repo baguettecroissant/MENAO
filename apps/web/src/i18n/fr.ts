@@ -284,7 +284,7 @@ export const fr = {
       back: "Mon code",
       unavailable: "Votre mémo sera disponible quand votre accès sera actif.",
       kicker: "Mémo à garder",
-      heading: "Votre inscription MENAO en 10 minutes",
+      heading: "Votre inscription MENAO en 5 minutes",
       lead: "Préparez ces six éléments avant le rendez-vous ou avant de vous inscrire seul : tout se fait sur votre téléphone, en photo.",
       missing:
         "Un document manque ? Commencez quand même : il se dépose plus tard, et MENAO vous le rappelle. L'application explique où trouver chaque pièce.",
@@ -8318,7 +8318,7 @@ export const fr = {
           items: [
             {
               q: "Combien de temps faut-il pour s'inscrire ?",
-              a: "Créer votre profil prend environ 2 minutes : vos métiers, votre entreprise et votre zone. Le dossier de vérification demande ensuite environ 10 minutes, documents pris en photo depuis votre téléphone. Tout est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre plus tard.",
+              a: "Créer votre profil prend environ 2 minutes : vos métiers, votre entreprise et votre zone. Le dossier de vérification demande ensuite environ 5 minutes, pièce d'identité prise en photo depuis votre téléphone. Tout est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre plus tard.",
             },
             {
               q: "Quels métiers peuvent s'inscrire sur MENAO ?",
@@ -8352,7 +8352,7 @@ export const fr = {
           items: [
             {
               q: "Dois-je payer avant d'être vérifié, et quand commence l'essai de 2 mois ?",
-              a: "Rien n'est à payer avant la vérification : le choix de la formule s'ouvre une fois votre dossier validé par l'équipe MENAO. L'essai de 2 mois commence le jour où vous choisissez votre formule ; aucun prélèvement n'a lieu avant la date indiquée à ce moment-là, et vous pouvez arrêter à tout moment pendant l'essai.",
+              a: "Vous pouvez choisir votre formule et enregistrer votre carte dès l'inscription, sans attendre la vérification : rien n'est prélevé pendant l'essai de 2 mois. Si votre dossier n'est pas validé, MENAO annule votre abonnement avant tout prélèvement, et vous pouvez arrêter à tout moment pendant l'essai.",
             },
             {
               q: "Quelle différence entre les formules Base, Premium et Entreprise ?",
@@ -8786,26 +8786,21 @@ export const fr = {
         toVerify: "Vérification à faire",
         zone: (place: string, km: number) => `${km} km autour de ${place}`,
         nextTitle: "Dernière étape : faites vérifier votre entreprise",
-        duration: "Environ 10 minutes, en photo depuis votre téléphone",
+        duration: "Environ 5 minutes, avec votre pièce d'identité",
         cta: "Commencer",
         blocks: {
           charterTitle: "La charte qualité MENAO",
           charterText: "À lire et à signer en ligne",
-          documentsTitle: (n: number) => (n === 1 ? "Votre document" : `Vos ${n} documents`),
-          documentNames: {
-            kbis: "Kbis",
-            decennale: "décennale",
-            rc_pro: "RC Pro",
-            identite: "pièce d'identité",
-            urssaf: "attestation URSSAF",
-          },
+          documentsTitle: (n: number) =>
+            n === 1 ? "Votre pièce d'identité" : "Votre pièce d'identité et votre Kbis",
+          documentsText: "Carte d'identité ou passeport, en photo",
           kbisDone: "Kbis : déjà vérifié au registre, rien à déposer",
           profilTitle: "Votre fiche",
-          profilText: "Votre photo. La présentation est déjà écrite.",
+          profilText: "La présentation est déjà écrite : vous la relisez.",
           minutes: (n: number) => `≈ ${n} min`,
         },
         skipHint:
-          "Un document vous manque ? Passez-le : vous le déposerez plus tard, nous gardons tout.",
+          "Ensuite, à votre rythme : votre formule, vos trois attestations (décennale, RC Pro, URSSAF) et vos paiements.",
         later: "Pas le temps maintenant ? Nous vous enverrons un rappel par e-mail.",
         sirene: {
           not_found:
@@ -8953,49 +8948,133 @@ export const fr = {
         step: (index: number, total: number, name: string) =>
           `Étape ${index} sur ${total} · ${name}`,
         left: (minutes: number) => `encore ${minutes} min`,
-        dossier: "Mon dossier",
+        dossier: "Mon inscription",
         back: "Retour",
         skip: "Passer pour l'instant",
         skipNote: "Vous le déposerez plus tard, MENAO vous le rappelle par e-mail.",
         continue: "Continuer",
+        later: "Plus tard",
         depositAndContinue: "Déposer et continuer",
         saveAndContinue: "Enregistrer et continuer",
         next: (name: string) => `Suite : ${name}`,
-        nextDossier: "Suite : envoi de votre dossier",
+        nextNames: {
+          entreprise: "votre entreprise",
+          metiers: "vos métiers",
+          zone: "votre zone",
+          charte: "la charte",
+          kbis: "votre Kbis",
+          identite: "votre pièce d'identité",
+          profil: "votre fiche",
+          formule: "votre formule",
+          attestations: "vos attestations",
+          paiements: "vos paiements",
+        },
+        nextEnd: "Suite : votre inscription",
         names: {
           entreprise: "Entreprise",
           metiers: "Métiers",
           zone: "Zone",
           charte: "Charte",
           kbis: "Kbis",
-          decennale: "Décennale",
-          rc_pro: "RC Pro",
           identite: "Pièce d'identité",
-          urssaf: "Attestation URSSAF",
           profil: "Votre fiche",
+          formule: "Formule",
+          attestations: "Attestations",
+          paiements: "Paiements",
         },
-        readyTitle: "Tout est prêt",
-        readyLead: "Relisez si vous le souhaitez, puis envoyez votre dossier à l'équipe MENAO.",
         checkRead: "Vérifiez ce que nous avons lu",
         checkReadHint: "Une valeur est fausse ? Corrigez-la. Sinon, continuez.",
         notAtHand: "Je ne l'ai pas sous la main",
         notAtHandHint: "MENAO prépare le message pour votre assureur",
-        /** « Dossier envoyé » : la suite pendant la vérification. */
-        sent: {
-          title: "Dossier envoyé",
-          lead: "L'équipe MENAO vérifie votre entreprise. Vous recevez un e-mail dès que c'est fait.",
-          nextTitle: "Pendant ce temps, préparez la suite",
-          planTitle: "Choisir votre formule",
-          planText: "Vous choisissez maintenant, pour être prêt dès la validation.",
-          planCta: "Choisir ma formule",
-          payTitle: "Recevoir vos paiements",
-          payText:
-            "Vos clients vous paient directement sur votre compte bancaire. MENAO ne touche jamais l'argent de vos chantiers.",
-          payCta: "Activer mes paiements",
-          discoverText: "Rempli d'exemples, en attendant vos premières demandes",
-          done: "Fait",
-          later: "Plus tard",
-          minutes: (n: number) => `≈ ${n} min`,
+        /** « Mon inscription » : un seul parcours jusqu'à la mise en ligne (lot 73, ADR 0376). */
+        path: {
+          title: "Votre inscription",
+          counter: (done: number, total: number) =>
+            `${done} étape${done > 1 ? "s" : ""} faite${done > 1 ? "s" : ""} sur ${total}`,
+          left: (minutes: number) => `encore ${minutes} min environ`,
+          current: (minutes: number) => `Prochaine étape · ≈ ${minutes} min`,
+          modify: "Modifier",
+          reread: "Relire",
+          company: "Votre entreprise",
+          kbisRegistry: "Kbis vérifié au registre",
+          steps: {
+            entreprise: {
+              title: "Votre entreprise",
+              todo: "À vérifier auprès de l'INSEE avec votre SIRET",
+              done: "Vérifiée auprès de l'INSEE",
+            },
+            metiers: {
+              title: "Vos métiers",
+              todo: "Ceux des demandes que vous voulez recevoir",
+              done: "Choisis",
+            },
+            zone: {
+              title: "Votre zone d'intervention",
+              todo: "Là où vous vous déplacez",
+              done: "Choisie",
+            },
+            charte: {
+              title: "Charte qualité MENAO",
+              todo: "À lire et à signer en ligne",
+              done: "Signée",
+            },
+            kbis: {
+              title: "Kbis ou extrait INSEE/RNE",
+              todo: "De moins de 3 mois",
+              done: "Déposé",
+            },
+            identite: {
+              title: "Pièce d'identité du dirigeant",
+              todo: "Carte d'identité ou passeport, en photo",
+              done: "Déposée",
+            },
+            profil: {
+              title: "Votre fiche",
+              todo: "La présentation est déjà écrite : relisez-la",
+              done: "Présentation enregistrée",
+            },
+            formule: {
+              title: "Votre formule et votre carte",
+              todo: "Rien n'est prélevé pendant l'essai",
+              done: "Formule choisie",
+            },
+            attestations: {
+              title: "Vos attestations",
+              todo: "Décennale, RC Pro, URSSAF : déposez celles que vous avez",
+              done: "Déposées",
+            },
+            paiements: {
+              title: "Recevoir vos paiements",
+              todo: "Votre compte Stripe, à votre nom",
+              done: "Compte transmis à Stripe",
+            },
+          },
+          count: (done: number, total: number) => `${done} sur ${total}`,
+          sent: "Dossier transmis à l'équipe MENAO : la vérification a commencé.",
+          online: "Votre fiche en ligne",
+          onlineHint: "Dès que tout est validé par l'équipe MENAO.",
+          barLeft: (n: number) =>
+            n === 1
+              ? "Encore 1 étape avant la mise en ligne"
+              : `Encore ${n} étapes avant la mise en ligne`,
+          barDone: "Tout est fait de votre côté : l'équipe MENAO vérifie votre dossier.",
+          continueWith: (name: string) => `Continuer : ${name}`,
+          resendTitle: "Votre dossier est prêt à repartir",
+          resend: "Renvoyer mon dossier",
+          extras: "Pour vous démarquer",
+          extrasHint: "logo, spécialités, certifications, budget minimum (facultatif)",
+        },
+        /** Les trois attestations sur un seul écran (lot 73) : on dépose ce qu'on a. */
+        attestations: {
+          title: (total: number) => `Vos ${total} attestations`,
+          lead: "Déposez celles que vous avez sous la main. Les autres, vous les ajouterez plus tard : votre fiche sera en ligne dès qu'elles seront toutes validées.",
+          insurer: "Il vous en manque ? MENAO prépare le message pour votre assureur",
+          barNote: (left: number) =>
+            left === 0
+              ? "Vos attestations sont déposées."
+              : left === 1
+                ? "Vous déposerez la dernière plus tard, MENAO vous le rappelle par e-mail."
+                : `Vous déposerez les ${left} autres plus tard, MENAO vous le rappelle par e-mail.`,
         },
       },
       /** Charte qualité (ADR 0104) : commandes autour du texte de la charte, en tutoiement comme elle. */
@@ -12455,7 +12534,7 @@ export const fr = {
     stalled: {
       title: "Inscriptions en cours",
       intro:
-        "Artisans qui n'ont pas terminé : dossier pas encore envoyé, compléments attendus, ou dossier validé mais profil pas encore visible. MENAO les relance automatiquement trois fois ; au-delà, un appel aide souvent.",
+        "Artisans qui n'ont pas terminé : dossier pas encore envoyé, compléments attendus, dossier envoyé mais attestations encore attendues, ou dossier validé mais profil pas encore visible. MENAO les relance automatiquement trois fois ; au-delà, un appel aide souvent.",
       empty: "Aucune inscription bloquée.",
       count: (n: number) => (n === 1 ? "1 inscription en cours" : `${n} inscriptions en cours`),
       columns: {
@@ -12468,6 +12547,8 @@ export const fr = {
       states: {
         dossier: "Dossier en cours",
         complement: "Compléments demandés",
+        // Inscription progressive (ADR 0376) : rien à vérifier de plus tant qu'elles manquent.
+        attestations: "Dossier envoyé, attestations attendues",
         activation: "Validé, pas encore visible",
       } as Record<string, string>,
       steps: {
@@ -12475,15 +12556,18 @@ export const fr = {
         metiers: "métiers",
         zone: "zone",
         charte: "charte",
-        documents: "documents",
+        documents: "Kbis ou pièce d'identité",
         profil: "présentation",
+        decennale: "décennale",
+        rc_pro: "RC Pro",
+        urssaf: "URSSAF",
         paiements: "paiements",
         formule: "formule",
       } as Record<string, string>,
       readyToSend: "prêt à envoyer",
       days: (n: number) => (n <= 0 ? "aujourd'hui" : n === 1 ? "1 jour" : `${n} jours`),
-      reminders: (n: number, last: string | null) =>
-        n === 0 ? "aucune" : last ? `${n} sur 3 (dernière le ${last})` : `${n} sur 3`,
+      reminders: (n: number, last: string | null, max: number = 3) =>
+        n === 0 ? "aucune" : last ? `${n} sur ${max} (dernière le ${last})` : `${n} sur ${max}`,
     },
     statuses: {
       brouillon: "Brouillon",

@@ -3,6 +3,7 @@ import {
   REQUIRED_DOCUMENT_TYPES,
   URSSAF_MAX_AGE_MONTHS,
   guidePosition,
+  isAttestationType,
   nextGuideStep,
   prefillUpdates,
   type DocumentPrefill,
@@ -92,7 +93,12 @@ function DocumentScreen() {
       </FicheScreen>
     );
   }
-  const locked = dossier?.status === "en_verification";
+  // Dossier envoyé (ADR 0376) : les attestations se déposent encore, une pièce refusée se
+  // remplace ; seul un document déjà validé par l'équipe est figé.
+  const verification = dossier?.status === "en_verification";
+  const locked =
+    verification &&
+    dossier?.documents.some((doc) => doc.type === type && doc.status === "valide") === true;
   const draft = dossier?.status === "brouillon" || dossier?.status === "refuse";
   const validated = dossier?.status === "valide" || dossier?.status === "suspendu";
   const exempt = type === "decennale" && dossier?.snapshot.decennaleExempt === true;
@@ -117,9 +123,12 @@ function DocumentScreen() {
     </Notice>
   ) : null;
   // Parcours guidé (ADR 0374) tant que le dossier se remplit : position, temps restant, suite.
-  const guide = dossier && draft ? dossierGuide(dossier) : null;
-  const position = guide ? guidePosition(guide.steps, type) : null;
-  const nextStep = guide ? nextGuideStep(guide.steps, type) : null;
+  // Le Kbis et la pièce d'identité sont des étapes du parcours ; les attestations se déposent
+  // depuis la liste des documents, sans enchaînement.
+  const guideKey = isAttestationType(type) ? null : type;
+  const guide = dossier && draft && guideKey ? dossierGuide(dossier) : null;
+  const position = guide && guideKey ? guidePosition(guide.steps, guideKey) : null;
+  const nextStep = guide && guideKey ? nextGuideStep(guide.steps, guideKey) : null;
   const nextNote = nextStep ? g.next(g.names[nextStep]) : g.nextDossier;
   const deposited =
     dossier?.documents.some((doc) => doc.type === type && doc.status !== "refuse") === true;
@@ -127,7 +136,7 @@ function DocumentScreen() {
     <>
       {guide && position ? (
         <StepsBar
-          label={g.step(position.index, position.total, g.names[type])}
+          label={g.step(position.index, position.total, g.names[guideKey ?? "attestations"])}
           step={position.index}
           total={position.total}
           text={guide.minutesLeft > 0 ? g.left(guide.minutesLeft) : ""}
@@ -146,7 +155,7 @@ function DocumentScreen() {
   );
   // « Non soumis » à la décennale : sous le formulaire, comme la colonne de la maquette.
   const exemptChoice =
-    !blocked && type === "decennale" && draft ? (
+    !blocked && type === "decennale" && (draft || verification) ? (
       <ExemptChoice exempt={exempt} onChange={reload} />
     ) : null;
   if (!blocked && !exempt && dossier) {
@@ -182,7 +191,8 @@ function DocumentScreen() {
 
 /** Étape suivante du parcours ; sans suite (fin, ou dossier déjà envoyé), retour à l'écran d'avant. */
 async function continueGuide(type: RequiredDocumentType) {
-  if (!(await openNextStep(type))) router.back();
+  // Une attestation déposée ramène à la liste : les deux autres sont peut-être encore à faire.
+  if (isAttestationType(type) || !(await openNextStep(type))) router.back();
 }
 
 /** Kbis à envoyer après un contrôle au registre sans succès, avec sa raison (ADR 0217). */

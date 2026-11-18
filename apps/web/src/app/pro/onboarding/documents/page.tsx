@@ -1,6 +1,7 @@
 import {
   DOCUMENT_HELP,
   MONITORED_DOCUMENT_TYPES,
+  isAttestationType,
   REQUIRED_DOCUMENT_TYPES,
   daysUntil,
   documentIsValid,
@@ -9,9 +10,10 @@ import {
   type RequiredDocumentType,
 } from "@menao/core";
 import { Alert, ButtonLink, Card, focusRing } from "@/components/ui";
-import { ArrowRight, Check, ChevronRight, Clock, Lock, Mail, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check, ChevronRight, Clock, Lock, Mail } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { GuideBar, GuideBarSpace } from "@/components/pro/guide-bar";
 import { guideAround, guideFromContext, suiteHref } from "@/lib/artisan/guide";
 import { DocumentHelpDisclosure, DocumentHelpSteps } from "@/components/pro/document-help";
@@ -45,6 +47,14 @@ export default async function DocumentsStepPage({
   searchParams: Promise<{ type?: string }>;
 }) {
   const { type: only } = await searchParams;
+  const early = await getOnboardingContext();
+  // Pendant l'inscription, les attestations se déposent sur leur écran à trois (ADR 0376).
+  if (
+    isAttestationType(only) &&
+    ["brouillon", "refuse", "en_verification"].includes(early.artisan.status)
+  ) {
+    redirect(`/pro/onboarding/attestations#${only}` as Route);
+  }
   const types = REQUIRED_DOCUMENT_TYPES.filter((type) => !only || type === only);
   const focused = types.length === 1;
   const context = await getOnboardingContext();
@@ -57,12 +67,17 @@ export default async function DocumentsStepPage({
     .order("sort_order");
   const exempt = artisan.decennale_non_soumis;
   const onboarding = artisan.status === "brouillon" || artisan.status === "refuse";
+  // Dossier envoyé (ADR 0376) : les attestations se déposent encore, une pièce refusée se
+  // remplace ; un document déjà validé est gardé.
+  const verification = artisan.status === "en_verification";
   // Artisan validé ou suspendu : renouvellement des documents surveillés (F-51).
   const renewal = artisan.status === "valide" || artisan.status === "suspendu";
-  // Parcours guidé (ADR 0373) : une pièce par écran, la suite dans la barre du bas.
-  const guided = focused && onboarding ? types[0] : undefined;
+  // Parcours guidé (ADR 0373) : une pièce par écran, la suite dans la barre du bas. Seulement
+  // pour le Kbis et la pièce d'identité : les attestations ont leur écran à trois (ADR 0376).
+  const only0 = types[0];
+  const guided = focused && onboarding && only0 && !isAttestationType(only0) ? only0 : undefined;
   const around = guided ? guideAround(guideFromContext(context), guided) : null;
-  const nextNote = around?.next ? g.next(g.names[around.next]) : g.nextDossier;
+  const nextNote = around?.next ? g.next(g.nextNames[around.next]) : g.nextEnd;
 
   // URL signées de courte durée (5 min) : les documents restent privés (spec F-43).
   const paths = documents.map((d) => d.storage_path);
@@ -97,7 +112,9 @@ export default async function DocumentsStepPage({
       type === "kbis" && onboarding && !current && artisan.registre_statut !== null
         ? (t.registry.reasons[artisan.registre_statut] ?? null)
         : null;
-    const canUpload = (onboarding || (renewal && monitored)) && !registry;
+    const canUpload =
+      (onboarding || (renewal && monitored) || (verification && current?.status !== "valide")) &&
+      !registry;
     // « Où trouver ce document ? » (ADR 0347) : seulement quand il y a quelque chose à déposer ;
     // le Kbis, seulement si la vérification au registre a échoué.
     const help =
@@ -127,9 +144,6 @@ export default async function DocumentsStepPage({
       {/* « Bien photographier un document » (ADR 0349), pendant l'inscription ; dans le parcours
           guidé, sous la pièce, avec le reste de l'aide. */}
       {onboarding && !guided && <HelpVideo id="v05-photo" />}
-      {artisan.status === "en_verification" && (
-        <Alert tone="success">{fr.pro.onboarding.upload.status.locked}</Alert>
-      )}
       {types.map((type) => {
         const { current, pending, monitored, registryFailed, canUpload, help } = stateOf(type);
         return (
@@ -244,7 +258,7 @@ export default async function DocumentsStepPage({
                   </form>
                 </div>
               )}
-              {type === "decennale" && onboarding && (!guided || exempt) && (
+              {type === "decennale" && (onboarding || verification) && (!guided || exempt) && (
                 <div className="flex flex-col gap-2 rounded-card bg-primary-softer p-4 text-sm">
                   {exempt ? (
                     <Alert tone="info">{t.exemptDeclared}</Alert>
@@ -280,7 +294,7 @@ export default async function DocumentsStepPage({
                       ? {
                           step: type,
                           backHref: around.backHref,
-                          skipHref: suiteHref(type),
+                          skipHref: suiteHref(guided),
                           // Pièce déjà déposée : rien à passer, on continue.
                           skipLabel: current ? g.continue : g.skip,
                           skipNote: current ? undefined : g.skipNote,
@@ -294,7 +308,7 @@ export default async function DocumentsStepPage({
                 around && (
                   // Rien à déposer (Kbis vérifié au registre, métier non soumis) : on continue.
                   <GuideBar backHref={around.backHref} note={nextNote}>
-                    <ButtonLink href={suiteHref(type)} size="lg" block>
+                    <ButtonLink href={suiteHref(guided)} size="lg" block>
                       {g.continue}
                       <ArrowRight aria-hidden="true" className="size-5" />
                     </ButtonLink>
@@ -306,29 +320,9 @@ export default async function DocumentsStepPage({
         );
       })}
       {guided && (
-        // L'aide en lignes à ouvrir (ADR 0373). D'abord ce qui évite de chercher la pièce pour
-        // rien : les métiers non soumis à la décennale, puis le message pour l'assureur ; ensuite
-        // la photo et où trouver la pièce.
+        // L'aide en lignes à ouvrir (ADR 0373) : le message pour l'assureur s'il y en a un, la
+        // photo et où trouver la pièce.
         <div className="flex flex-col gap-3">
-          {guided === "decennale" && !exempt && (
-            <form action={setDecennaleExempt}>
-              <input type="hidden" name="value" value="oui" />
-              <button
-                type="submit"
-                className={`flex min-h-touch w-full items-center gap-3 rounded-input border border-border bg-surface px-4 py-3 text-left hover:bg-background ${focusRing}`}
-              >
-                <ShieldCheck aria-hidden="true" className="size-5 shrink-0 text-label" />
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="font-semibold">{t.exemptDeclare}</span>
-                  <span className="text-sm text-muted-foreground">{t.exemptText}</span>
-                </span>
-                <ChevronRight
-                  aria-hidden="true"
-                  className="size-5 shrink-0 text-muted-foreground"
-                />
-              </button>
-            </form>
-          )}
           {stateOf(guided).help && DOCUMENT_HELP[guided].insurerRequest && (
             <Link
               href={`/pro/onboarding/documents/assureur?type=${guided}` as Route}

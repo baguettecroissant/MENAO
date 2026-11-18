@@ -358,7 +358,8 @@ export function notificationContent(
         paragraphs: [
           hello(ctx.firstName),
           "Merci ! Votre dossier est bien arrivé : l'équipe MENAO vérifie maintenant votre entreprise et vos documents.",
-          "Vous serez prévenu par e-mail dès la fin de la vérification. D'ici là, vos documents ne peuvent plus être modifiés.",
+          // Inscription progressive (ADR 0376) : les attestations se déposent aussi après l'envoi.
+          "Votre fiche sera en ligne dès que vos attestations (assurance décennale, responsabilité civile professionnelle, vigilance URSSAF) seront déposées et validées. Vous pouvez les ajouter à tout moment depuis votre inscription.",
         ],
         quote: null,
         cta: { label: "Voir mon dossier", url: link("/pro/onboarding") },
@@ -749,6 +750,34 @@ export function notificationContent(
       // Inscription artisan abandonnée (ADR 0112) : trois relances au plus (J+1, J+3, J+7), vers
       // « Faire vérifier mon entreprise ». Le texte suit l'état du dossier.
       const etape = integer(data, "etape") ?? 1;
+      // Dossier envoyé, attestations encore attendues (ADR 0376) : quatre rappels au plus.
+      if (text(data, "phase") === "attestations") {
+        const names: Record<string, string> = {
+          decennale: "votre attestation d'assurance décennale",
+          rc_pro: "votre attestation de responsabilité civile professionnelle",
+          urssaf: "votre attestation de vigilance URSSAF",
+        };
+        const missing = (Array.isArray(data.manque) ? data.manque : [])
+          .map((type) => (typeof type === "string" ? names[type] : undefined))
+          .filter((name): name is string => typeof name === "string");
+        const what = missing.length > 0 ? listing(missing) : "vos attestations";
+        const last = etape >= 4;
+        return {
+          subject: last
+            ? "Dernier rappel : votre fiche MENAO n'est pas encore en ligne"
+            : "Il manque vos attestations pour mettre votre fiche en ligne",
+          preview: "Déposez-les en photo : votre fiche est en ligne dès leur validation.",
+          title: "Votre fiche attend vos attestations",
+          paragraphs: [
+            hello(ctx.firstName),
+            `Votre dossier est bien reçu. Pour que les particuliers de votre zone voient votre fiche, il nous manque encore ${what}.`,
+            "Une photo suffit. Si vous ne les avez pas sous la main, MENAO prépare le message à envoyer à votre assureur.",
+            ...(last ? ["C'est notre dernier rappel. Votre inscription reste accessible."] : []),
+          ],
+          quote: null,
+          cta: { label: "Déposer mes attestations", url: link("/pro/onboarding/attestations") },
+        };
+      }
       const cta = { label: "Reprendre mon inscription", url: link("/pro/onboarding") };
       // Étapes manquantes jointes depuis l'ADR 0219.
       const remaining = missingSteps(data);

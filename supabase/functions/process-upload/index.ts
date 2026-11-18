@@ -446,10 +446,13 @@ async function saveDocument(
 ) {
   // Brouillon ou refus : le dépôt remplace le document du même type. Artisan validé ou suspendu :
   // c'est un renouvellement (F-51), le document validé en cours est conservé jusqu'à la
-  // validation du nouveau. Pendant la vérification du dossier, les documents sont figés.
+  // validation du nouveau. Dossier envoyé (inscription progressive, ADR 0376) : les attestations
+  // se déposent encore, et une pièce refusée se remplace ; un document déjà validé est gardé,
+  // comme pour un renouvellement.
   const onboarding = artisan.status === "brouillon" || artisan.status === "refuse";
   const renewal = artisan.status === "valide" || artisan.status === "suspendu";
-  if (!onboarding && !renewal) return respond("locked", 409);
+  const verification = artisan.status === "en_verification";
+  if (!onboarding && !renewal && !verification) return respond("locked", 409);
   if (!doc || !DOCUMENT_TYPES.has(doc.type)) return respond("invalid", 400);
 
   const path = `${artisan.id}/${doc.type}-${file.name}`;

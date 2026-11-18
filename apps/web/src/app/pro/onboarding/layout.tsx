@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
-import { MONITORED_DOCUMENT_TYPES, expiryStatus } from "@menao/core";
+import { MONITORED_DOCUMENT_TYPES, expiryStatus, requiredAttestationTypes } from "@menao/core";
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
 import { AppShell } from "@/components/app-shell/app-shell";
@@ -49,7 +49,11 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
           actions={signOutButton}
           guide={
             guide.active
-              ? { steps: guide.steps, minutesLeft: guide.minutesLeft, ready: context.canSubmit }
+              ? {
+                  steps: guide.steps,
+                  minutesLeft: guide.minutesLeft,
+                  attestations: requiredAttestationTypes(context.snapshot).length,
+                }
               : undefined
           }
         />

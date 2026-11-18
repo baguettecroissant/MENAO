@@ -1,3 +1,4 @@
+import { GuideStepBar } from "@/components/pro/guide-step-bar";
 import {
   type ConnectOverview,
   collectedTotals,
@@ -24,9 +25,17 @@ const t = fr.pro.onboarding.connect;
  * du dossier (ADR 0353). Dit en clair ce que Stripe attend encore (rubriques lisibles, date limite)
  * ou qu'il vérifie les informations.
  */
-export default async function PaymentsStepPage({
-  searchParams,
-}: PageProps<"/pro/onboarding/paiements">) {
+export default async function PaymentsStepPage(props: PageProps<"/pro/onboarding/paiements">) {
+  return (
+    <>
+      <PaymentsStepContent {...props} />
+      {/* Parcours guidé (ADR 0376) : continuer, ou remettre l'étape à plus tard. */}
+      <GuideStepBar step="paiements" />
+    </>
+  );
+}
+
+async function PaymentsStepContent({ searchParams }: PageProps<"/pro/onboarding/paiements">) {
   const params = await searchParams;
   const context = await getOnboardingContext();
   const { supabase } = context;

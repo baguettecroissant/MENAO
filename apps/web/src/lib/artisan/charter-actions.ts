@@ -9,6 +9,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
 import { text, type FormState } from "@/lib/auth/form";
+import { sendWhenReady } from "./auto-send";
 import { getOnboardingContext } from "./context";
 
 export type CharterDestination = "onboarding" | "espace";
@@ -64,6 +65,8 @@ export async function acceptCharter(
     revalidatePath("/pro", "layout");
     redirect("/pro/charte" as Route);
   }
+  // Le dossier part dès qu'il peut partir (ADR 0376) : la charte peut être sa dernière pièce.
+  await sendWhenReady();
   revalidatePath("/pro/onboarding", "layout");
   redirect("/pro/onboarding/charte" as Route);
 }

@@ -748,6 +748,32 @@ describe("contenu des notifications (F-41)", () => {
       const again = notificationContent("dossier_envoye", { renvoi: true }, ctx);
       expect(again.subject).toBe("Votre dossier complété est bien reçu");
       expect(again.cta.url).toBe("https://menao.example/pro/onboarding");
+      // Inscription progressive (ADR 0376) : les attestations se déposent après l'envoi.
+      expect(again.paragraphs.join(" ")).toContain("Vous pouvez les ajouter à tout moment");
+      expect(again.paragraphs.join(" ")).not.toContain("ne peuvent plus être modifiés");
+    });
+
+    it("dossier envoyé : rappel des attestations manquantes, quatre au plus (ADR 0376)", () => {
+      const first = notificationContent(
+        "inscription_relance",
+        { phase: "attestations", etape: 1, manque: ["decennale", "urssaf"] },
+        ctx,
+      );
+      expect(first.subject).toBe("Il manque vos attestations pour mettre votre fiche en ligne");
+      expect(first.paragraphs.join(" ")).toContain("votre attestation d'assurance décennale");
+      expect(first.paragraphs.join(" ")).toContain("votre attestation de vigilance URSSAF");
+      expect(first.paragraphs.join(" ")).not.toContain("responsabilité civile");
+      expect(first.cta).toEqual({
+        label: "Déposer mes attestations",
+        url: "https://menao.example/pro/onboarding/attestations",
+      });
+      const last = notificationContent(
+        "inscription_relance",
+        { phase: "attestations", etape: 4, manque: ["rc_pro"] },
+        ctx,
+      );
+      expect(last.subject).toBe("Dernier rappel : votre fiche MENAO n'est pas encore en ligne");
+      expect(last.paragraphs.at(-1)).toContain("dernier rappel");
     });
 
     it("devis sans réponse : relance après envoi, puis avant la fin de validité", () => {

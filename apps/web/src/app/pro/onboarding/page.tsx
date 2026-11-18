@@ -37,6 +37,7 @@ import { Alert, ButtonLink, Card, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
 import { HelpVideo } from "@/components/pro/help-video";
+import { InscriptionPath } from "./inscription-path";
 import { SubmitOnboarding } from "./submit-onboarding";
 
 const t = fr.pro.onboarding;
@@ -67,6 +68,15 @@ const documentTone: Record<DocumentState, Tone> = {
  * validé, c'est « Mon dossier » (renouvellement des documents).
  */
 export default async function OnboardingIndexPage() {
+  const context = await getOnboardingContext();
+  // Pas encore validé : « Mon inscription », un seul parcours jusqu'à la mise en ligne (ADR 0376).
+  if (
+    context.artisan.status === "brouillon" ||
+    context.artisan.status === "refuse" ||
+    context.artisan.status === "en_verification"
+  ) {
+    return <InscriptionPath context={context} />;
+  }
   const {
     supabase,
     artisan,
@@ -77,7 +87,7 @@ export default async function OnboardingIndexPage() {
     documents,
     workTypeCodes,
     certifications,
-  } = await getOnboardingContext();
+  } = context;
   // Contrôle au registre jamais abouti : MENAO le relance tout seul (ADR 0354).
   const registryPending = registryCheckPending({
     status: artisan.status,
@@ -105,7 +115,7 @@ export default async function OnboardingIndexPage() {
     !validated && progress.metiers && progress.zone ? await loadZoneDemand(supabase) : null;
   const left = dossierItemsLeft(snapshot);
   const groups = dossierGroups(snapshot);
-  const total = dossierItemCount(snapshot);
+  const total = dossierItemCount();
   const done = total - left;
   const profileDone = progress.entreprise && progress.metiers && progress.zone;
   // Prochaine chose à faire, dans l'ordre du dossier (lot 61) : un seul bouton « Continuer ».
@@ -179,11 +189,7 @@ export default async function OnboardingIndexPage() {
         </>
       )}
 
-      {editable && (
-        <p className="max-w-3xl leading-relaxed text-label">
-          {canSubmit ? t.guide.readyLead : d.lead}
-        </p>
-      )}
+      {editable && <p className="max-w-3xl leading-relaxed text-label">{d.lead}</p>}
       {/* « Avant de commencer » (ADR 0347) : tant que l'artisan n'a déposé aucune pièce (le Kbis
           vérifié au registre, créé à l'inscription, ne compte pas). */}
       {/* Tant qu'aucun document n'est déposé : la vidéo de présentation (ADR 0349). La liste « Avant
