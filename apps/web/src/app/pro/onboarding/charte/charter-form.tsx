@@ -89,18 +89,29 @@ export function CharterForm({
   const end = useRef<HTMLDivElement>(null);
   const top = useRef<HTMLDivElement>(null);
 
+  /** Le repère de fin est entré à l'écran : la dernière règle est passée au-dessus de la barre. */
+  const reachedEnd = () => {
+    const target = end.current;
+    return target !== null && target.getBoundingClientRect().top <= window.innerHeight;
+  };
+
   useEffect(() => {
     const target = end.current;
     if (!target) return;
-    // La barre du bas couvre le pied de l'écran : la fin doit en dépasser pour compter.
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) setAtEnd(true);
-      },
-      { rootMargin: "0px 0px -140px 0px" },
-    );
+    // Le repère est placé sous la place réservée à la barre du bas : aucune marge à deviner.
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) setAtEnd(true);
+    });
     observer.observe(target);
-    return () => observer.disconnect();
+    // Filet de sécurité : la position est aussi relue à chaque défilement.
+    const onScroll = () => {
+      if (reachedEnd()) setAtEnd(true);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
   }, [screen]);
 
   function go(next: number) {
@@ -120,6 +131,8 @@ export function CharterForm({
 
   function advance() {
     if (reading) {
+      // Déjà en bas : le bouton devient celui qui accepte, sans rien faire défiler.
+      if (reachedEnd()) return setAtEnd(true);
       window.scrollBy({ top: window.innerHeight * 0.7, behavior: "smooth" });
       return;
     }
@@ -284,7 +297,6 @@ export function CharterForm({
 
       {screen < SIGNATURE && (
         <>
-          <div ref={end} aria-hidden="true" className="h-px" />
           <GuideBar back={back} note={reading ? undefined : nextNote}>
             <Button
               type="button"
@@ -423,6 +435,9 @@ export function CharterForm({
       )}
 
       <GuideBarSpace />
+      {/* Repère de fin de lecture, sous la place de la barre du bas : il entre à l'écran quand
+          la dernière règle est passée au-dessus de la barre, quelle que soit sa hauteur. */}
+      {screen < SIGNATURE && <div ref={end} aria-hidden="true" className="h-px" />}
       <p className="sr-only" aria-live="polite">
         {t.progressCount(
           CHARTER_SECTIONS.slice(0, accepted).flatMap((s) => s.rules).length,
