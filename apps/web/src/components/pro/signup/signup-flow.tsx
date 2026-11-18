@@ -23,8 +23,12 @@ const t = fr.pro.signUp;
 type Screen = "intro" | ArtisanSignupStep | "code";
 
 const noSubscribe = () => () => {};
-/** Délai sous lequel un second « Continuer » est un double clic, pas une décision. */
-const DOUBLE_TAP_MS = 800;
+/**
+ * Après un changement d'écran, le nouvel écran ignore les clics pendant ce délai : un double clic
+ * (ou double toucher) sur « Continuer » ne valide pas aussi l'écran suivant, souvent déjà rempli
+ * (la zone part du siège choisi, ADR 0371).
+ */
+const SETTLE_MS = 600;
 
 /**
  * Inscription artisan en un seul parcours (ADR 0110) : une question par écran, bouton principal
@@ -73,15 +77,17 @@ export function ArtisanSignupFlow({
     focusTarget.current?.focus({ preventScroll: true });
   }, [chosen]);
 
-  // Heure du dernier changement d'écran : un double clic (ou double toucher) sur « Continuer » ne
-  // valide pas aussi l'écran suivant, souvent déjà rempli (la zone part du siège choisi).
-  const movedAt = useRef(0);
+  const [settling, setSettling] = useState(false);
+  useEffect(() => {
+    if (!settling) return;
+    const timer = window.setTimeout(() => setSettling(false), SETTLE_MS);
+    return () => window.clearTimeout(timer);
+  }, [settling, chosen]);
   const go = (next: Screen) => {
-    movedAt.current = performance.now();
+    setSettling(true);
     setChosen(next);
   };
   const goNext = () => {
-    if (performance.now() - movedAt.current < DOUBLE_TAP_MS) return;
     const next = steps[index + 1];
     if (next) go(next);
   };
@@ -147,7 +153,9 @@ export function ArtisanSignupFlow({
             <div
               ref={focusTarget}
               tabIndex={-1}
-              className="flex flex-1 flex-col gap-6 py-6 outline-none"
+              className={`flex flex-1 flex-col gap-6 py-6 outline-none ${
+                settling ? "pointer-events-none" : ""
+              }`}
             >
               {screen === "intro" && (
                 <Intro

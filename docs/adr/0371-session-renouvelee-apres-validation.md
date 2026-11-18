@@ -22,11 +22,13 @@ Essai de bout en bout sur menao.fr avec un vrai compte :
    `/auth/rafraichir`, un gestionnaire de route qui renouvelle la session (il peut écrire les
    cookies) puis ouvre le tableau de bord. Si le rôle n'a pas changé, retour au dossier : pas de
    boucle.
-2. Le parcours d'inscription ignore un second « Continuer » arrivé moins de 800 ms après un
-   changement d'écran.
+2. Après un changement d'écran, le parcours d'inscription ignore les clics pendant 600 ms
+   (`pointer-events: none` sur l'écran) : le second clic d'un double clic tombe dans le vide. Un
+   simple délai sur « Continuer » bloquait aussi les clics rapprochés des tests automatisés, qui,
+   eux, attendent que l'élément accepte les clics.
 
 ## Conséquences
 
 - Plus besoin de se déconnecter ou d'attendre une heure après la validation.
-- Un clic volontaire très rapide juste après un changement d'écran est ignoré : il suffit de
+- Un clic volontaire dans les 600 ms qui suivent un changement d'écran est ignoré : il suffit de
   recliquer.
