@@ -23,6 +23,8 @@ const t = fr.pro.signUp;
 type Screen = "intro" | ArtisanSignupStep | "code";
 
 const noSubscribe = () => () => {};
+/** Délai sous lequel un second « Continuer » est un double clic, pas une décision. */
+const DOUBLE_TAP_MS = 800;
 
 /**
  * Inscription artisan en un seul parcours (ADR 0110) : une question par écran, bouton principal
@@ -71,8 +73,15 @@ export function ArtisanSignupFlow({
     focusTarget.current?.focus({ preventScroll: true });
   }, [chosen]);
 
-  const go = (next: Screen) => setChosen(next);
+  // Heure du dernier changement d'écran : un double clic (ou double toucher) sur « Continuer » ne
+  // valide pas aussi l'écran suivant, souvent déjà rempli (la zone part du siège choisi).
+  const movedAt = useRef(0);
+  const go = (next: Screen) => {
+    movedAt.current = performance.now();
+    setChosen(next);
+  };
   const goNext = () => {
+    if (performance.now() - movedAt.current < DOUBLE_TAP_MS) return;
     const next = steps[index + 1];
     if (next) go(next);
   };

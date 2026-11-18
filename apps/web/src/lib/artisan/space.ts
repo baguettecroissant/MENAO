@@ -11,6 +11,7 @@ import {
   parseTeamContext,
   requestsAwaitingAnswer,
   roleFromAppMetadata,
+  sessionRoleOutdated,
   spaceExamplesShown,
   subscriptionGrantsAccess,
   teamCan,
@@ -46,7 +47,20 @@ export const requireProSpace = cache(async () => {
   const { data: auth } = await supabase.auth.getClaims();
   if (!auth || auth.claims.is_anonymous) redirect("/connexion?next=/pro/tableau-de-bord");
   const role = roleFromAppMetadata(auth.claims.app_metadata);
-  if (role === "artisan_en_attente") redirect("/pro/onboarding");
+  if (role === "artisan_en_attente") {
+    // Dossier validé depuis l'ouverture de la session (ADR 0371) : le jeton a gardé l'ancien rôle,
+    // on le renouvelle au lieu de renvoyer l'artisan vers son inscription.
+    const { data: own } = await supabase
+      .from("artisans")
+      .select("status")
+      .eq("user_id", auth.claims.sub)
+      .maybeSingle();
+    redirect(
+      sessionRoleOutdated(role, own?.status ?? null)
+        ? "/auth/rafraichir?next=/pro/tableau-de-bord"
+        : "/pro/onboarding",
+    );
+  }
   if (role !== "artisan") redirect(homePathForRole(role) as Route);
 
   // Patron (titulaire de la fiche) ou membre actif de son équipe (F-89, ADR 0240).

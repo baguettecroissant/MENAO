@@ -8,6 +8,7 @@ import {
   isStaff,
   isTeam,
   roleFromAppMetadata,
+  sessionRoleOutdated,
 } from "../src/roles";
 
 describe("rôles", () => {
@@ -89,5 +90,21 @@ describe("appSpaceForRole (application native)", () => {
     expect(appSpaceForRole("verification")).toBe("equipe");
     // Commercial (ADR 0205) : son espace est sur le site.
     expect(appSpaceForRole("commercial")).toBe("equipe");
+  });
+});
+
+describe("rôle de la session périmé après la validation (ADR 0371)", () => {
+  it("jeton « en attente » alors que le dossier est validé, suspendu ou radié", () => {
+    expect(sessionRoleOutdated("artisan_en_attente", "valide")).toBe(true);
+    expect(sessionRoleOutdated("artisan_en_attente", "suspendu")).toBe(true);
+    expect(sessionRoleOutdated("artisan_en_attente", "radie")).toBe(true);
+  });
+
+  it("rien à renouveler pendant l'inscription, ni pour un rôle déjà à jour", () => {
+    expect(sessionRoleOutdated("artisan_en_attente", "brouillon")).toBe(false);
+    expect(sessionRoleOutdated("artisan_en_attente", "en_verification")).toBe(false);
+    expect(sessionRoleOutdated("artisan_en_attente", "refuse")).toBe(false);
+    expect(sessionRoleOutdated("artisan_en_attente", null)).toBe(false);
+    expect(sessionRoleOutdated("artisan", "valide")).toBe(false);
   });
 });
