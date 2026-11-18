@@ -74,6 +74,19 @@ export function homePathForRole(role: Role): string {
  */
 export type AppSpace = "client" | "artisan" | "equipe";
 
+/**
+ * Le rôle lu dans le jeton de session date d'avant la validation (ADR 0371) : la base a déjà
+ * passé l'artisan à « artisan », mais le jeton garde « artisan_en_attente » jusqu'à son
+ * renouvellement (une heure au plus). Il faut alors renouveler la session plutôt que renvoyer
+ * l'artisan vers son inscription.
+ */
+export function sessionRoleOutdated(role: Role, artisanStatus: string | null): boolean {
+  return (
+    role === "artisan_en_attente" &&
+    (artisanStatus === "valide" || artisanStatus === "suspendu" || artisanStatus === "radie")
+  );
+}
+
 export function appSpaceForRole(role: Role): AppSpace {
   if (isTeam(role) || role === "commercial") return "equipe";
   if (role === "artisan" || role === "artisan_en_attente") return "artisan";
