@@ -9759,6 +9759,8 @@ export const fr = {
         presentationCount: (n: number, min: number) =>
           n < min ? `${n} / ${min} caractères` : `${n} caractère${n > 1 ? "s" : ""}`,
         presentationDraft: "Proposer un texte",
+        presentationPrefilled:
+          "Nous avons écrit ce texte avec les informations de votre entreprise. Relisez-le, modifiez-le si besoin, puis enregistrez.",
         presentationSave: "Enregistrer la présentation",
         portfolio: "Photos de réalisations",
         portfolioHint:
