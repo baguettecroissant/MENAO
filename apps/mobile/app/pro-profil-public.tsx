@@ -1,8 +1,9 @@
-import { PORTFOLIO_MAX_PHOTOS, PRESENTATION_MIN_LENGTH } from "@menao/core";
+import { PORTFOLIO_MAX_PHOTOS, PRESENTATION_MIN_LENGTH, guidePosition } from "@menao/core";
+import { router } from "expo-router";
 import { Camera, ImageIcon, ImagePlus, Sparkles, X } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { PageHead } from "@/components/pro/dossier-kit";
+import { PageHead, StepsBar } from "@/components/pro/dossier-kit";
 import { HelpVideoCard } from "@/components/pro/onboarding-help";
 import {
   CardHeading,
@@ -21,6 +22,7 @@ import {
   savePresentation,
   type Dossier,
 } from "@/lib/artisan-dossier";
+import { dossierGuide } from "@/lib/dossier-guide";
 import { choosePhotoSource, pickAvatar, pickPhotos, uploadPhoto } from "@/lib/photos";
 import { deletePortfolioPhoto, loadPortfolio, type PortfolioPhoto } from "@/lib/portfolio";
 import { forgetProfileSummary } from "@/lib/profile-summary";
@@ -32,6 +34,7 @@ import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proPublicProfile;
 const i = t.image;
+const g = fr.proGuide;
 const { colors, font, radius, spacing } = theme;
 
 /**
@@ -69,6 +72,10 @@ function PublicProfileContent({
   const [error, setError] = useState<string | undefined>();
   const [sending, setSending] = useState(false);
   const prefilled = !saved && !!draft && value === draft;
+  // Parcours guidé tant que le dossier se remplit : position, temps restant, suite en bas.
+  const guide = dossier ? dossierGuide(dossier) : null;
+  const guided = guide?.active === true;
+  const position = guide && guided ? guidePosition(guide.steps, "profil") : null;
 
   async function save() {
     setSending(true);
@@ -77,6 +84,8 @@ function PublicProfileContent({
     setError(failure ?? undefined);
     if (!failure) {
       toast.success(t.saved);
+      // Dernière étape du parcours guidé (ADR 0374) : retour au dossier, prêt à être envoyé.
+      if (guided) return router.back();
       void onSaved();
     }
   }
@@ -84,8 +93,26 @@ function PublicProfileContent({
   return (
     <FicheScreen
       onRefresh={onSaved}
-      footer={<FicheButton label={t.save} tall onPress={() => void save()} loading={sending} />}
+      footer={
+        <>
+          {guided ? <Text style={styles.footerNote}>{g.nextDossier}</Text> : null}
+          <FicheButton
+            label={guided ? g.saveAndContinue : t.save}
+            tall
+            onPress={() => void save()}
+            loading={sending}
+          />
+        </>
+      }
     >
+      {guide && position ? (
+        <StepsBar
+          label={g.step(position.index, position.total, g.names.profil)}
+          step={position.index}
+          total={position.total}
+          text={guide.minutesLeft > 0 ? g.left(guide.minutesLeft) : ""}
+        />
+      ) : null}
       <PageHead title={t.title} lead={fr.proDossier.profilHint} />
       <HelpVideoCard id="v10-profil" />
       <ImageCard
@@ -336,6 +363,12 @@ function PortfolioCard() {
 }
 
 const styles = StyleSheet.create({
+  footerNote: {
+    fontFamily: font.regular,
+    fontSize: 13,
+    textAlign: "center",
+    color: colors["muted-foreground"],
+  },
   prefilled: {
     fontFamily: font.regular,
     fontSize: 13.5,

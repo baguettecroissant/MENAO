@@ -5,6 +5,7 @@ import {
   documentState,
   dossierGroups,
   dossierItemCount,
+  nextGuideStep,
   zoneDemandShown,
   type DocumentState,
   type RequiredDocumentType,
@@ -20,11 +21,13 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react-native";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { TabHeader } from "@/components/tab-header";
 import { fr } from "@/i18n/fr";
 import { loadDossier, loadZoneDemand, retryRegistry, submitDossier } from "@/lib/artisan-dossier";
+import { dossierGuide, guideHref } from "@/lib/dossier-guide";
 import { useTrades } from "@/lib/trades";
 import { useFocusData } from "@/lib/use-focus-data";
 import { Notice, Screen, ScreenSkeleton } from "@/ui";
@@ -43,6 +46,7 @@ import { HelpVideoCard } from "./onboarding-help";
 import { ProgressBar } from "./tools-kit";
 
 const t = fr.proDossier;
+const g = fr.proGuide;
 const { colors, font, radius, spacing } = theme;
 
 const documentTone: Record<DocumentState, DossierTone> = {
@@ -110,8 +114,14 @@ export function DossierScreen() {
     const failure = await submitDossier();
     setSending(false);
     if (failure) return setError(failure);
-    reload();
+    // « Dossier envoyé » (ADR 0374) : la suite pendant la vérification.
+    router.push("/pro-dossier-envoye");
   }
+
+  // Parcours guidé (ADR 0374) : tant qu'il reste une étape, le bouton du bas y mène ; « Mon
+  // dossier » est la vue d'ensemble et l'écran de reprise.
+  const guide = dossierGuide(dossier);
+  const nextStep = guide.active ? nextGuideStep(guide.steps) : null;
 
   return (
     <Screen
@@ -121,18 +131,26 @@ export function DossierScreen() {
             <Text style={styles.footerText}>
               {dossier.canSubmit ? t.ready : t.left(dossier.itemsLeft)}
             </Text>
-            <FicheButton
-              label={t.submit}
-              tall
-              onPress={() => void submit()}
-              loading={sending}
-              disabled={!dossier.canSubmit}
-            />
+            {nextStep && !dossier.canSubmit ? (
+              <FicheButton
+                label={g.continueWith(g.names[nextStep])}
+                tall
+                onPress={() => router.push(guideHref(nextStep))}
+              />
+            ) : (
+              <FicheButton
+                label={t.submit}
+                tall
+                onPress={() => void submit()}
+                loading={sending}
+                disabled={!dossier.canSubmit}
+              />
+            )}
           </>
         ) : undefined
       }
     >
-      <TabHeader title={t.title} />
+      <TabHeader title={editable && dossier.canSubmit ? g.readyTitle : t.title} />
       {dossier.status === "en_verification" ? <Notice tone="success">{t.sent}</Notice> : null}
       {/* Pendant la vérification : l'espace rempli d'exemples (ADR 0184), comme sur le site. */}
       {dossier.status === "en_verification" ? (
@@ -156,7 +174,9 @@ export function DossierScreen() {
           <Text style={styles.progressValue}>{t.progress(done, total)}</Text>
         </View>
         <ProgressBar value={done} target={total} label={t.progressLabel} color={colors.success} />
-        {editable ? <Text style={styles.progressHint}>{t.lead}</Text> : null}
+        {editable ? (
+          <Text style={styles.progressHint}>{dossier.canSubmit ? g.readyLead : t.lead}</Text>
+        ) : null}
       </View>
 
       {progress.metiers && progress.zone && zoneDemand && zoneDemandShown(zoneDemand.recherches) ? (
