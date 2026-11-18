@@ -25,6 +25,7 @@ export function ConnectStatusPanel({
   deadline,
   prefill,
   today,
+  userId,
 }: {
   status: ConnectAccountStatus;
   payoutsEnabled: boolean;
@@ -38,6 +39,8 @@ export function ConnectStatusPanel({
   prefill: ConnectTokenPrefill | null;
   /** Date du jour (AAAA-MM-JJ, heure de Paris). */
   today: string;
+  /** Compte connecté : la date de naissance lue sur sa pièce d'identité est rangée à son nom. */
+  userId: string;
 }) {
   const note = deadline ? t.deadline(deadline) : null;
   switch (status) {
@@ -70,7 +73,7 @@ export function ConnectStatusPanel({
         <>
           <p>{t.intro}</p>
           <p className="text-sm text-muted-foreground">{t.fees}</p>
-          <ConnectPrepareForm prefill={prefill} today={today} />
+          <ConnectPrepareForm prefill={prefill} today={today} userId={userId} />
         </>
       );
     case "a_completer":

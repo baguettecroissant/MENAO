@@ -263,6 +263,15 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await identite.getByLabel("Fichier").setInputFiles(files.pdf);
   await expect(identite.getByText(/Document lu automatiquement/)).toBeVisible();
   await expect(identite.getByLabel("Date d'expiration (optionnel)")).toHaveValue(dates.inTenYears);
+  // Date de naissance lue sur la pièce (ADR 0375) : gardée par le navigateur, à ce compte, pour
+  // pré-remplir l'étape « Paiements » ; rien n'est enregistré chez MENAO.
+  expect(
+    await page.evaluate(() =>
+      Object.entries(localStorage)
+        .filter(([key]) => key.startsWith("menao:naissance:"))
+        .map(([, value]) => value),
+    ),
+  ).toEqual(["1980-01-01"]);
   await identite.getByRole("button", { name: "Déposer le document" }).click();
   await expect(identite.getByText("Déposé, en attente de vérification")).toBeVisible();
 

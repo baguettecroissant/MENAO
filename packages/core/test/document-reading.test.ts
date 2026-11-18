@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   documentReadingJsonSchema,
   normalizeDocumentReading,
+  plausibleBirthDate,
   prefillUpdates,
   type RawDocumentReading,
 } from "../src/document-reading";
@@ -129,5 +130,55 @@ describe("lecture automatique des documents (ADR 0176)", () => {
     expect(prefillUpdates({ dateFin: null }, { dateFin: "2027-01-31" })).toEqual({
       dateFin: "2027-01-31",
     });
+  });
+});
+
+describe("date de naissance lue sur la pièce d'identité (ADR 0375)", () => {
+  const today = new Date("2026-11-18T12:00:00Z");
+  const identite = (overrides: Partial<RawDocumentReading> = {}) =>
+    raw({
+      type_document: "identite",
+      date_emission: null,
+      assureur: null,
+      numero: null,
+      couverture: null,
+      siren: null,
+      date_fin: "2034-05-01",
+      date_naissance: "1980-01-01",
+      ...overrides,
+    });
+
+  it("pièce d'identité lisible : la date de naissance accompagne la date d'expiration", () => {
+    expect(normalizeDocumentReading(identite(), "identite", { today })).toEqual({
+      fields: { dateFin: "2034-05-01" },
+      warnings: [],
+      detected: "identite",
+      birthDate: "1980-01-01",
+    });
+  });
+
+  it("jamais pour un autre document, ni si la pièce est illisible ou n'est pas la bonne", () => {
+    const options = { today };
+    expect(
+      normalizeDocumentReading(raw({ date_naissance: "1980-01-01" }), "decennale", options),
+    ).not.toHaveProperty("birthDate");
+    expect(
+      normalizeDocumentReading(identite({ lisible: false }), "identite", options),
+    ).not.toHaveProperty("birthDate");
+    expect(
+      normalizeDocumentReading(identite({ type_document: "kbis" }), "identite", options),
+    ).not.toHaveProperty("birthDate");
+  });
+
+  it("date absente, impossible ou invraisemblable : rien n'est proposé", () => {
+    for (const date_naissance of [null, undefined, "01/01/1980", "1980-02-30", "1850-01-01"]) {
+      expect(
+        normalizeDocumentReading(identite({ date_naissance }), "identite", { today }),
+      ).not.toHaveProperty("birthDate");
+    }
+    // Moins de 16 ans : une date de délivrance prise pour une naissance, par exemple.
+    expect(plausibleBirthDate("2010-11-19", today)).toBeNull();
+    expect(plausibleBirthDate("2010-11-18", today)).toBe("2010-11-18");
+    expect(plausibleBirthDate("2026-11-18", today)).toBeNull();
   });
 });

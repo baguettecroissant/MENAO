@@ -29,6 +29,7 @@ import { CheckRow, ToolField } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
 import { AiProgress } from "@/components/ai-progress";
 import { loadDossier, setDecennaleExempt } from "@/lib/artisan-dossier";
+import { rememberBirthDate } from "@/lib/birth-date-memo";
 import { dossierGuide, openNextStep } from "@/lib/dossier-guide";
 import { formatLongDate } from "@/lib/dates";
 import { verifySiret } from "@/lib/my-company";
@@ -314,6 +315,9 @@ function DocumentForm({
     const result = await readDocument(deposited, type);
     if (deposit.current?.photo !== chosen) return;
     if (result.status !== "ok") return setReading({ step: "failed" });
+    // Pièce d'identité : la date de naissance lue reste sur ce téléphone, pour pré-remplir
+    // l'écran « Paiements » (ADR 0375).
+    if (type === "identite" && result.birthDate) void rememberBirthDate(result.birthDate);
     // Champs vides (ou remplis par la lecture précédente) seulement : la saisie est gardée.
     const updates = prefillUpdates(current.current, result.fields, lastRead.current);
     lastRead.current = result.fields;

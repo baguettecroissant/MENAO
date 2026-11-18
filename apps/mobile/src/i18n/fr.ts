@@ -569,6 +569,7 @@ export const fr = {
       intro:
         "Ces informations partent directement chez Stripe, sans être enregistrées par MENAO : vous n'aurez plus à les saisir.",
       birthDate: "Votre date de naissance",
+      birthDateRead: "Lue sur votre pièce d'identité. Vérifiez-la, corrigez-la si besoin.",
       birthDatePlaceholder: "JJ/MM/AAAA",
       homeAddress: "Votre adresse personnelle",
       sameAddress: "Même adresse que l'entreprise",

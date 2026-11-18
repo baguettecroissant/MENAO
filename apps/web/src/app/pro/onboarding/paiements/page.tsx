@@ -99,6 +99,7 @@ export default async function PaymentsStepPage({
               }
               prefill={prefill}
               today={parisToday()}
+              userId={context.userId}
             />
           </section>
         </Card>
