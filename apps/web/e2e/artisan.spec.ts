@@ -251,10 +251,24 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(rcPro.getByText("Déposé, en attente de vérification")).toBeVisible();
 
   // Lecture automatique (ADR 0176) : la date d'expiration lue pré-remplit le champ.
+  // Pièce d'identité selon son type (ADR 0378) : un passeport tient en une page, une carte se
+  // dépose recto et verso ; le bouton ne s'allume qu'une fois les deux côtés déposés.
   const identite = page.getByRole("region", { name: "Pièce d'identité du dirigeant" });
-  await identite.getByLabel("Fichier").setInputFiles(files.pdf);
-  await expect(identite.getByText(/Document lu automatiquement/)).toBeVisible();
+  await identite.getByLabel("Passeport").check();
+  await expect(identite.getByLabel("Page d'identité : choisir un fichier")).toBeAttached();
+  await expect(identite.getByLabel("Verso : choisir un fichier")).toHaveCount(0);
+  await identite.getByLabel("Carte d'identité").check();
+  await identite.getByLabel("Recto : choisir un fichier").setInputFiles(files.png);
+  await expect(identite.getByText("Recto déposé")).toBeVisible();
+  await expect(identite.getByText("Lu sur le recto")).toBeVisible();
+  await expect(identite.getByText("Il reste le verso")).toBeVisible();
+  await expect(identite.getByRole("button", { name: "Déposer le document" })).toBeDisabled();
+  await identite.getByLabel("Verso : choisir un fichier").setInputFiles(files.png);
+  await expect(identite.getByText("Verso déposé")).toBeVisible();
+  await expect(identite.getByText("Lu automatiquement : vérifiez")).toBeVisible();
   await expect(identite.getByLabel("Date d'expiration (optionnel)")).toHaveValue(dates.inTenYears);
+  // Deux images : la pièce pourra être transmise à Stripe, l'artisan en est informé.
+  await expect(identite.getByText("Vous n'aurez pas à la refaire")).toBeVisible();
   // Date de naissance lue sur la pièce (ADR 0375) : gardée par le navigateur, à ce compte, pour
   // pré-remplir l'étape « Paiements » ; rien n'est enregistré chez MENAO.
   expect(
@@ -266,6 +280,10 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   ).toEqual(["1980-01-01"]);
   await identite.getByRole("button", { name: "Déposer le document" }).click();
   await expect(identite.getByText("Déposé, en attente de vérification")).toBeVisible();
+  await expect(identite.getByRole("link", { name: "Voir le verso" })).toHaveAttribute(
+    "href",
+    /token=/,
+  );
 
   await expect(kbis.getByRole("link", { name: "Voir la fiche de vérification" })).toHaveAttribute(
     "href",

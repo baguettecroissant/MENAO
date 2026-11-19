@@ -64,6 +64,7 @@ export * from "./menao-score";
 export * from "./artisan-page";
 export * from "./new-artisans";
 export * from "./document-reading";
+export * from "./identity-document";
 export * from "./need-suggestion";
 export * from "./pro-assistant";
 export * from "./client-assistant";

@@ -253,7 +253,7 @@ test("pages légales : conditions d'utilisation, confidentialité et cookies (F-
     page.getByRole("heading", { name: "Conditions générales d'utilisation", level: 1 }),
   ).toBeVisible();
   await expect(page.getByText("Version provisoire")).toBeVisible();
-  await expect(page.getByText("Version du 18 novembre 2026")).toBeVisible();
+  await expect(page.getByText("Version du 19 novembre 2026")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Article 14. Modification" })).toBeVisible();
   await page.getByRole("main").getByRole("link", { name: "Critères de classement" }).last().click();
   await expect(page).toHaveURL(/\/criteres-de-classement$/);

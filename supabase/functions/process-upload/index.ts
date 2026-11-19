@@ -1,9 +1,10 @@
-// Edge Function process-upload (F-05, F-14, F-20, F-22, F-40, F-42, F-43, F-62) : vérifie un fichier déposé par l'utilisateur dans
+// Edge Function process-upload (F-05, F-14, F-20, F-22, F-40, F-42, F-43, F-62, F-181) : vérifie un fichier déposé par l'utilisateur dans
 // « uploads/<user_id>/<uuid> » (type réel, taille), supprime les métadonnées des images, puis le
 // range dans son espace définitif et l'enregistre. Le fichier brut est toujours supprimé.
 // TODO [À VALIDER] : analyse antivirus des documents (prestataire à choisir).
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { logoImageName } from "../../../packages/core/src/avatar.ts";
+import { identitySides, isIdentityPiece } from "../../../packages/core/src/identity-document.ts";
 import { messageAttachmentKind } from "../../../packages/core/src/messaging.ts";
 import { MAX_PROJECT_PHOTOS } from "../../../packages/core/src/project.ts";
 import {
@@ -56,6 +57,10 @@ type DocumentInput = {
   couverture?: string | null;
   /** Décennale : métiers couverts selon l'artisan (ADR 0116). */
   coveredTrades?: unknown;
+  /** Pièce d'identité (ADR 0378) : carte d'identité, passeport ou titre de séjour. */
+  piece?: unknown;
+  /** Pièce d'identité : false si l'artisan refuse sa transmission à Stripe. */
+  shareWithStripe?: unknown;
 };
 
 export type ProcessUploadStatus =
@@ -97,6 +102,8 @@ Deno.serve(
     const body = (await req.json().catch(() => null)) as {
       purpose?: string;
       path?: string;
+      /** Pièce d'identité (ADR 0378) : second fichier déposé, le verso. */
+      versoPath?: string;
       document?: DocumentInput;
       projectId?: string;
       chantierId?: string;
@@ -121,6 +128,17 @@ Deno.serve(
     if (!purpose || !(purpose in ALLOWED) || !new RegExp(`^${user.id}/${UUID}$`).test(path)) {
       return respond("invalid", 400);
     }
+    // Verso d'une pièce d'identité : un second fichier brut, dans le même dossier de dépôt.
+    const versoPath = typeof body?.versoPath === "string" ? body.versoPath : null;
+    if (
+      versoPath !== null &&
+      (purpose !== "document" ||
+        versoPath === path ||
+        !new RegExp(`^${user.id}/${UUID}$`).test(versoPath))
+    ) {
+      return respond("invalid", 400);
+    }
+    const rawPaths = versoPath ? [path, versoPath] : [path];
 
     const { data: allowed } = await admin.rpc("consume_rate_limit", {
       p_key: `process-upload:${user.id}`,
@@ -128,7 +146,7 @@ Deno.serve(
       p_window_seconds: 3600,
     });
     if (allowed !== true) {
-      await admin.storage.from("uploads").remove([path]);
+      await admin.storage.from("uploads").remove(rawPaths);
       return respond("rate_limited", 429);
     }
 
@@ -202,19 +220,55 @@ Deno.serve(
         if (error) throw error;
         return respond("ok");
       }
-      return purpose === "portfolio"
-        ? await savePortfolioPhoto(admin, artisan.id, file)
-        : await saveDocument(admin, artisan, file, body?.document);
+      if (purpose === "portfolio") return await savePortfolioPhoto(admin, artisan.id, file);
+      // Verso d'une pièce d'identité : lu et nettoyé comme le recto.
+      let verso: CleanFile | null = null;
+      if (versoPath) {
+        const cleaned = await cleanRawFile(admin, versoPath, ALLOWED.document);
+        if (typeof cleaned === "string") {
+          return respond(
+            cleaned,
+            cleaned === "not_found" ? 404 : cleaned === "too_large" ? 413 : 415,
+          );
+        }
+        verso = cleaned;
+      }
+      return await saveDocument(admin, artisan, file, body?.document, verso);
     } catch (error) {
       console.error("process-upload : erreur", error instanceof Error ? error.name : "");
       return respond("unavailable", 503);
     } finally {
-      await admin.storage.from("uploads").remove([path]);
+      await admin.storage.from("uploads").remove(rawPaths);
     }
   }),
 );
 
 type CleanFile = { bytes: Uint8Array; type: DetectedFileType; name: string };
+
+/**
+ * Fichier brut du dossier « uploads », contrôlé comme tout dépôt : taille, type réel lu dans son
+ * contenu, données cachées des images retirées. Renvoie le fichier nettoyé, ou le statut du refus.
+ */
+async function cleanRawFile(
+  admin: SupabaseClient,
+  path: string,
+  allowed: DetectedFileType[],
+): Promise<CleanFile | "not_found" | "too_large" | "invalid_type"> {
+  const { data: blob, error } = await admin.storage.from("uploads").download(path);
+  if (error || !blob) return "not_found";
+  if (blob.size > MAX_UPLOAD_BYTES) return "too_large";
+  let bytes: Uint8Array = new Uint8Array(await blob.arrayBuffer());
+  const type = detectFileType(bytes);
+  if (!type || !allowed.includes(type)) return "invalid_type";
+  if (type !== "pdf") {
+    try {
+      bytes = stripImageMetadata(bytes, type);
+    } catch {
+      return "invalid_type";
+    }
+  }
+  return { bytes, type, name: `${crypto.randomUUID()}.${EXTENSIONS[type]}` };
+}
 
 async function store(admin: SupabaseClient, bucket: string, path: string, file: CleanFile) {
   const { error } = await admin.storage
@@ -443,6 +497,7 @@ async function saveDocument(
   artisan: { id: string; status: string },
   file: CleanFile,
   doc: DocumentInput | undefined,
+  verso: CleanFile | null = null,
 ) {
   // Brouillon ou refus : le dépôt remplace le document du même type. Artisan validé ou suspendu :
   // c'est un renouvellement (F-51), le document validé en cours est conservé jusqu'à la
@@ -454,13 +509,28 @@ async function saveDocument(
   const verification = artisan.status === "en_verification";
   if (!onboarding && !renewal && !verification) return respond("locked", 409);
   if (!doc || !DOCUMENT_TYPES.has(doc.type)) return respond("invalid", 400);
+  // Pièce d'identité (ADR 0378) : type de pièce, et verso pour une carte ou un titre de séjour.
+  // Sans type (application d'avant F-181) : une pièce en un seul fichier, comme avant.
+  const piece = doc.type === "identite" && isIdentityPiece(doc.piece) ? doc.piece : null;
+  if (verso && (!piece || !identitySides(piece).includes("verso"))) return respond("invalid", 400);
+  if (piece && identitySides(piece).includes("verso") && !verso) return respond("invalid", 400);
 
   const path = `${artisan.id}/${doc.type}-${file.name}`;
   await store(admin, "artisan-documents", path, file);
+  const versoStored = verso ? `${artisan.id}/${doc.type}-verso-${verso.name}` : null;
+  if (verso && versoStored) {
+    try {
+      await store(admin, "artisan-documents", versoStored, verso);
+    } catch (error) {
+      await admin.storage.from("artisan-documents").remove([path]);
+      throw error;
+    }
+  }
+  const stored = versoStored ? [path, versoStored] : [path];
 
   const { data: previous } = await admin
     .from("artisan_documents")
-    .select("id, storage_path")
+    .select("id, storage_path, verso_path")
     .eq("artisan_id", artisan.id)
     .eq("type", doc.type)
     .in("status", onboarding ? ["en_attente", "refuse", "valide"] : ["en_attente", "refuse"]);
@@ -485,6 +555,10 @@ async function saveDocument(
     numero: shortText(doc.numero, 60),
     assureur: shortText(doc.assureur, 120),
     couverture: shortText(doc.couverture, 200),
+    piece,
+    verso_path: versoStored,
+    verso_mime_type: verso ? MIME_TYPES[verso.type] : null,
+    partage_stripe: doc.shareWithStripe !== false,
     covered_trades:
       doc.type === "decennale" && Array.isArray(doc.coveredTrades)
         ? [
@@ -497,11 +571,15 @@ async function saveDocument(
         : null,
   });
   if (error) {
-    await admin.storage.from("artisan-documents").remove([path]);
+    await admin.storage.from("artisan-documents").remove(stored);
     throw error;
   }
   if (previous?.length) {
-    await admin.storage.from("artisan-documents").remove(previous.map((p) => p.storage_path));
+    await admin.storage
+      .from("artisan-documents")
+      .remove(
+        previous.flatMap((p) => (p.verso_path ? [p.storage_path, p.verso_path] : [p.storage_path])),
+      );
   }
   return respond("ok");
 }

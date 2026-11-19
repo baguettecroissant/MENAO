@@ -16,4 +16,4 @@ export const COMPANY = {
 export const COMPANY_LINE = `${COMPANY.name}, ${COMPANY.form}, dont le siège est ${COMPANY.address}, ${COMPANY.registry}`;
 
 /** Date de la version en cours des textes légaux. */
-export const LEGAL_UPDATED_AT = "2026-11-18";
+export const LEGAL_UPDATED_AT = "2026-11-19";

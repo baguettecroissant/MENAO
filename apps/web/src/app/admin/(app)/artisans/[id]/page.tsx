@@ -115,7 +115,7 @@ export default async function AdminArtisanPage({
     supabase
       .from("artisan_documents")
       .select(
-        "id, type, source, storage_path, mime_type, status, created_at, date_emission, date_fin, numero, assureur, couverture, covered_trades, refusal_reason, verified_at, verified_by",
+        "id, type, source, storage_path, mime_type, piece, verso_path, verso_mime_type, partage_stripe, status, created_at, date_emission, date_fin, numero, assureur, couverture, covered_trades, refusal_reason, verified_at, verified_by",
       )
       .eq("artisan_id", id),
     supabase
@@ -203,7 +203,7 @@ export default async function AdminArtisanPage({
   const docs = documents.data ?? [];
   const { data: signed } = docs.length
     ? await supabase.storage.from("artisan-documents").createSignedUrls(
-        docs.map((d) => d.storage_path),
+        docs.flatMap((d) => (d.verso_path ? [d.storage_path, d.verso_path] : [d.storage_path])),
         300,
       )
     : { data: [] };

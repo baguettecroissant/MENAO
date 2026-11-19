@@ -5,7 +5,8 @@ import type { LegalDocument } from "./types";
 // publication définitive : contrat de sous-traitance et lieu de traitement de chaque prestataire,
 // durées de conservation (seules « 3 ans d'inactivité » et « 10 ans pour la comptabilité » viennent
 // du cahier des charges, §RGPD), base légale de la note du client par l'artisan, information des
-// professionnels contactés à partir des registres publics, délégué à la protection des données.
+// professionnels contactés à partir des registres publics, délégué à la protection des données,
+// transmission de la pièce d'identité à Stripe (ADR 0378).
 // Le tableau des prestataires suit le code : le tenir à jour à chaque ajout ou retrait.
 export const confidentialite: LegalDocument = {
   title: "Politique de confidentialité",
@@ -87,6 +88,10 @@ export const confidentialite: LegalDocument = {
         [
           "Compte de paiement : identité, date de naissance, coordonnées bancaires",
           "Vous, directement auprès de Stripe ; MENAO n'en garde que l'état du compte",
+        ],
+        [
+          "Pièce d'identité transmise à Stripe pour ouvrir le compte de paiement",
+          "Celle que vous avez déposée dans votre dossier ; vous pouvez refuser cette transmission au moment du dépôt, Stripe vous la demandera alors lui-même",
         ],
         ["Charte qualité signée, conditions acceptées", "Vous"],
       ],
@@ -215,7 +220,7 @@ export const confidentialite: LegalDocument = {
         [
           "Stripe",
           "Paiement des chantiers, compte de paiement des artisans, abonnement",
-          "Identité, coordonnées bancaires, paiements",
+          "Identité, pièce d'identité, coordonnées bancaires, paiements",
           "Irlande et États-Unis",
         ],
         [

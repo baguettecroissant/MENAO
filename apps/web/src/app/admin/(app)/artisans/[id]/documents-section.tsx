@@ -19,6 +19,11 @@ export type AdminDocument = {
   type: string;
   storage_path: string;
   mime_type: string;
+  /** Pièce d'identité (ADR 0378) : type de pièce, verso, transmission à Stripe. */
+  piece: string | null;
+  verso_path: string | null;
+  verso_mime_type: string | null;
+  partage_stripe: boolean;
   status: string;
   created_at: string;
   date_emission: string | null;
@@ -105,6 +110,7 @@ export function DocumentsSection({
                   type={type}
                   doc={d}
                   url={urlByPath.get(d.storage_path) ?? null}
+                  versoUrl={d.verso_path ? (urlByPath.get(d.verso_path) ?? null) : null}
                   artisanId={artisanId}
                   company={company}
                   coverage={
@@ -122,6 +128,7 @@ export function DocumentsSection({
                   key={d.id}
                   doc={d}
                   url={urlByPath.get(d.storage_path) ?? null}
+                  versoUrl={d.verso_path ? (urlByPath.get(d.verso_path) ?? null) : null}
                   reviewer={reviewerName(d.verified_by)}
                   coverage={
                     type === "decennale" && d.covered_trades ? (
@@ -146,6 +153,7 @@ export function DocumentsSection({
                       <CompactRow
                         doc={d}
                         url={urlByPath.get(d.storage_path) ?? null}
+                        versoUrl={d.verso_path ? (urlByPath.get(d.verso_path) ?? null) : null}
                         reviewer={reviewerName(d.verified_by)}
                         coverage={null}
                       />
@@ -174,7 +182,17 @@ function enteredValues(type: RequiredDocumentType, d: AdminDocument): [string, s
             [t.docEnd, date(d.date_fin)],
           ]
         : type === "identite"
-          ? [[t.docEnd, date(d.date_fin)]]
+          ? [
+              [
+                t.docPiece,
+                d.piece && d.piece in docT.identity.pieces
+                  ? docT.identity.pieces[d.piece as keyof typeof docT.identity.pieces]
+                  : null,
+              ],
+              [t.docEnd, date(d.date_fin)],
+              // Choix montré pour les pièces déposées depuis F-181 (type de pièce connu).
+              [t.docStripe, d.piece ? (d.partage_stripe ? t.docStripeYes : t.docStripeNo) : null],
+            ]
           : [
               [t.docInsurer, d.assureur],
               [t.docNumber, d.numero],
@@ -188,6 +206,7 @@ function SideBySide({
   type,
   doc,
   url,
+  versoUrl,
   artisanId,
   company,
   coverage,
@@ -195,6 +214,7 @@ function SideBySide({
   type: RequiredDocumentType;
   doc: AdminDocument;
   url: string | null;
+  versoUrl: string | null;
   artisanId: string;
   company: CompanyReference;
   coverage: ReactNode;
@@ -208,7 +228,23 @@ function SideBySide({
   ];
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <DocumentPreview url={url} mime={doc.mime_type} label={docT.types[type]} />
+      {doc.verso_path && doc.verso_mime_type ? (
+        // Pièce d'identité recto verso (ADR 0378) : les deux côtés l'un sous l'autre.
+        <div className="flex min-w-0 flex-col gap-4">
+          <DocumentPreview
+            url={url}
+            mime={doc.mime_type}
+            label={`${docT.types[type]}, ${t.docRecto.toLowerCase()}`}
+          />
+          <DocumentPreview
+            url={versoUrl}
+            mime={doc.verso_mime_type}
+            label={`${docT.types[type]}, ${t.docVerso.toLowerCase()}`}
+          />
+        </div>
+      ) : (
+        <DocumentPreview url={url} mime={doc.mime_type} label={docT.types[type]} />
+      )}
       <div className="flex min-w-0 flex-col gap-4">
         <p className="text-sm">
           <span className="font-medium">{statusLabel(doc.status)}</span>
@@ -305,11 +341,13 @@ function DocumentPreview({
 function CompactRow({
   doc,
   url,
+  versoUrl,
   reviewer,
   coverage,
 }: {
   doc: AdminDocument;
   url: string | null;
+  versoUrl: string | null;
   reviewer: string | null;
   coverage: ReactNode;
 }) {
@@ -346,6 +384,20 @@ function CompactRow({
               className="font-medium text-primary underline"
             >
               {registry ? docT.registry.view : docT.view}
+            </a>
+          </>
+        )}
+        {versoUrl && (
+          <>
+            {" "}
+            ·{" "}
+            <a
+              href={versoUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-primary underline"
+            >
+              {t.docViewVerso}
             </a>
           </>
         )}

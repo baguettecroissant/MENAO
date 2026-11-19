@@ -36,6 +36,12 @@ export type ConnectPrefillSource = {
 };
 
 export type ConnectAddress = { line1: string; postal_code: string; city: string; country: "FR" };
+/**
+ * Pièce d'identité déjà déposée chez Stripe par le navigateur (F-181, ADR 0378) : identifiants
+ * des fichiers, recto puis verso.
+ */
+export type ConnectIdentityDocument = { front: string; back?: string };
+type Verification = { document: ConnectIdentityDocument };
 type Address = ConnectAddress;
 /** Date de naissance au format de Stripe. */
 export type ConnectBirthDate = { day: number; month: number; year: number };
@@ -63,6 +69,7 @@ export type ConnectAccountTokenData =
         phone?: string;
         dob?: ConnectBirthDate;
         address?: Address;
+        verification?: Verification;
       };
     };
 
@@ -74,6 +81,7 @@ export type ConnectPersonTokenData = {
   phone?: string;
   dob?: ConnectBirthDate;
   address?: Address;
+  verification?: Verification;
   relationship: {
     representative: true;
     /** Fonction : « Président », « Gérant ». */
@@ -347,6 +355,8 @@ export type ConnectDetails = {
   soleOwner?: boolean;
   /** Site web ou page de réseau social, déjà vérifié par `businessUrlOf`. */
   website?: string | null;
+  /** Pièce d'identité de l'entrepreneur ou du dirigeant, déposée chez Stripe (ADR 0378). */
+  identityDocument?: ConnectIdentityDocument | null;
 };
 
 /** Réseaux et annuaires dont l'adresse seule (sans page) ne décrit pas l'entreprise. */
@@ -404,8 +414,9 @@ export type ConnectTokenData = {
 };
 
 /**
- * Ajoute au pré-remplissage les compléments saisis par l'artisan : date de naissance et adresse
- * personnelle de l'entrepreneur ou du dirigeant, associé unique (100 %, associés déclarés), IBAN.
+ * Ajoute au pré-remplissage les compléments saisis par l'artisan : date de naissance, adresse
+ * personnelle et pièce d'identité de l'entrepreneur ou du dirigeant, associé unique (100 %,
+ * associés déclarés), IBAN.
  */
 export function completeConnectPrefill(
   prefill: Pick<ConnectTokenPrefill, "account" | "person" | "holderName">,
@@ -414,6 +425,7 @@ export function completeConnectPrefill(
   const personal = defined({
     dob: details.birthDate ?? undefined,
     address: details.homeAddress ?? undefined,
+    verification: details.identityDocument ? { document: details.identityDocument } : undefined,
   });
   let account = prefill.account;
   let person = prefill.person;

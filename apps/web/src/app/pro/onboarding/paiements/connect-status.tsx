@@ -7,6 +7,7 @@ import { CircleCheck, Clock, ExternalLink, ListChecks, ShieldAlert } from "lucid
 import { Alert, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { ConnectPrepareForm } from "./connect-prepare-form";
+import { StripeAhead, type StripeAheadSent } from "./stripe-ahead";
 import { ConnectStripeLink } from "./stripe-link";
 
 const t = fr.pro.onboarding.connect;
@@ -26,6 +27,7 @@ export function ConnectStatusPanel({
   prefill,
   today,
   userId,
+  sent,
 }: {
   status: ConnectAccountStatus;
   payoutsEnabled: boolean;
@@ -41,6 +43,8 @@ export function ConnectStatusPanel({
   today: string;
   /** Compte connecté : la date de naissance lue sur sa pièce d'identité est rangée à son nom. */
   userId: string;
+  /** Avant Stripe (ADR 0378) : ce que MENAO transmet à la place de l'artisan. */
+  sent: StripeAheadSent;
 }) {
   const note = deadline ? t.deadline(deadline) : null;
   switch (status) {
@@ -73,6 +77,7 @@ export function ConnectStatusPanel({
         <>
           <p>{t.intro}</p>
           <p className="text-sm text-muted-foreground">{t.fees}</p>
+          <StripeAhead sent={sent} />
           <ConnectPrepareForm prefill={prefill} today={today} userId={userId} />
         </>
       );

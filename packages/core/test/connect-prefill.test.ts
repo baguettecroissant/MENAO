@@ -334,6 +334,35 @@ describe("compléments saisis dans MENAO (ADR 0215)", () => {
     });
   });
 
+  it("pièce d'identité déposée chez Stripe : jointe au dirigeant, ou à l'entrepreneur", () => {
+    const document = { front: "file_1AbCdEfGh2345", back: "file_1ZyXwVuTs9876" };
+    const company = completeConnectPrefill(connectPrefill(sarl), { identityDocument: document });
+    expect(company.person?.verification).toEqual({ document });
+    expect(company.account).not.toHaveProperty("company.verification");
+
+    const prefill = connectPrefill({ ...sarl, formeJuridiqueCode: "1000", raisonSociale: "X" });
+    const individual = completeConnectPrefill(prefill, {
+      identityDocument: { front: "file_1AbCdEfGh2345" },
+    });
+    expect(individual.account).toMatchObject({
+      individual: { verification: { document: { front: "file_1AbCdEfGh2345" } } },
+    });
+    // Encodée comme Stripe l'attend.
+    if (!individual.account) throw new Error("jeton du compte attendu");
+    const { init } = connectTokenRequest("pk_test_1234567890", "account", individual.account);
+    expect(decodeURIComponent(init.body)).toContain(
+      "account[individual][verification][document][front]=file_1AbCdEfGh2345",
+    );
+  });
+
+  it("sans être le dirigeant : la pièce déposée n'est jointe à personne", () => {
+    const tokens = completeConnectPrefill(connectPrefill({ ...sarl, isDirigeant: false }), {
+      identityDocument: { front: "file_1AbCdEfGh2345" },
+    });
+    expect(tokens.person).toBeNull();
+    expect(JSON.stringify(tokens)).not.toContain("file_1AbCdEfGh2345");
+  });
+
   it("sans être le dirigeant : seulement l'IBAN, aucune donnée de personne", () => {
     const prefill = connectPrefill({ ...sarl, isDirigeant: false });
     const tokens = completeConnectPrefill(prefill, {

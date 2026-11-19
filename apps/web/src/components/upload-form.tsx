@@ -602,7 +602,7 @@ export function UploadForm({
  * Gros bouton d'envoi de fichier : le vrai champ, invisible, couvre tout le bouton (un toucher
  * l'ouvre directement). `capture` ouvre l'appareil photo sur téléphone.
  */
-function CameraButton({
+export function CameraButton({
   id,
   inputRef,
   label,

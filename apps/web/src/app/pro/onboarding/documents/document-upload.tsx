@@ -5,6 +5,7 @@ import type { ComponentProps } from "react";
 import { CheckboxField, Field } from "@/components/ui";
 import { UploadForm } from "@/components/upload-form";
 import { fr } from "@/i18n/fr";
+import { IdentityUpload } from "./identity-upload";
 
 const t = fr.pro.onboarding.documents;
 
@@ -27,6 +28,8 @@ export function DocumentUpload({
   fieldsAfterFile?: boolean;
 }) {
   const id = (name: string) => `${type}-${name}`;
+  // Pièce d'identité : son propre écran, selon le type de pièce (ADR 0378).
+  if (type === "identite") return <IdentityUpload userId={userId} label={label} guide={guide} />;
   return (
     <UploadForm
       purpose="document"
@@ -113,15 +116,6 @@ export function DocumentUpload({
                 errors={errors.numero}
               />
             </div>
-          )}
-          {type === "identite" && (
-            <Field
-              id={id("dateFin")}
-              label={t.dateFinIdentite}
-              name="dateFin"
-              type="date"
-              errors={errors.dateFin}
-            />
           )}
         </>
       )}

@@ -6,6 +6,7 @@ import {
   connectOnboardingOpen,
   connectRequirementGroups,
   parisToday,
+  stripeIdentitySides,
 } from "@menao/core";
 import { Lock } from "lucide-react";
 import { Alert, Card } from "@/components/ui";
@@ -69,6 +70,18 @@ async function PaymentsStepContent({ searchParams }: PageProps<"/pro/onboarding/
   });
   // Premier passage : de quoi pré-remplir le compte Stripe avant sa création (ADR 0204, 0215).
   const prefill = status === "a_demarrer" ? await loadConnectPrefill().catch(() => null) : null;
+  // Pièce d'identité déposée en image et transmissible (ADR 0378) : jointe au pré-remplissage,
+  // pour le dirigeant ou l'entrepreneur individuel.
+  const personal = prefill?.person != null || prefill?.account?.business_type === "individual";
+  const piece = context.documents.find((d) => d.type === "identite" && d.status !== "refuse");
+  const pieceShared =
+    personal &&
+    piece !== undefined &&
+    stripeIdentitySides({
+      share: piece.partage_stripe,
+      mimeType: piece.mime_type,
+      versoMimeType: piece.verso_mime_type,
+    }).length > 0;
   // Compte actif : solde, virements et encaissé via MENAO (ADR 0152), lus en parallèle.
   const money =
     status === "actif"
@@ -109,6 +122,11 @@ async function PaymentsStepContent({ searchParams }: PageProps<"/pro/onboarding/
               prefill={prefill}
               today={parisToday()}
               userId={context.userId}
+              sent={{
+                company: prefill?.account?.business_type === "company",
+                identity: personal,
+                piece: pieceShared,
+              }}
             />
           </section>
         </Card>
@@ -127,7 +145,7 @@ async function PaymentsStepContent({ searchParams }: PageProps<"/pro/onboarding/
       </div>
       <div className="flex flex-col gap-4">
         {/* Avant le formulaire Stripe (ADR 0347) : ce qu'il demande, à garder sous la main. */}
-        {status === "a_demarrer" && <StripeChecklist />}
+        {status === "a_demarrer" && <StripeChecklist withoutIdentity={pieceShared} />}
         <PaymentHow />
       </div>
     </div>
