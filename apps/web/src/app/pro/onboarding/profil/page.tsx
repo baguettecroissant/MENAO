@@ -149,7 +149,11 @@ export default async function ProfileStepPage() {
         </Card>
         {/* Retour au dossier en bas de page aussi : le lien du haut est loin après les envois. Dans
             le parcours guidé, la barre du bas mène à la suite. */}
-        {around && <GuideBarSpace />}
+        {around && (
+          <div className="hidden lg:block">
+            <GuideBarSpace />
+          </div>
+        )}
         {!around && (
           <ButtonLink href="/pro/onboarding" variant="outline" className="self-start">
             <ArrowLeft aria-hidden="true" className="size-4" />
@@ -217,6 +221,13 @@ export default async function ProfileStepPage() {
           )}
         </div>
       </aside>
+      {/* Sur téléphone, l'aperçu vient en dernier : la place de la barre du parcours se garde après
+          lui, sinon la barre le recouvre. */}
+      {around && (
+        <div className="lg:hidden">
+          <GuideBarSpace />
+        </div>
+      )}
     </div>
   );
 }

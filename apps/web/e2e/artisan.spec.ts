@@ -302,6 +302,24 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await expect(portfolio.getByText("2 photos ajoutées.")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("img", { name: "Réalisation 2" })).toBeVisible();
 
+  // Sur téléphone, l'aperçu « Ce que verront les clients » vient en dernier : il se lit jusqu'au
+  // bout, au-dessus de la barre du parcours.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  const overlap = await page.evaluate(() => {
+    const preview = [...document.querySelectorAll("aside")].find((el) =>
+      el.textContent?.includes("Ce que verront les clients"),
+    );
+    const bar = [...document.querySelectorAll("div")].find(
+      (el) => getComputedStyle(el).position === "fixed" && el.textContent?.includes("Suite :"),
+    );
+    if (!preview || !bar) return null;
+    return preview.getBoundingClientRect().bottom - bar.getBoundingClientRect().top;
+  });
+  expect(overlap).not.toBeNull();
+  expect(overlap as number).toBeLessThanOrEqual(0);
+  await page.setViewportSize({ width: 1280, height: 720 });
+
   // « Enregistrer et continuer » (ADR 0376) : charte, pièce d'identité et fiche faites, le dossier
   // part tout seul à l'équipe, et la suite s'ouvre : la formule, sans attendre la validation.
   await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
