@@ -1003,6 +1003,10 @@ export const fr = {
     trades: "Métiers",
     howItWorks: "Comment ça marche ?",
     guarantees: "Garanties & Confiance",
+    // En-tête (F-182, ADR 0379) : libellé court dans la barre, la page garde son titre.
+    guaranteesShort: "Garanties",
+    // Bouton des artisans dans l'en-tête (F-182, ADR 0379) ; sur téléphone, « Espace Pro ».
+    proCta: "Vous êtes artisan ?",
     myClientSpace: "Mon espace client",
     findArtisan: "Trouver un artisan",
     describeProject: "Décrire mon projet",

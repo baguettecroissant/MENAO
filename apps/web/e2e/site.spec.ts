@@ -270,3 +270,28 @@ test("pages légales : conditions d'utilisation, confidentialité et cookies (F-
   await expect(page.getByRole("heading", { name: "Politique cookies", level: 1 })).toBeVisible();
   await expect(page.getByRole("rowheader", { name: "menao_menu (cookie)" })).toBeVisible();
 });
+
+test("en-tête : bouton des artisans visible, trois liens au centre (F-182)", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const nav = page.getByRole("navigation", { name: "Navigation principale" });
+  await expect(nav.getByRole("link", { name: "Garanties", exact: true })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Espace Pro", exact: true })).toBeHidden();
+  const pro = nav.getByRole("link", { name: "Vous êtes artisan ?" });
+  await expect(pro).toBeVisible();
+  await pro.click();
+  await expect(page).toHaveURL(/\/pro$/);
+  await expect(nav.getByRole("link", { name: "Vous êtes artisan ?" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+
+  // Sur téléphone, le bouton n'est pas dans la barre : il est dans le menu.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(nav.getByRole("link", { name: "Vous êtes artisan ?" })).toBeHidden();
+  await nav.getByRole("button", { name: "Menu" }).click();
+  await expect(
+    page.locator("#menu-mobile").getByRole("link", { name: "Vous êtes artisan ?" }),
+  ).toBeVisible();
+});
