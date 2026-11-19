@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Search, X } from "lucide-react";
+import { Menu, Search, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -8,7 +8,7 @@ import { Logo } from "@/components/brand/logo";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { ButtonLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
-import { NAV_LINKS } from "./nav-links";
+import { NAV_LINKS, isProPath } from "./nav-links";
 
 const t = fr.nav;
 
@@ -24,12 +24,16 @@ const t = fr.nav;
  * - Seule la pilule capte les clics : les marges transparentes laissent passer vers la page.
  * - Liens et boutons dans la pilule dès 1 280 px (`xl`) ; en dessous, menu replié (la pilule est
  *   plus étroite que l'ancienne barre : à 1 024 px, les liens passaient sur deux lignes).
+ * - Composition (F-182, ADR 0379) : trois liens courts au centre ; à droite, une seule action
+ *   principale, « Décrire mon projet » (bleu), le bouton des artisans en bleu nuit, et l'accès au
+ *   compte en lien discret. Le bouton des artisans reste visible sur téléphone (« Espace Pro »).
  */
 export function SiteHeader() {
   const pathname = usePathname();
   // Le menu mobile reste ouvert pour la page où il a été ouvert : il se referme en naviguant.
   const [openFor, setOpenFor] = useState<string | null>(null);
   const open = openFor === pathname;
+  const onPro = isProPath(pathname);
 
   return (
     <header className="pointer-events-none sticky -top-3 z-30 px-2 pt-5 sm:-top-8 sm:px-4 sm:pt-10">
@@ -48,7 +52,7 @@ export function SiteHeader() {
                   <Link
                     href={l.href}
                     aria-current={pathname === l.href ? "page" : undefined}
-                    className="hover:text-primary-strong aria-[current=page]:text-primary-strong"
+                    className="whitespace-nowrap hover:text-primary-strong aria-[current=page]:font-semibold aria-[current=page]:text-primary-strong"
                   >
                     {l.label}
                   </Link>
@@ -56,12 +60,32 @@ export function SiteHeader() {
               ))}
             </ul>
           </div>
-          <div className="ml-auto flex items-center xl:hidden">
+          <div className="ml-auto flex items-center gap-1 xl:hidden">
             <NotificationBell />
+            {/* Sur téléphone et tablette : le bouton des artisans reste dans la barre. */}
+            <ButtonLink
+              href="/pro"
+              variant="dark"
+              size="sm"
+              aria-current={onPro ? "page" : undefined}
+              className="max-[359px]:hidden"
+            >
+              <span className="sm:hidden">{t.pro}</span>
+              <span className="hidden sm:inline">{t.proCta}</span>
+            </ButtonLink>
           </div>
           <div className="hidden items-center gap-2 xl:flex">
             <NotificationBell />
-            <ButtonLink href="/mon-espace" variant="outline" size="sm">
+            <ButtonLink
+              href="/pro"
+              variant="dark"
+              size="sm"
+              aria-current={onPro ? "page" : undefined}
+            >
+              {t.proCta}
+            </ButtonLink>
+            <ButtonLink href="/mon-espace" variant="ghost" size="sm" className="text-foreground">
+              <UserRound aria-hidden="true" className="size-4" />
               {t.myClientSpace}
             </ButtonLink>
             <ButtonLink href="/recherche" size="sm">
@@ -99,12 +123,24 @@ export function SiteHeader() {
               ))}
             </ul>
             <div className="mt-4 flex flex-col gap-2">
-              <ButtonLink href="/mon-espace" variant="outline" block>
-                {t.myClientSpace}
-              </ButtonLink>
               <ButtonLink href="/recherche" block>
                 {t.describeProject}
                 <Search aria-hidden="true" className="size-4" />
+              </ButtonLink>
+              <ButtonLink href="/mon-espace" variant="outline" block>
+                <UserRound aria-hidden="true" className="size-4" />
+                {t.myClientSpace}
+              </ButtonLink>
+            </div>
+            {/* Les artisans, à part des particuliers. */}
+            <div className="mt-4 border-t border-border pt-4">
+              <ButtonLink
+                href="/pro"
+                variant="dark"
+                block
+                aria-current={onPro ? "page" : undefined}
+              >
+                {t.proCta}
               </ButtonLink>
             </div>
           </div>
