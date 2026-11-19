@@ -80,7 +80,9 @@ export default async function DocumentsStepPage({
   const nextNote = around?.next ? g.next(g.nextNames[around.next]) : g.nextEnd;
 
   // URL signées de courte durée (5 min) : les documents restent privés (spec F-43).
-  const paths = documents.map((d) => d.storage_path);
+  const paths = documents.flatMap((d) =>
+    d.verso_path ? [d.storage_path, d.verso_path] : [d.storage_path],
+  );
   const { data: signed } = paths.length
     ? await supabase.storage.from("artisan-documents").createSignedUrls(paths, 300)
     : { data: [] };
@@ -180,6 +182,8 @@ export default async function DocumentsStepPage({
                 .filter((d) => d !== undefined)
                 .map((doc) => {
                   const url = urlByPath.get(doc.storage_path);
+                  // Pièce d'identité recto verso (ADR 0378).
+                  const versoUrl = doc.verso_path ? urlByPath.get(doc.verso_path) : undefined;
                   const expiry =
                     doc.status === "valide" && monitored ? expiryStatus(doc.date_fin) : "ok";
                   const days = doc.date_fin ? daysUntil(doc.date_fin) : 0;
@@ -222,6 +226,20 @@ export default async function DocumentsStepPage({
                               className="font-medium text-primary underline"
                             >
                               {doc.source === "registre" ? t.registry.view : t.view}
+                            </a>
+                          </>
+                        )}
+                        {versoUrl && (
+                          <>
+                            {" "}
+                            ·{" "}
+                            <a
+                              href={versoUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-medium text-primary underline"
+                            >
+                              {t.identity.viewVerso}
                             </a>
                           </>
                         )}

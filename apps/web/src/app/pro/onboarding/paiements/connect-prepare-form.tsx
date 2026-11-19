@@ -9,6 +9,7 @@ import { fr } from "@/i18n/fr";
 import { createConnectAccount } from "@/lib/artisan/actions";
 import { forgetBirthDate, recallBirthDate } from "@/lib/artisan/birth-date-memo";
 import { createConnectTokens } from "@/lib/artisan/connect-tokens";
+import { uploadIdentityToStripe } from "@/lib/artisan/stripe-identity";
 import { CONNECT_STRIPE_PATH } from "./stripe-link";
 
 const t = fr.pro.onboarding.connect;
@@ -52,10 +53,14 @@ export function ConnectPrepareForm({
   /** Crée les jetons (si possible), puis le compte, puis ouvre le formulaire Stripe intégré. */
   function open(details: ConnectDetails | null) {
     startTransition(async () => {
+      // Pièce d'identité déposée dans MENAO (ADR 0378) : envoyée à Stripe avec le reste, pour
+      // que l'artisan n'ait pas à la refaire.
+      const identityDocument =
+        prefill && personal ? await uploadIdentityToStripe(prefill.publishableKey) : null;
       const tokens = prefill
         ? await createConnectTokens(
             prefill.publishableKey,
-            completeConnectPrefill(prefill, details ?? {}),
+            completeConnectPrefill(prefill, { ...(details ?? {}), identityDocument }),
           )
         : {};
       const result = await createConnectAccount(tokens, details?.website ?? null);

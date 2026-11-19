@@ -7,6 +7,7 @@ import {
   nextGuideStep,
   onboardingProgress,
   plausibleBirthDate,
+  stripeIdentitySides,
   type GuideStepKey,
   type ConnectTokenPrefill,
   type ConnectTokens,
@@ -351,17 +352,24 @@ export async function processUpload(_prev: FormState, formData: FormData): Promi
       numero: text(formData, "numero"),
       couverture: text(formData, "couverture"),
       coveredTrades: formData.getAll("coveredTrades").filter((v) => typeof v === "string"),
+      piece: text(formData, "piece") ?? "",
     });
     if (!parsed.success) return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
-    document = parsed.data;
+    // Pièce d'identité (ADR 0378) : « non » si l'artisan refuse sa transmission à Stripe.
+    document =
+      parsed.data.type === "identite"
+        ? { ...parsed.data, shareWithStripe: text(formData, "partageStripe") !== "non" }
+        : parsed.data;
   }
+  // Verso d'une pièce d'identité : second fichier déposé.
+  const versoPath = purpose === "document" ? text(formData, "versoPath") : null;
 
   const { supabase } = await getOnboardingContext();
   const { data, error } = await supabase.functions.invoke<{ status: UploadStatus }>(
     "process-upload",
     {
       method: "POST",
-      body: { purpose, path, document },
+      body: { purpose, path, document, ...(versoPath ? { versoPath } : {}) },
     },
   );
   let status: UploadStatus = data?.status ?? "unavailable";
@@ -419,6 +427,35 @@ export async function readDocument(path: string, type: string): Promise<Document
     warnings: data.warnings ?? [],
     ...(birthDate ? { birthDate } : {}),
   };
+}
+
+/**
+ * Pièce d'identité à transmettre à Stripe (ADR 0378) : liens temporaires vers le recto et le verso
+ * déposés par l'artisan, pour que son navigateur les envoie directement à Stripe avec le reste du
+ * pré-remplissage. Null s'il n'y a rien à transmettre : aucune pièce, pièce en PDF, ou refus de
+ * l'artisan.
+ */
+export async function identityFilesForStripe(): Promise<{ front: string; back?: string } | null> {
+  const { supabase, documents } = await getOnboardingContext();
+  const pieces = documents.filter((d) => d.type === "identite" && d.status !== "refuse");
+  const piece = pieces.find((d) => d.status === "valide") ?? pieces[0];
+  if (!piece) return null;
+  const sides = stripeIdentitySides({
+    share: piece.partage_stripe,
+    mimeType: piece.mime_type,
+    versoMimeType: piece.verso_mime_type,
+  });
+  if (!sides.includes("recto")) return null;
+  const paths =
+    sides.includes("verso") && piece.verso_path
+      ? [piece.storage_path, piece.verso_path]
+      : [piece.storage_path];
+  const { data } = await supabase.storage.from("artisan-documents").createSignedUrls(paths, 120);
+  const urlOf = (path: string) => data?.find((entry) => entry.path === path)?.signedUrl ?? null;
+  const front = urlOf(piece.storage_path);
+  if (!front) return null;
+  const back = paths.length > 1 && piece.verso_path ? urlOf(piece.verso_path) : null;
+  return back ? { front, back } : { front };
 }
 
 export async function savePresentation(_prev: FormState, formData: FormData): Promise<FormState> {

@@ -585,6 +585,8 @@ export type Database = {
           id: string;
           mime_type: string;
           numero: string | null;
+          partage_stripe: boolean;
+          piece: string | null;
           refusal_code: string | null;
           refusal_reason: string | null;
           renewal_reminder_days: number | null;
@@ -596,6 +598,8 @@ export type Database = {
           updated_at: string;
           verified_at: string | null;
           verified_by: string | null;
+          verso_mime_type: string | null;
+          verso_path: string | null;
         };
         ComputedFields: never;
         Insert: {
@@ -609,6 +613,8 @@ export type Database = {
           id?: string;
           mime_type: string;
           numero?: string | null;
+          partage_stripe?: boolean;
+          piece?: string | null;
           refusal_code?: string | null;
           refusal_reason?: string | null;
           renewal_reminder_days?: number | null;
@@ -620,6 +626,8 @@ export type Database = {
           updated_at?: string;
           verified_at?: string | null;
           verified_by?: string | null;
+          verso_mime_type?: string | null;
+          verso_path?: string | null;
         };
         Update: {
           artisan_id?: string;
@@ -632,6 +640,8 @@ export type Database = {
           id?: string;
           mime_type?: string;
           numero?: string | null;
+          partage_stripe?: boolean;
+          piece?: string | null;
           refusal_code?: string | null;
           refusal_reason?: string | null;
           renewal_reminder_days?: number | null;
@@ -643,6 +653,8 @@ export type Database = {
           updated_at?: string;
           verified_at?: string | null;
           verified_by?: string | null;
+          verso_mime_type?: string | null;
+          verso_path?: string | null;
         };
         Relationships: [
           {

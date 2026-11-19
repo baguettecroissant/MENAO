@@ -1,4 +1,4 @@
-import { PRESENTATION_MIN_LENGTH, documentIsValid } from "@menao/core";
+import { IDENTITY_PIECES, PRESENTATION_MIN_LENGTH, documentIsValid } from "@menao/core";
 import { z } from "zod";
 import { messages } from "./messages";
 
@@ -76,6 +76,11 @@ export const documentMetadataSchema = (today: Date = new Date()) => {
       type: z.literal("identite"),
       dateFin: z
         .union([z.literal(""), notPast])
+        .optional()
+        .transform((v) => (v === "" ? undefined : v)),
+      // Carte d'identité, passeport ou titre de séjour (ADR 0378) ; absent des anciens dépôts.
+      piece: z
+        .union([z.literal(""), z.enum(IDENTITY_PIECES)])
         .optional()
         .transform((v) => (v === "" ? undefined : v)),
     }),

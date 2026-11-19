@@ -123,6 +123,8 @@ export function contentSecurityPolicy({
       "https://recherche-entreprises.api.gouv.fr",
       // Jetons Stripe du pré-remplissage du compte de paiement, créés par le navigateur (ADR 0204).
       "https://api.stripe.com",
+      // Pièce d'identité transmise à Stripe par le navigateur de l'artisan (ADR 0378).
+      "https://files.stripe.com",
       "https://*.ingest.de.sentry.io",
       "https://*.ingest.sentry.io",
       ...(voiceCalls ? VOICE_CONNECT_ORIGINS : []),

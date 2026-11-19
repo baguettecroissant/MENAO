@@ -9255,6 +9255,32 @@ export const fr = {
         },
         start: "Configurer mes paiements avec Stripe",
         // Compléments saisis dans MENAO, transmis directement à Stripe (ADR 0215).
+        // Avant Stripe (F-181, ADR 0378, maquette du lot 75) : ce que MENAO transmet pour
+        // l'artisan, et ce que Stripe va lui demander.
+        ahead: {
+          sentTitle: "Transmis pour vous",
+          company: { title: "Votre entreprise", hint: "Nom, SIREN et adresse du siège" },
+          identity: { title: "Votre identité", hint: "Nom et prénom du dirigeant" },
+          piece: {
+            title: "Votre pièce d'identité",
+            hint: "Celle que vous avez déposée dans votre dossier",
+          },
+          askedTitle: "Ce que Stripe va vous demander",
+          asked: [
+            {
+              title: "Protéger votre compte par SMS",
+              hint: "Un code reçu sur votre téléphone, puis un code de secours à noter. Comptez une minute.",
+            },
+            {
+              title: "Confirmer vos informations",
+              hint: "Elles sont déjà remplies : vérifiez et continuez.",
+            },
+            {
+              title: "Accepter les conditions de Stripe",
+              hint: "La dernière étape, en un toucher.",
+            },
+          ],
+        },
         prepare: {
           title: "Préparez votre compte de paiement",
           intro:
@@ -9760,6 +9786,58 @@ export const fr = {
         dateEmission: "Date d'émission",
         dateFin: "Date de fin de validité",
         dateFinIdentite: "Date d'expiration (optionnel)",
+        // Pièce d'identité selon son type, recto et verso (F-181, ADR 0378, maquette du lot 75).
+        identity: {
+          question: "Quelle pièce présentez-vous ?",
+          pieces: {
+            carte_identite: "Carte d'identité",
+            passeport: "Passeport",
+            titre_sejour: "Titre de séjour",
+          },
+          sides: {
+            recto: {
+              title: "Recto",
+              hint: "Le côté avec votre photo",
+              deposited: "Recto déposé",
+              readOn: "Lu sur le recto",
+            },
+            verso: {
+              title: "Verso",
+              hint: "L'autre côté de la carte",
+              deposited: "Verso déposé",
+              readOn: "Lu sur le verso",
+            },
+            page: {
+              title: "Page d'identité",
+              hint: "La double page avec votre photo",
+              deposited: "Page d'identité déposée",
+              readOn: "Lu sur la page",
+            },
+          },
+          photo: "Photo",
+          file: "Fichier",
+          photoLabel: (side: string) => `${side} : prendre en photo`,
+          fileLabel: (side: string) => `${side} : choisir un fichier`,
+          change: "Changer",
+          changeLabel: (side: string) => `Changer : ${side}`,
+          readAll: "Lu automatiquement : vérifiez",
+          birthDate: "Date de naissance",
+          expiry: "Fin de validité",
+          versoLeft: "Il reste le verso : la date de validité s'y trouve souvent.",
+          photoHint: "Photo nette, à plat et bien éclairée. JPEG, PNG ou PDF, 10 Mo maximum.",
+          privacy: "Votre pièce reste privée : seule l'équipe MENAO la consulte.",
+          // TODO(legal) : information de l'artisan sur la transmission de sa pièce à Stripe, et
+          // possibilité de la refuser, à faire valider par l'avocat.
+          share: {
+            title: "Vous n'aurez pas à la refaire",
+            text: "MENAO transmettra cette pièce à Stripe pour ouvrir votre compte de paiement.",
+            decline: "Ne pas la transmettre",
+            declinedTitle: "Pièce non transmise à Stripe",
+            declinedText: "Stripe vous la redemandera à l'étape des paiements.",
+            accept: "La transmettre",
+          },
+          viewVerso: "Voir le verso",
+        },
         coverageLegend: "Votre attestation couvre-t-elle ces métiers ?",
         coverageHint: "Un métier non couvert passe en vérification manuelle par l'équipe MENAO.",
         exemptTitle: "Métiers non soumis à la décennale ?",
@@ -12690,6 +12768,14 @@ export const fr = {
       // Vue côte à côte (ADR 0120).
       docPreview: (label: string) => `Aperçu : ${label}`,
       docOpen: "Ouvrir dans un nouvel onglet",
+      // Pièce d'identité recto verso (ADR 0378).
+      docPiece: "Pièce",
+      docRecto: "Recto",
+      docVerso: "Verso",
+      docViewVerso: "Voir le verso",
+      docStripe: "Transmission à Stripe",
+      docStripeYes: "Acceptée",
+      docStripeNo: "Refusée par l'artisan",
       docNoPreview: "Aperçu impossible pour ce format : ouvrez le document.",
       docReplaced: "Remplacé",
       docEntered: "Saisi par l'artisan",

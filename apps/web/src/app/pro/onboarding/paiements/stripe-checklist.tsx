@@ -8,7 +8,12 @@ const t = fr.pro.onboarding.help.stripe;
 const icons = [IdCard, Landmark, Smartphone, Calendar] as const;
 
 /** « Avant Stripe » (lot 60, ADR 0347) : ce que le formulaire demande, avant de l'ouvrir. */
-export function StripeChecklist() {
+export function StripeChecklist({ withoutIdentity = false }: { withoutIdentity?: boolean }) {
+  // Pièce d'identité déjà transmise par MENAO (ADR 0378) : plus besoin de l'avoir sous la main.
+  const items = STRIPE_CHECKLIST.map((item, index) => ({
+    item,
+    Icon: icons[index] ?? IdCard,
+  })).slice(withoutIdentity ? 1 : 0);
   return (
     <section aria-labelledby="sous-la-main" className={sheetCard}>
       <div className="flex flex-col gap-1">
@@ -18,8 +23,7 @@ export function StripeChecklist() {
         <p className="text-sm text-muted-foreground">{t.intro}</p>
       </div>
       <ul className="flex flex-col divide-y divide-border">
-        {STRIPE_CHECKLIST.map((item, index) => {
-          const Icon = icons[index] ?? IdCard;
+        {items.map(({ item, Icon }) => {
           return (
             <li key={item.title} className="flex items-center gap-3 py-2.5">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-input bg-background text-label">
