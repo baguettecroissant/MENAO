@@ -56,6 +56,8 @@ export const PRIVATE_PATHS = [
   "/espace-partenaire/",
   // Espace commercial (ADR 0205) : réservé aux comptes commerciaux.
   "/commercial",
+  // Réservation d'un candidat conseiller (ADR 0380) : lien privé des e-mails.
+  "/devenir-conseiller/reunion",
 ] as const;
 
 export const absoluteUrl = (path: string) =>
@@ -78,6 +80,7 @@ export const STATIC_PAGES = [
   "/metiers",
   "/villes",
   "/partenaires",
+  "/devenir-conseiller",
   "/pro",
   "/pro/formules",
   // Pages par fonction (ADR 0267).

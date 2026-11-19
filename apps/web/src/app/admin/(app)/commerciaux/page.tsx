@@ -30,14 +30,45 @@ const prospectsSummarySchema = z.object({
 
 export const metadata: Metadata = { title: `${t.title} — ${fr.admin.title}` };
 
+/** Code proposé à un candidat retenu : son prénom sans accents, en majuscules, puis « -06 ». */
+function suggestedCode(firstName: string): string {
+  const base = firstName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "")
+    .slice(0, 20);
+  return base ? `${base}-06` : "";
+}
+
 /**
  * Commerciaux de terrain (F-65, ADR 0205) : liste, inscrits et validés par code, suspension, et
  * invitation d'un nouveau commercial ; base de prospects et son import (lot 2, ADR 0206) ;
  * abonnés, prospects suivis, primes à payer, réglages des primes et export (lot 3, ADR 0207).
  * Réservé aux admins.
  */
-export default async function AdminCommercialsPage() {
+export default async function AdminCommercialsPage({
+  searchParams,
+}: PageProps<"/admin/commerciaux">) {
+  const { candidat } = await searchParams;
   const { supabase } = await requireAdmin();
+  // « Inviter comme commercial » depuis la fiche d'un candidat (ADR 0380) : invitation remplie.
+  const candidateId =
+    typeof candidat === "string" && z.uuid().safeParse(candidat).success ? candidat : null;
+  const { data: candidateRow } = candidateId
+    ? await supabase
+        .from("commercial_candidates")
+        .select("id, first_name, last_name, email")
+        .eq("id", candidateId)
+        .maybeSingle()
+    : { data: null };
+  const candidate = candidateRow && {
+    id: candidateRow.id,
+    firstName: candidateRow.first_name,
+    lastName: candidateRow.last_name,
+    email: candidateRow.email,
+    code: suggestedCode(candidateRow.first_name),
+  };
   const [{ data }, { data: summaryData }, { data: settings }, { data: demo }] = await Promise.all([
     supabase.rpc("admin_commercials_dashboard"),
     supabase.rpc("admin_prospects_summary"),
@@ -162,9 +193,9 @@ export default async function AdminCommercialsPage() {
       </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card className="flex flex-col gap-4">
+        <Card id="inviter" className="flex scroll-mt-24 flex-col gap-4">
           <CardTitle title={t.newTitle} description={t.newLead} />
-          <CommercialInviteForm />
+          <CommercialInviteForm candidate={candidate ?? undefined} />
         </Card>
         {/* Réglage rangé dans les Réglages (ADR 0284) : résumé et lien. */}
         {settings && (

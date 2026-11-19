@@ -90,6 +90,12 @@ export const NOTIFICATION_TYPES = [
   // Échéancier réglable (F-146, ADR 0301) : paiement au démarrage dû (client), puis reçu.
   "demarrage_du",
   "demarrage_paye",
+  // Recrutement des conseillers MENAO (ADR 0380) : e-mails aux candidats, qui n'ont pas de compte.
+  "recrutement_reunion",
+  "recrutement_rappel",
+  "recrutement_annulation",
+  "recrutement_reponse",
+  "recrutement_demo",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -115,6 +121,11 @@ export type EmailContext = {
 
 export const EMAIL_FOOTER =
   "Vous recevez cet e-mail car vous avez un compte MENAO. Message envoyé automatiquement : merci de ne pas y répondre.";
+/** Pied des e-mails envoyés aux candidats conseillers (ADR 0380) : ils n'ont pas de compte. */
+export const RECRUITMENT_EMAIL_FOOTER =
+  "Vous recevez cet e-mail car vous avez candidaté pour devenir conseiller MENAO. Vos données sont gardées 2 ans au plus ; demandez leur suppression depuis la page Contact. Message envoyé automatiquement : merci de ne pas y répondre.";
+/** Les e-mails aux candidats conseillers (sans compte, donc sans préférences). */
+export const isRecruitmentEmail = (type: NotificationType) => type.startsWith("recrutement_");
 /** Lien du pied de page vers les préférences d'e-mail (page /notifications, ADR 0219). */
 export const EMAIL_PREFERENCES_LABEL = "Gérer mes e-mails";
 
@@ -2080,6 +2091,107 @@ export function notificationContent(
         ],
         quote: null,
         cta: { label: "Accéder à mon espace pro", url: link("/pro/tableau-de-bord") },
+      };
+    }
+    // Recrutement des conseillers MENAO (ADR 0380) : réunion d'information en visio.
+    case "recrutement_reunion":
+    case "recrutement_rappel": {
+      const when = moment(text(data, "debut"));
+      const duree = integer(data, "duree") ?? 30;
+      const visio = text(data, "lien");
+      const jeton = uuid(data, "jeton");
+      const at = when ? `le ${when.day} à ${when.time}` : "à la date prévue";
+      const change = jeton
+        ? `Un empêchement ? Choisissez une autre réunion : ${link(`/devenir-conseiller/reunion?t=${jeton}`)}`
+        : "Un empêchement ? Écrivez-nous depuis la page Contact.";
+      const join = { label: "Rejoindre la réunion", url: visio ?? link("/devenir-conseiller") };
+      if (type === "recrutement_reunion") {
+        return {
+          subject: when
+            ? `Votre réunion d'information MENAO : ${when.day} à ${when.time}`
+            : "Votre réunion d'information MENAO",
+          preview: `${duree}\u00a0minutes en visio avec l'équipe MENAO.`,
+          title: "Votre réunion d'information est réservée",
+          paragraphs: [
+            hello(ctx.firstName),
+            `Merci pour votre candidature. Votre réunion d'information en visio a lieu ${at}, pendant ${duree}\u00a0minutes.`,
+            "Au programme : MENAO, l'outil du conseiller et vos gains, puis vos questions. Caméra facultative. Le lien de la visio est ci-dessous ; un rappel vous arrive la veille et une heure avant.",
+            change,
+          ],
+          quote: null,
+          cta: join,
+        };
+      }
+      const heure = text(data, "moment") === "heure";
+      return {
+        subject: heure
+          ? "Dans une heure : votre réunion d'information MENAO"
+          : when
+            ? `Demain à ${when.time} : votre réunion d'information MENAO`
+            : "Demain : votre réunion d'information MENAO",
+        preview: `${duree}\u00a0minutes en visio avec l'équipe MENAO.`,
+        title: heure ? "Votre réunion commence dans une heure" : "Votre réunion, c'est demain",
+        paragraphs: [
+          hello(ctx.firstName),
+          `Petit rappel : votre réunion d'information MENAO a lieu ${at}, en visio, pendant ${duree}\u00a0minutes.`,
+          change,
+        ],
+        quote: null,
+        cta: join,
+      };
+    }
+    case "recrutement_annulation": {
+      const when = moment(text(data, "debut"));
+      const jeton = uuid(data, "jeton");
+      return {
+        subject: "Votre réunion d'information MENAO est annulée",
+        preview: "Choisissez une autre réunion en un clic.",
+        title: "Réunion annulée : choisissez-en une autre",
+        paragraphs: [
+          hello(ctx.firstName),
+          when
+            ? `Nous sommes désolés : la réunion d'information du ${when.day} à ${when.time} est annulée.`
+            : "Nous sommes désolés : votre réunion d'information est annulée.",
+          "Votre candidature reste enregistrée. Choisissez une autre réunion, ou demandez à être rappelé.",
+        ],
+        quote: null,
+        cta: {
+          label: "Choisir une autre réunion",
+          url: link(jeton ? `/devenir-conseiller/reunion?t=${jeton}` : "/devenir-conseiller"),
+        },
+      };
+    }
+    case "recrutement_reponse":
+      return {
+        subject: "Votre candidature chez MENAO",
+        preview: "Merci pour l'intérêt que vous portez à MENAO.",
+        title: "Merci pour votre candidature",
+        paragraphs: [
+          hello(ctx.firstName),
+          "Merci pour l'intérêt que vous portez à MENAO et pour le temps que vous avez consacré à votre candidature.",
+          "Nous ne pouvons pas y donner suite pour le moment. Nous vous souhaitons pleine réussite dans vos projets.",
+        ],
+        quote: null,
+        cta: { label: "Découvrir MENAO", url: link("/") },
+      };
+    case "recrutement_demo": {
+      const cle = text(data, "cle");
+      return {
+        subject: "Découvrez l'espace conseiller MENAO",
+        preview: "La démonstration de l'outil du conseiller, avec des exemples.",
+        title: "L'espace conseiller, en démonstration",
+        paragraphs: [
+          hello(ctx.firstName),
+          "Comme promis, voici l'accès à la démonstration de l'espace conseiller MENAO : votre code, vos artisans, vos gains et le guide terrain, avec des exemples.",
+          "Le lien reste valable quelques jours. Aucune donnée réelle n'y est visible.",
+        ],
+        quote: null,
+        cta: {
+          label: "Ouvrir la démonstration",
+          url: link(
+            cle && /^[a-f0-9]{32}$/.test(cle) ? `/commercial/demo/${cle}` : "/devenir-conseiller",
+          ),
+        },
       };
     }
   }

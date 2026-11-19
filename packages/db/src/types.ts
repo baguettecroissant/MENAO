@@ -2598,6 +2598,114 @@ export type Database = {
           },
         ];
       };
+      commercial_candidates: {
+        Row: {
+          attendance: string | null;
+          availability: string;
+          booked_at: string | null;
+          booking_token: string;
+          callback_requested: boolean;
+          consent_at: string;
+          created_at: string;
+          email: string;
+          experience: string;
+          first_name: string;
+          id: string;
+          interview_grid: NonNullable<Json>;
+          interview_notes: string | null;
+          interviewed_at: string | null;
+          interviewed_by: string | null;
+          last_contact_at: string;
+          last_name: string;
+          legal_status: string;
+          meeting_id: string | null;
+          motivation: string | null;
+          phone: string;
+          sector: string;
+          sees_artisans: boolean;
+          source: string;
+          stage: string;
+          test_persona: string | null;
+          test_review: Json | null;
+          test_score: number | null;
+          tested_at: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          attendance?: string | null;
+          availability: string;
+          booked_at?: string | null;
+          booking_token?: string;
+          callback_requested?: boolean;
+          consent_at?: string;
+          created_at?: string;
+          email: string;
+          experience: string;
+          first_name: string;
+          id?: string;
+          interview_grid?: NonNullable<Json>;
+          interview_notes?: string | null;
+          interviewed_at?: string | null;
+          interviewed_by?: string | null;
+          last_contact_at?: string;
+          last_name: string;
+          legal_status: string;
+          meeting_id?: string | null;
+          motivation?: string | null;
+          phone: string;
+          sector: string;
+          sees_artisans: boolean;
+          source: string;
+          stage?: string;
+          test_persona?: string | null;
+          test_review?: Json | null;
+          test_score?: number | null;
+          tested_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          attendance?: string | null;
+          availability?: string;
+          booked_at?: string | null;
+          booking_token?: string;
+          callback_requested?: boolean;
+          consent_at?: string;
+          created_at?: string;
+          email?: string;
+          experience?: string;
+          first_name?: string;
+          id?: string;
+          interview_grid?: NonNullable<Json>;
+          interview_notes?: string | null;
+          interviewed_at?: string | null;
+          interviewed_by?: string | null;
+          last_contact_at?: string;
+          last_name?: string;
+          legal_status?: string;
+          meeting_id?: string | null;
+          motivation?: string | null;
+          phone?: string;
+          sector?: string;
+          sees_artisans?: boolean;
+          source?: string;
+          stage?: string;
+          test_persona?: string | null;
+          test_review?: Json | null;
+          test_score?: number | null;
+          tested_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_candidates_meeting_id_fkey";
+            columns: ["meeting_id"];
+            isOneToOne: false;
+            referencedRelation: "recruitment_meetings";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       commercial_demo: {
         Row: {
           enabled: boolean;
@@ -3614,6 +3722,7 @@ export type Database = {
       notifications: {
         Row: {
           attempts: number;
+          candidate_id: string | null;
           channel: Database["public"]["Enums"]["notification_channel"];
           created_at: string;
           data: NonNullable<Json>;
@@ -3636,6 +3745,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           attempts?: number;
+          candidate_id?: string | null;
           channel?: Database["public"]["Enums"]["notification_channel"];
           created_at?: string;
           data?: NonNullable<Json>;
@@ -3657,6 +3767,7 @@ export type Database = {
         };
         Update: {
           attempts?: number;
+          candidate_id?: string | null;
           channel?: Database["public"]["Enums"]["notification_channel"];
           created_at?: string;
           data?: NonNullable<Json>;
@@ -3677,6 +3788,13 @@ export type Database = {
           user_id?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "notifications_candidate_id_fkey";
+            columns: ["candidate_id"];
+            isOneToOne: false;
+            referencedRelation: "commercial_candidates";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "notifications_ticket_id_fkey";
             columns: ["ticket_id"];
@@ -5171,6 +5289,40 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      recruitment_meetings: {
+        Row: {
+          active: boolean;
+          capacity: number;
+          created_at: string;
+          created_by: string | null;
+          duration_minutes: number;
+          id: string;
+          meet_url: string;
+          starts_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          capacity?: number;
+          created_at?: string;
+          created_by?: string | null;
+          duration_minutes?: number;
+          id?: string;
+          meet_url: string;
+          starts_at: string;
+        };
+        Update: {
+          active?: boolean;
+          capacity?: number;
+          created_at?: string;
+          created_by?: string | null;
+          duration_minutes?: number;
+          id?: string;
+          meet_url?: string;
+          starts_at?: string;
+        };
+        Relationships: [];
       };
       regions: {
         Row: {
@@ -6737,7 +6889,9 @@ export type Database = {
         Args: { p_id: string; p_reason: string };
         Returns: undefined;
       };
+      admin_cancel_recruitment_meeting: { Args: { p_id: string }; Returns: number };
       admin_cancel_referral: { Args: { p_id: string; p_reason: string }; Returns: undefined };
+      admin_candidate_test_context: { Args: { p_id: string }; Returns: string };
       admin_chantier_counts: { Args: { p_query?: string }; Returns: Json };
       admin_chantiers: {
         Args: {
@@ -6832,6 +6986,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_decline_candidate: { Args: { p_id: string }; Returns: undefined };
       admin_delete_launch_member: { Args: { p_id: string }; Returns: undefined };
       admin_delete_launch_task: { Args: { p_id: string }; Returns: undefined };
       admin_draw_spot_checks: { Args: Record<PropertyKey, never>; Returns: number };
@@ -7026,6 +7181,10 @@ export type Database = {
         };
         Returns: string;
       };
+      admin_save_candidate_test: {
+        Args: { p_id: string; p_persona: string; p_review: Json; p_score: number };
+        Returns: undefined;
+      };
       admin_save_commercial_bonus_settings: {
         Args: {
           p_delai_validation_jours?: number;
@@ -7118,6 +7277,7 @@ export type Database = {
           tag: string;
         }[];
       };
+      admin_send_candidate_demo: { Args: { p_id: string }; Returns: undefined };
       admin_set_commercial_demo: { Args: { p_enabled: boolean }; Returns: undefined };
       admin_set_commercial_status: {
         Args: { p_id: string; p_status: Database["public"]["Enums"]["commercial_status"] };
@@ -7245,6 +7405,23 @@ export type Database = {
           total: number;
           type: string;
         }[];
+      };
+      apply_as_commercial: {
+        Args: {
+          p_availability: string;
+          p_consent: boolean;
+          p_email: string;
+          p_experience: string;
+          p_first_name: string;
+          p_last_name: string;
+          p_legal_status: string;
+          p_motivation: string;
+          p_phone: string;
+          p_sector: string;
+          p_sees_artisans: boolean;
+          p_source: string;
+        };
+        Returns: string;
       };
       artisan_add_chantier_message: {
         Args: { p_chantier_id: string; p_message: string };
@@ -7720,6 +7897,15 @@ export type Database = {
           p_summary: string;
         };
         Returns: string;
+      };
+      commercial_bonus_rates: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          prime_abonnement_centimes: number;
+          prime_abonnement_entreprise_centimes: number;
+          prime_abonnement_premium_centimes: number;
+          prime_validation_centimes: number;
+        }[];
       };
       commercial_bonuses_list: {
         Args: Record<PropertyKey, never>;
@@ -8238,6 +8424,34 @@ export type Database = {
         Returns: string;
       };
       record_webhook_failure: { Args: { p_error: string; p_event_id: string }; Returns: undefined };
+      recruitment_book_meeting: {
+        Args: { p_meeting: string; p_token: string };
+        Returns: {
+          duration_minutes: number;
+          starts_at: string;
+        }[];
+      };
+      recruitment_candidate: {
+        Args: { p_token: string };
+        Returns: {
+          email: string;
+          first_name: string;
+          meeting_duration: number;
+          meeting_id: string;
+          meeting_starts_at: string;
+          stage: string;
+        }[];
+      };
+      recruitment_open_meetings: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          duration_minutes: number;
+          id: string;
+          remaining: number;
+          starts_at: string;
+        }[];
+      };
+      recruitment_request_callback: { Args: { p_token: string }; Returns: undefined };
       register_push_token: {
         Args: { p_platform: Database["public"]["Enums"]["push_platform"]; p_token: string };
         Returns: undefined;
@@ -8717,7 +8931,12 @@ export type Database = {
         | "paiement_relance"
         | "chantier_attribue"
         | "demarrage_du"
-        | "demarrage_paye";
+        | "demarrage_paye"
+        | "recrutement_reunion"
+        | "recrutement_rappel"
+        | "recrutement_annulation"
+        | "recrutement_reponse"
+        | "recrutement_demo";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -9063,6 +9282,11 @@ export const Constants = {
         "chantier_attribue",
         "demarrage_du",
         "demarrage_paye",
+        "recrutement_reunion",
+        "recrutement_rappel",
+        "recrutement_annulation",
+        "recrutement_reponse",
+        "recrutement_demo",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],
