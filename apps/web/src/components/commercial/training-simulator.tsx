@@ -49,7 +49,14 @@ async function invokeTraining(body: Record<string, unknown>) {
  * par écrit (12 messages au plus), puis le coach note l'échange sur 20 avec 3 conseils. L'échange
  * reste dans la page ; seule la note est gardée.
  */
-export function TrainingSimulator({ aside = null }: { aside?: ReactNode }) {
+export function TrainingSimulator({
+  aside = null,
+  candidateId,
+}: {
+  aside?: ReactNode;
+  /** Test de vente en entretien (ADR 0380) : la note va sur la fiche du candidat. */
+  candidateId?: string;
+}) {
   const [persona, setPersona] = useState<TrainingPersona | null>(null);
   const [session, setSession] = useState(0);
 
@@ -62,6 +69,7 @@ export function TrainingSimulator({ aside = null }: { aside?: ReactNode }) {
           <Session
             key={`${persona}-${session}`}
             persona={persona}
+            candidateId={candidateId}
             onRestart={() => setSession((s) => s + 1)}
             onChange={() => setPersona(null)}
           />
@@ -137,10 +145,12 @@ function initials(label: string) {
 
 function Session({
   persona,
+  candidateId,
   onRestart,
   onChange,
 }: {
   persona: TrainingPersona;
+  candidateId?: string;
   onRestart: () => void;
   onChange: () => void;
 }) {
@@ -177,6 +187,7 @@ function Session({
       persona,
       history,
       message: text,
+      ...(candidateId ? { candidateId } : {}),
     });
     setPending(false);
     if (failure || !("reply" in result)) {
@@ -196,6 +207,7 @@ function Session({
       action: "coach",
       persona,
       history: messages,
+      ...(candidateId ? { candidateId } : {}),
     });
     setReviewing(false);
     if (failure || !("review" in result)) return setError(failure ?? t.errors.unavailable);

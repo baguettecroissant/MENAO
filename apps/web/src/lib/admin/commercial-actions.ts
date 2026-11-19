@@ -57,6 +57,15 @@ export async function inviteCommercial(_prev: FormState, formData: FormData): Pr
     if (status === "email_taken") return { fieldErrors: { email: [message] }, values };
     return { error: message, values };
   }
+  // Candidat retenu depuis sa fiche (ADR 0380) : il passe à l'étape « Retenu ».
+  const candidate = text(formData, "candidate") ?? "";
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(candidate)) {
+    await supabase
+      .from("commercial_candidates")
+      .update({ stage: "retenu", last_contact_at: new Date().toISOString() })
+      .eq("id", candidate);
+    revalidatePath("/admin/candidats");
+  }
   revalidatePath(PATH);
   return { success: t.invited(values.email ?? "") };
 }

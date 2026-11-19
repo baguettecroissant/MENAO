@@ -2,6 +2,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import {
   EMAIL_FOOTER,
   EMAIL_PREFERENCES_LABEL,
+  RECRUITMENT_EMAIL_FOOTER,
+  isRecruitmentEmail,
   notificationContent,
   plainText,
   type EmailContent,
@@ -39,6 +41,9 @@ export function renderNotification(
   ctx: EmailContext,
 ): RenderedEmail {
   const content = notificationContent(type, data, ctx);
+  // Candidats conseillers (ADR 0380) : pas de compte, donc pas de préférences d'e-mail.
+  if (isRecruitmentEmail(type))
+    return renderContent(content, ctx.siteUrl, RECRUITMENT_EMAIL_FOOTER);
   const preferencesUrl = `${ctx.siteUrl.replace(/\/+$/, "")}/notifications`;
   return {
     subject: content.subject,

@@ -29,4 +29,5 @@ export * from "./menao-score";
 export * from "./partner-dashboard";
 export * from "./launch-plan";
 export * from "./pro-callback";
+export * from "./commercial-application";
 export * from "./reception";

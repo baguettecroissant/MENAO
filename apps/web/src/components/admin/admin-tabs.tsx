@@ -29,6 +29,7 @@ export const ADMIN_TAB_SETS = {
     label: t.contributors.title,
     tabs: [
       { key: "commercials", href: "/admin/commerciaux", label: t.contributors.commercials },
+      { key: "candidates", href: "/admin/candidats", label: t.contributors.candidates },
       { key: "partners", href: "/admin/partenaires", label: t.contributors.partners },
       { key: "referrals", href: "/admin/parrainages", label: t.contributors.referrals },
     ],

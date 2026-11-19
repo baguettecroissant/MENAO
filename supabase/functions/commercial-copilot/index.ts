@@ -108,7 +108,13 @@ async function training(
   admin: SupabaseClient,
   asUser: SupabaseClient,
   userId: string,
-  body: { action?: unknown; persona?: unknown; history?: unknown; message?: unknown },
+  body: {
+    action?: unknown;
+    persona?: unknown;
+    history?: unknown;
+    message?: unknown;
+    candidateId?: unknown;
+  },
 ): Promise<Response> {
   const persona = TRAINING_PERSONAS.find((p) => p === body.persona);
   const history = normalizeTrainingHistory(body.history);
@@ -122,12 +128,24 @@ async function training(
   ) {
     return json({ status: "invalid" }, 400);
   }
-  const { data: me } = await asUser
-    .from("commercials")
-    .select("status")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (me?.status !== "actif") return json({ status: "forbidden" }, 403);
+  // Test de vente en entretien (ADR 0380) : un administrateur fait passer le simulateur à un
+  // candidat, sans compte ; la base vérifie le rôle et renvoie le prénom du candidat.
+  const candidateId =
+    typeof body.candidateId === "string" && UUID.test(body.candidateId) ? body.candidateId : null;
+  let candidateName: string | null = null;
+  if (body.candidateId !== undefined && !candidateId) return json({ status: "invalid" }, 400);
+  if (candidateId) {
+    const { data, error } = await asUser.rpc("admin_candidate_test_context", { p_id: candidateId });
+    if (error) return json({ status: "forbidden" }, 403);
+    candidateName = typeof data === "string" ? data : null;
+  } else {
+    const { data: me } = await asUser
+      .from("commercials")
+      .select("status")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (me?.status !== "actif") return json({ status: "forbidden" }, 403);
+  }
   if (!(await withinLimits(admin, userId, "entrainement"))) {
     return json({ status: "rate_limited" }, 429);
   }
@@ -148,11 +166,9 @@ async function training(
     // Le coach juge finement (refus, promesses) : Sonnet par défaut, une note par séance.
     run.model = env("AI_COMMERCIAL_COACH_MODEL") || quoteModel();
     const detected = detectedBreaches(history, VIOLATION_LABELS);
-    const { data: profile } = await asUser
-      .from("profiles")
-      .select("first_name")
-      .eq("user_id", userId)
-      .maybeSingle();
+    const { data: profile } = candidateId
+      ? { data: { first_name: candidateName } }
+      : await asUser.from("profiles").select("first_name").eq("user_id", userId).maybeSingle();
     const review = await reviewTraining(
       llm,
       GUIDE,
@@ -162,7 +178,15 @@ async function training(
       run,
       profile?.first_name?.trim() || null,
     );
-    if (review) {
+    if (review && candidateId) {
+      const { error } = await asUser.rpc("admin_save_candidate_test", {
+        p_id: candidateId,
+        p_persona: persona,
+        p_score: review.total,
+        p_review: review,
+      });
+      if (error) console.error("commercial-copilot : test du candidat non enregistré", error.code);
+    } else if (review) {
       const { error } = await asUser.rpc("commercial_save_training", {
         p_persona: persona,
         p_score: review.total,
@@ -195,6 +219,7 @@ Deno.serve(
       persona?: unknown;
       history?: unknown;
       message?: unknown;
+      candidateId?: unknown;
     } | null;
 
     // Appels à la base avec le jeton du commercial : ses droits sont vérifiés par la base.

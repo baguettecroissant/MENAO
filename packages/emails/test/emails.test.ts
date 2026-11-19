@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   EMAIL_FOOTER,
   NOTIFICATION_TYPES,
+  RECRUITMENT_EMAIL_FOOTER,
   messagePushContent,
   notificationContent,
   plainText,
@@ -1394,5 +1395,61 @@ describe("chantier attribué à un membre de l'équipe (ADR 0243)", () => {
       label: "Voir le chantier",
       url: `https://menao.example/pro/chantiers/${chantierId}`,
     });
+  });
+});
+
+describe("recrutement des conseillers (ADR 0380)", () => {
+  const ctx = { siteUrl: "https://menao.fr", firstName: "Julie" };
+  const meeting = {
+    reunion: "11111111-1111-4111-8111-111111111111",
+    debut: "2026-11-26T17:00:00Z",
+    duree: 30,
+    lien: "https://meet.google.com/abc-defg-hij",
+    jeton: "33333333-3333-4333-8333-333333333333",
+  };
+
+  it("confirmation : date à l'heure de Paris, lien de visio, lien pour changer", () => {
+    const content = notificationContent("recrutement_reunion", meeting, ctx);
+    expect(content.subject).toBe("Votre réunion d'information MENAO : jeudi 26 novembre à 18h00");
+    expect(content.cta).toEqual({
+      label: "Rejoindre la réunion",
+      url: "https://meet.google.com/abc-defg-hij",
+    });
+    expect(content.paragraphs.join(" ")).toContain(
+      "https://menao.fr/devenir-conseiller/reunion?t=33333333-3333-4333-8333-333333333333",
+    );
+  });
+
+  it("rappels : la veille, puis une heure avant", () => {
+    expect(
+      notificationContent("recrutement_rappel", { ...meeting, moment: "veille" }, ctx).subject,
+    ).toBe("Demain à 18h00 : votre réunion d'information MENAO");
+    expect(
+      notificationContent("recrutement_rappel", { ...meeting, moment: "heure" }, ctx).subject,
+    ).toBe("Dans une heure : votre réunion d'information MENAO");
+  });
+
+  it("annulation : choisir une autre réunion avec son lien", () => {
+    const content = notificationContent("recrutement_annulation", meeting, ctx);
+    expect(content.cta.url).toBe(
+      "https://menao.fr/devenir-conseiller/reunion?t=33333333-3333-4333-8333-333333333333",
+    );
+  });
+
+  it("démo : lien seulement avec une clé valide", () => {
+    const key = "a".repeat(32);
+    expect(notificationContent("recrutement_demo", { cle: key }, ctx).cta.url).toBe(
+      `https://menao.fr/commercial/demo/${key}`,
+    );
+    expect(notificationContent("recrutement_demo", { cle: "../x" }, ctx).cta.url).toBe(
+      "https://menao.fr/devenir-conseiller",
+    );
+  });
+
+  it("pied de page sans compte ni préférences", () => {
+    const email = renderNotification("recrutement_reponse", {}, ctx);
+    expect(email.text).toContain(RECRUITMENT_EMAIL_FOOTER);
+    expect(email.text).not.toContain("compte MENAO");
+    expect(email.html).not.toContain("/notifications");
   });
 });

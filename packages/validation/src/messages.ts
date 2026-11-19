@@ -10,6 +10,12 @@ export const messages = {
   callbackFirstName: "Indiquez votre prénom.",
   callbackPhone: "Indiquez un numéro de téléphone valide.",
   callbackConsent: "Cochez la case pour que nous puissions vous rappeler.",
+  // Candidature des conseillers MENAO (ADR 0380).
+  candidateFirstName: "Indiquez votre prénom.",
+  candidateLastName: "Indiquez votre nom.",
+  candidateSector: "Indiquez la ville ou le secteur où vous aimeriez travailler.",
+  candidateChoice: "Choisissez une réponse.",
+  candidateConsent: "Cochez la case pour que nous puissions traiter votre candidature.",
   passwordTooShort: "Le mot de passe doit contenir au moins 8 caractères.",
   passwordTooLong: "Le mot de passe doit contenir au plus 72 caractères.",
   siretInvalid: "Numéro SIRET invalide (14 chiffres).",

@@ -262,7 +262,7 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           href: "/admin/commerciaux",
           label: fr.admin.nav.contributors,
           icon: Handshake,
-          also: ["/admin/partenaires", "/admin/parrainages"],
+          also: ["/admin/candidats", "/admin/partenaires", "/admin/parrainages"],
         },
       ],
     },

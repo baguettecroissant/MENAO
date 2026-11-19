@@ -1519,6 +1519,235 @@ export const fr = {
         website: "Adresse de site invalide.",
       },
     },
+    // Recrutement des conseillers MENAO (F-183, lot 77, ADR 0380). Montants lus dans le barème.
+    recruitment: {
+      title: "Devenir conseiller MENAO",
+      metaTitle: "Devenir conseiller MENAO : indépendant, payé à chaque artisan",
+      metaDescription:
+        "Faites découvrir MENAO aux artisans du bâtiment des Alpes-Maritimes. Indépendant, à votre rythme, payé pour chaque artisan validé, sans plafond.",
+      eyebrow: "Recrutement · Alpes-Maritimes",
+      heroTitle: "Devenez conseiller MENAO.",
+      intro:
+        "Faites découvrir MENAO aux artisans du bâtiment de votre secteur. Vous êtes indépendant, vous choisissez vos horaires, et vous êtes payé pour chaque artisan que vous faites entrer.",
+      apply: "Je candidate",
+      simulate: "Calculer mes gains",
+      heroChecks: [
+        "Indépendant, à votre rythme",
+        "Payé à chaque artisan validé",
+        "Outils et formation fournis",
+      ],
+      photoAlt:
+        "Trois conseillers MENAO en polo marine marchent devant une voiture aux couleurs de MENAO, sur la Côte d'Azur.",
+      gains: {
+        validation: (amount: string) => ({
+          value: amount,
+          title: "par artisan validé",
+          text: "dès que son dossier est accepté",
+        }),
+        subscription: (amount: string, list: string) => ({
+          value: `+${amount}`,
+          title: "au plus, quand il s'abonne",
+          text: `${list} selon sa formule`,
+        }),
+        ceiling: { value: "0", title: "plafond", text: "versé chaque mois, sans limite" },
+      },
+      stepsEyebrow: "Le métier",
+      stepsTitle: "Simple à expliquer, facile à vendre.",
+      stepsLead:
+        "Aucune commission sur les chantiers des artisans, un abonnement fixe, 2 mois offerts pour essayer : MENAO se présente en dix minutes.",
+      steps: (validation: string, list: string) => [
+        {
+          title: "Vous rencontrez les artisans",
+          text: "Sur le terrain, au téléphone, chez les grossistes : vous présentez MENAO aux artisans de votre secteur.",
+        },
+        {
+          title: "Ils s'inscrivent avec votre code",
+          text: "Votre lien et votre QR code rattachent chaque inscription à votre nom, même s'il s'inscrit plus tard.",
+        },
+        {
+          title: "L'équipe vérifie leur dossier",
+          text: `Assurance, Kbis, qualifications : dès que le dossier est validé, vous gagnez ${validation}.`,
+        },
+        {
+          title: "Ils s'abonnent, vous gagnez encore",
+          text: `Après ses 2 mois offerts, au premier paiement : ${list} de plus selon sa formule.`,
+        },
+      ],
+      simulator: {
+        eyebrow: "Vos gains",
+        title: "Calculez ce que vous pouvez gagner.",
+        lead: (validation: string, list: string) =>
+          `Le calcul suit le barème : ${validation} par artisan validé, puis ${list} quand il s'abonne, selon sa formule.`,
+        validated: "Artisans validés par mois",
+        subscribers: "Dont abonnés, selon leur formule",
+        planLabel: (plan: string) => `Abonnés en ${plan}`,
+        less: (plan: string) => `Un abonné ${plan} de moins`,
+        more: (plan: string) => `Un abonné ${plan} de plus`,
+        lineValidation: (count: number, unit: string) => `${count} validés × ${unit}`,
+        linePlan: (count: number, plan: string, unit: string) =>
+          `${count} abonnés en ${plan} × ${unit}`,
+        example: "Exemple pour un mois",
+        disclaimer:
+          "Avant vos cotisations d'indépendant. C'est un exemple de calcul, pas une promesse de revenus : tout dépend du nombre d'artisans que vous faites entrer. La prime d'abonnement arrive après les 2 mois offerts à l'artisan.",
+      },
+      toolsEyebrow: "Vos outils",
+      toolsTitle: "Tout ce qu'il faut, dès le premier jour.",
+      toolsLead:
+        "Votre espace conseiller sur l'ordinateur et le téléphone, et une formation avant de commencer.",
+      tools: [
+        {
+          title: "Votre code et votre QR code",
+          text: "Un lien à partager, des cartes à imprimer, chaque inscrit rattaché à votre nom.",
+        },
+        {
+          title: "Les entreprises du 06 sur une carte",
+          text: "Les artisans de votre secteur, issus du registre public, et leur suivi.",
+        },
+        {
+          title: "Un copilote pour chaque visite",
+          text: "La visite préparée, le message prêt, le compte rendu dicté.",
+        },
+        {
+          title: "Un entraînement noté sur 20",
+          text: "Face à un artisan joué par l'IA, avec les conseils d'un coach.",
+        },
+        {
+          title: "Vos gains en direct",
+          text: "Inscrits, validés, abonnés, et ce qui vous sera versé.",
+        },
+        {
+          title: "Un guide terrain complet",
+          text: "Les appels types, les objections, les règles à respecter.",
+        },
+      ],
+      profileEyebrow: "Pour qui ?",
+      profileTitle: "Vous aimez le terrain et le contact.",
+      alreadyTitle: "Vous voyez déjà des artisans pour votre travail ?",
+      alreadyText:
+        "Négoce de matériaux, outillage, fournitures, assurance… MENAO s'ajoute à ce que vous leur présentez déjà, sans un kilomètre de plus.",
+      lookingTitle: "Ce qu'on recherche",
+      looking: [
+        "À l'aise au téléphone et en face à face",
+        "Vous connaissez le 06 et ses artisans, ou vous apprenez vite",
+        "Un statut d'indépendant, ou prêt à en créer un",
+        "Une expérience du bâtiment est un plus, pas une obligation",
+      ],
+      processTitle: "Comment ça se passe",
+      process: [
+        "Vous envoyez votre candidature (2 minutes)",
+        "Vous choisissez tout de suite une réunion d'information en visio (30 minutes)",
+        "Un entretien, avec une mise en situation face à un artisan joué par l'IA",
+        "Votre code, votre espace et une formation pour démarrer",
+      ],
+      faqEyebrow: "Questions fréquentes",
+      faqTitle: "Avant de candidater.",
+      faq: (validation: string, list: string) => [
+        {
+          q: "Quel statut faut-il pour devenir conseiller MENAO ?",
+          a: "Un statut d'indépendant, par exemple auto-entrepreneur ou société. Pas encore de statut ? Dites-le dans le formulaire : nous en parlons pendant la réunion d'information.",
+        },
+        {
+          q: "Ai-je des horaires ou un nombre d'artisans à atteindre ?",
+          a: "Non. Vous êtes indépendant : vous organisez vos journées et vos tournées comme vous le souhaitez. Le guide et les outils sont des conseils, pas des consignes.",
+        },
+        {
+          q: "Quand et comment suis-je payé ?",
+          a: `Chaque mois, pour les primes acquises : ${validation} quand le dossier d'un artisan inscrit avec votre code est validé, puis ${list} selon sa formule à son premier paiement, après ses 2 mois offerts. Tout est suivi dans votre espace.`,
+        },
+        {
+          q: "Sur quel secteur vais-je travailler ?",
+          a: "Dans les Alpes-Maritimes, autour de chez vous. Indiquez votre secteur dans le formulaire : nous en parlons ensemble.",
+        },
+        {
+          q: "Faut-il connaître le bâtiment ?",
+          a: "Non, c'est un plus. Le guide, l'entraînement et le copilote vous aident à présenter MENAO simplement.",
+        },
+        {
+          q: "Que se passe-t-il si un artisan s'inscrit sans mon code ?",
+          a: "Votre lien et votre QR code rattachent l'inscription à votre nom, même plus tard. Sans eux, l'artisan peut saisir votre code lors de son inscription, dans le champ « J'ai un code ».",
+        },
+      ],
+      formTitle: "Je candidate.",
+      formLead:
+        "Deux minutes. Juste après, vous choisissez votre réunion d'information en visio : on vous présente MENAO, l'outil et vos gains, et vous posez toutes vos questions.",
+      formChecks: [
+        "Aucun CV demandé pour commencer",
+        "Réponse à chaque candidature",
+        "Vos données ne servent qu'au recrutement",
+      ],
+      fields: {
+        firstName: "Prénom",
+        lastName: "Nom",
+        email: "E-mail",
+        phone: "Téléphone",
+        sector: "Ville ou secteur",
+        sectorHint: "Là où vous aimeriez démarcher les artisans.",
+        legalStatus: "Votre statut aujourd'hui",
+        seesArtisans: "Vous voyez déjà des artisans pour votre travail ?",
+        experience: "Votre expérience de la vente sur le terrain",
+        availability: "Votre disponibilité",
+        source: "Comment avez-vous connu MENAO ?",
+        sourceHint: "Déjà coché si vous arrivez par le lien d'une annonce.",
+        motivation: "Pourquoi MENAO ?",
+        optional: "(facultatif)",
+        consent: "J'accepte que MENAO conserve ma candidature pour me recontacter, 2 ans au plus.",
+        privacy: "Confidentialité",
+      },
+      options: {
+        legalStatus: {
+          auto_entrepreneur: "Auto-entrepreneur",
+          societe: "Société",
+          aucun: "Pas encore de statut",
+        },
+        seesArtisans: { oui: "Oui", non: "Non" },
+        experience: {
+          aucune: "Aucune",
+          moins_2_ans: "Moins de 2 ans",
+          plus_2_ans: "2 ans et plus",
+        },
+        availability: { temps_plein: "Temps plein", temps_partiel: "Temps partiel" },
+        source: {
+          linkedin: "LinkedIn",
+          facebook: "Facebook",
+          indeed: "Indeed",
+          leboncoin: "Leboncoin",
+          bouche_a_oreille: "Bouche-à-oreille",
+          autre: "Autre",
+        },
+      },
+      submit: "Envoyer et choisir ma réunion",
+      meeting: {
+        sent: "Candidature envoyée",
+        title: (firstName: string) => `Merci ${firstName}. Choisissez votre réunion d'information.`,
+        changeTitle: (firstName: string) => `${firstName}, choisissez votre réunion d'information.`,
+        lead: "30 minutes en visio avec l'équipe : MENAO, l'outil du conseiller, vos gains, puis vos questions. Caméra facultative.",
+        slot: (day: string, from: string, to: string) => ({
+          day,
+          hours: `${from} – ${to} · en visio`,
+        }),
+        remaining: (n: number) => (n === 1 ? "1 place restante" : `${n} places restantes`),
+        book: (day: string) => `Je réserve ${day}`,
+        pick: "Choisissez une réunion",
+        none: "Aucune réunion n'est ouverte pour le moment : l'équipe vous rappelle pour en fixer une.",
+        noneFits: "Aucun créneau ne vous va ?",
+        callback: "Être rappelé par l'équipe",
+        callbackDone: "C'est noté : l'équipe vous rappelle très vite pour convenir d'un moment.",
+        booked: (day: string, time: string) => `C'est noté : ${day} à ${time}.`,
+        bookedText: (email: string) =>
+          `Le lien de la visio vient de partir à ${email}. Un rappel arrive la veille et une heure avant.`,
+        addToCalendar: "Ajouter à mon agenda",
+        change: "Changer de créneau",
+        demoTitle: "En attendant",
+        demoText: "découvrez ce que MENAO apporte aux artisans :",
+        demoLink: "voir l'Espace Pro",
+        calendarTitle: "Réunion d'information MENAO",
+        calendarDetails:
+          "Réunion d'information en visio avec l'équipe MENAO. Le lien est dans l'e-mail de confirmation.",
+      },
+      invalidLink:
+        "Ce lien n'est plus valable. Pour toute question sur votre candidature, écrivez-nous depuis la page Contact.",
+      reunionTitle: "Votre réunion d'information",
+    },
     about: {
       title: "À propos de MENAO",
       metaDescription:
@@ -10118,6 +10347,7 @@ export const fr = {
         intro:
           "Ceux qui font venir des artisans et des clients à MENAO : commerciaux de terrain, partenaires et artisans qui parrainent un confrère.",
         commercials: "Commerciaux",
+        candidates: "Candidats",
         partners: "Partenaires",
         referrals: "Parrainages",
       },
@@ -11659,6 +11889,167 @@ export const fr = {
       },
     },
     // Commerciaux de terrain (F-65, ADR 0205).
+    // Candidats conseillers (F-183, lot 77, ADR 0380) : onglet « Candidats » des apporteurs.
+    candidates: {
+      title: "Candidats",
+      intro:
+        "Les candidatures de la page « Devenir conseiller MENAO », de la réunion d'information à la décision.",
+      nextMeeting: "Prochaine réunion d'information",
+      noMeeting: "Aucune réunion prévue",
+      meetingSeats: (booked: number, capacity: number) =>
+        `${booked} inscrit${booked > 1 ? "s" : ""} sur ${capacity}`,
+      copyLink: "Copier le lien",
+      copied: "Lien copié",
+      manageMeetings: "Gérer les réunions",
+      sourcesTitle: "D'où viennent les candidats · 30 derniers jours",
+      sourcesEmpty: "Aucune candidature ces 30 derniers jours.",
+      filtersLabel: "Étape",
+      filters: {
+        a_traiter: "À traiter",
+        reunion: "Réunion prévue",
+        retenus: "Retenus",
+        non_retenus: "Non retenus",
+        tous: "Tous",
+      },
+      columns: {
+        candidate: "Candidat",
+        received: "Reçue",
+        source: "Venu par",
+        profile: "Profil",
+        progress: "Réunion, test",
+        stage: "Étape",
+      },
+      empty: "Aucun candidat à cette étape.",
+      seesArtisans: "Voit des artisans",
+      stages: {
+        nouveau: "Nouveau",
+        a_appeler: "À appeler",
+        reunion_prevue: "Réunion prévue",
+        entretien: "Entretien",
+        retenu: "Retenu",
+        non_retenu: "Non retenu",
+      },
+      progress: {
+        meeting: (day: string) => `Réunion ${day}`,
+        present: (day: string) => `Présent le ${day}`,
+        absent: (day: string) => `Absent le ${day}`,
+        callback: "Rappel demandé",
+        test: (score: number) => `Test ${score} / 20`,
+        none: "—",
+      },
+      note: "La provenance est cochée par le candidat, ou remplie seule quand il arrive par le lien d'une annonce (menao.fr/devenir-conseiller?source=linkedin). Candidatures supprimées 2 ans après le dernier échange.",
+      publicLink: "Voir la page publique",
+      detail: {
+        back: "Candidats",
+        subtitle: (sector: string, status: string, experience: string) =>
+          `${sector} · ${status} · ${experience} de vente terrain`,
+        application: "Sa candidature",
+        receivedOn: (date: string) => `reçue le ${date}`,
+        rows: {
+          email: "E-mail",
+          phone: "Téléphone",
+          sector: "Secteur",
+          legalStatus: "Statut",
+          experience: "Vente terrain",
+          availability: "Disponibilité",
+          source: "Venu par",
+          seesArtisans: "Voit déjà des artisans",
+          meeting: "Réunion d'information",
+        },
+        yes: "Oui",
+        no: "Non",
+        meetingBooked: (day: string) => `Inscrit pour le ${day}`,
+        meetingPresent: (day: string) => `Présent le ${day}`,
+        meetingAbsent: (day: string) => `Absent le ${day}`,
+        meetingNone: "Pas encore inscrit",
+        callbackAsked: "Demande à être rappelé",
+        grid: "Grille d'entretien",
+        criteria: {
+          presentation: "Présentation et aisance",
+          ecoute: "Écoute, questions posées",
+          connaissance: "Connaissance des artisans et du 06",
+          telephone: "Aisance au téléphone",
+          motivation: "Motivation, autonomie",
+          disponibilite: "Disponibilité et secteur",
+        },
+        note: (criterion: string, n: number) => `${criterion} : ${n} sur 5`,
+        notes: "Notes de l'entretien",
+        saveGrid: "Enregistrer la grille",
+        saved: "Grille enregistrée.",
+        lastInterview: (date: string) => `Entretien noté le ${date}`,
+        test: "Test de vente",
+        testDone: "Fait",
+        testNone: "Pas encore passé",
+        testCriteria: "Détail de la note",
+        testTips: "Conseils du coach",
+        runTest: "Faire passer le test",
+        redoTest: "Refaire un test",
+        stage: "Étape",
+        saveStage: "Changer l'étape",
+        stageSaved: "Étape changée.",
+        actions: "Actions",
+        sendDemo: "Envoyer le lien de démo",
+        demoSent: "Lien de démo envoyé par e-mail.",
+        invite: "Inviter comme commercial",
+        decline: "Ne pas retenir",
+        declineConfirm:
+          "Le candidat reçoit un e-mail de réponse polie et passe en « Non retenu ». Continuer ?",
+        declined: "Candidat non retenu : la réponse est partie par e-mail.",
+        actionsHelp:
+          "« Inviter » ouvre l'invitation des commerciaux, déjà remplie. « Ne pas retenir » envoie un e-mail de réponse polie.",
+        motivation: "Ce qu'il nous a écrit",
+      },
+      test: {
+        title: "Test de vente",
+        banner: (name: string) =>
+          `Mode entretien : passez l'ordinateur à ${name}. La note du coach s'ajoute à sa fiche.`,
+        quit: "Quitter le test",
+        intro:
+          "Le candidat répond à un artisan joué par l'IA, à l'écrit ou à la voix. À la fin, la note du coach et ses conseils s'ajoutent à sa fiche ; l'échange n'est pas gardé.",
+      },
+      meetings: {
+        title: "Réunions d'information",
+        back: "Candidats",
+        intro:
+          "Les créneaux proposés aux candidats juste après leur candidature. Collez le lien de la visio (Google Meet) : il part dans l'e-mail de confirmation et dans les rappels.",
+        newTitle: "Nouvelle réunion",
+        date: "Date",
+        time: "Heure",
+        duration: "Durée",
+        durationOption: (minutes: number) => `${minutes} minutes`,
+        capacity: "Places",
+        url: "Lien de la visio",
+        urlHint: "Commence par https:// (Google Meet, Zoom, Teams…).",
+        create: "Ajouter la réunion",
+        created: "Réunion ajoutée : elle est proposée aux candidats.",
+        upcoming: "À venir",
+        past: "Passées",
+        noneUpcoming: "Aucune réunion à venir : les candidats demandent alors à être rappelés.",
+        nonePast: "Aucune réunion passée.",
+        seats: (booked: number, capacity: number) =>
+          `${booked} inscrit${booked > 1 ? "s" : ""} sur ${capacity}`,
+        cancelled: "Annulée",
+        cancel: "Annuler la réunion",
+        cancelConfirm:
+          "Les inscrits reçoivent un e-mail et peuvent choisir une autre réunion. Annuler cette réunion ?",
+        cancelDone: (n: number) =>
+          n === 0
+            ? "Réunion annulée."
+            : `Réunion annulée : ${n} inscrit${n > 1 ? "s" : ""} prévenu${n > 1 ? "s" : ""}.`,
+        attendees: "Inscrits",
+        noAttendee: "Aucun inscrit pour l'instant.",
+        present: "Présent",
+        absent: "Absent",
+        open: "Ouvrir la visio",
+        errors: {
+          date: "Choisissez une date et une heure à venir.",
+          url: "Collez un lien qui commence par https://.",
+        },
+      },
+      errors: {
+        generic: "L'action n'a pas abouti. Réessayez.",
+      },
+    },
     commercials: {
       title: "Commerciaux",
       intro:

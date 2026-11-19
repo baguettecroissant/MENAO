@@ -61,6 +61,7 @@ Projets Supabase : staging `izwdfxynzegntubminth`, production `ffidtbwxiyqybyfdq
 - [ ] Secrets du coffre (Vault), sans lesquels aucune notification ne part : `menao_notify_url` (adresse de la fonction `notify` de production) et `menao_notify_secret` (la même valeur que `NOTIFY_SECRET`).
 
 - [ ] Déposer les vidéos de l'aide à l'inscription dans le compartiment public `aide-videos` (ADR 0349) : `SUPABASE_ACCESS_TOKEN=… node scripts/aide-videos.mjs --project ffidtbwxiyqybyfdqmkj --dossier medias/films/aide/sortie` (versions légères fabriquées hors dépôt).
+- [ ] Recrutement des conseillers (ADR 0380) : régler le barème des primes (Réglages › Commerciaux), puis poser au moins une réunion d'information avec son lien de visio (Apporteurs › Candidats › Gérer les réunions) avant de diffuser `/devenir-conseiller`.
 
 ### Authentification (Ensemble)
 - [ ] `scripts/supabase-auth.mjs --project ffidtbwxiyqybyfdqmkj --production oui --site-url https://menao.fr --extra-urls https://www.menao.fr --app-urls menao://** --smtp oui` (avec la clé SMTP Resend de production) :

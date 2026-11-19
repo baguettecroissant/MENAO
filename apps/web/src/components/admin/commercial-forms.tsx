@@ -18,14 +18,28 @@ import { initialFormState } from "@/lib/auth/form";
 const t = fr.admin.commercials;
 
 /** Invitation d'un commercial (F-65, ADR 0205) : prénom, nom, e-mail et code définitif. */
-export function CommercialInviteForm() {
+export function CommercialInviteForm({
+  candidate,
+}: {
+  /** Candidat retenu (ADR 0380) : l'invitation est déjà remplie, et il passe en « Retenu ». */
+  candidate?: { id: string; firstName: string; lastName: string; email: string; code: string };
+} = {}) {
   const [state, action, pending] = useActionState(inviteCommercial, initialFormState);
   const errors = state.fieldErrors ?? {};
   // Après l'envoi, formulaire vide pour l'invitation suivante.
-  const v = state.success ? undefined : state.values;
+  const v = state.success
+    ? undefined
+    : (state.values ??
+      (candidate && {
+        firstName: candidate.firstName,
+        lastName: candidate.lastName,
+        email: candidate.email,
+        code: candidate.code,
+      }));
   const f = t.fields;
   return (
     <form action={action} noValidate className="flex flex-col gap-4">
+      {candidate && !state.success && <input type="hidden" name="candidate" value={candidate.id} />}
       {state.success && <Alert tone="success">{state.success}</Alert>}
       {state.error && <Alert tone="error">{state.error}</Alert>}
       <div className="grid gap-4 sm:grid-cols-2">
