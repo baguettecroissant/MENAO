@@ -1,19 +1,18 @@
 import type { Metadata } from "next";
-import { ContentSection, LegalPage } from "@/components/site/content-page";
-import { fr } from "@/i18n/fr";
+import { LegalPage } from "@/components/site/content-page";
+import { LegalBody } from "@/components/site/legal-body";
+import { confidentialite } from "@/content/legal";
 
 export const metadata: Metadata = {
-  title: `${fr.legal.privacy} — MENAO`,
+  title: `${confidentialite.title} — MENAO`,
   alternates: { canonical: "/confidentialite" },
 };
 
-// TODO(legal) : publier la version validée par l'avocat avant le pilote.
+// TODO(legal) : version provisoire, à faire valider par l'avocat avant l'ouverture (ADR 0377).
 export default function Page() {
   return (
-    <LegalPage path="/confidentialite" title={fr.legal.privacy}>
-      <ContentSection title={fr.legal.draftTitle}>
-        <p>{fr.legal.draftBody}</p>
-      </ContentSection>
+    <LegalPage path="/confidentialite" title={confidentialite.title} intro={confidentialite.intro}>
+      <LegalBody document={confidentialite} />
     </LegalPage>
   );
 }

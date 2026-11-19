@@ -1,27 +1,18 @@
 import type { Metadata } from "next";
-import { BulletList, ContentSection, LegalPage } from "@/components/site/content-page";
-import { fr } from "@/i18n/fr";
-
-const t = fr.pages.legalNotice;
+import { LegalPage } from "@/components/site/content-page";
+import { LegalBody } from "@/components/site/legal-body";
+import { mentionsLegales } from "@/content/legal";
 
 export const metadata: Metadata = {
-  title: `${t.title} — MENAO`,
+  title: `${mentionsLegales.title} — MENAO`,
   alternates: { canonical: "/mentions-legales" },
 };
 
-// TODO(legal) : informations de l'éditeur à compléter et texte à faire valider par l'avocat.
-export default function LegalNoticePage() {
+// TODO(legal) : version provisoire, à faire valider par l'avocat avant l'ouverture (ADR 0377).
+export default function Page() {
   return (
-    <LegalPage path="/mentions-legales" title={t.title}>
-      <ContentSection title={t.editorTitle}>
-        <p>{t.editor}</p>
-      </ContentSection>
-      <ContentSection title={t.directorTitle}>
-        <p>{t.director}</p>
-      </ContentSection>
-      <ContentSection title={t.hostTitle}>
-        <BulletList items={t.host} />
-      </ContentSection>
+    <LegalPage path="/mentions-legales" title={mentionsLegales.title} intro={mentionsLegales.intro}>
+      <LegalBody document={mentionsLegales} />
     </LegalPage>
   );
 }

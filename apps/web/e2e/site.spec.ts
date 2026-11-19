@@ -77,6 +77,9 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveCount(1);
   await page.getByRole("link", { name: "Mentions légales" }).click();
   await expect(page.getByRole("heading", { name: "Mentions légales" })).toBeVisible();
+  // Textes légaux (F-180, ADR 0377) : société éditrice et adresse de contact.
+  await expect(page.getByRole("main")).toContainText("MENAO FRANCE");
+  await expect(page.getByRole("main")).toContainText("contact@menao.fr");
   await page.getByRole("link", { name: "Questions fréquentes" }).click();
   await expect(page.getByRole("heading", { name: "Questions fréquentes" })).toBeVisible();
 
@@ -240,4 +243,30 @@ test("badges App Store et Google Play : pied de page, accueil et page Pro (ADR 0
   await expect(
     page.getByRole("main").getByRole("link", { name: "Disponible sur Google Play" }).first(),
   ).toBeVisible();
+});
+
+test("pages légales : conditions d'utilisation, confidentialité et cookies (F-180)", async ({
+  page,
+}) => {
+  await page.goto("/cgu");
+  await expect(
+    page.getByRole("heading", { name: "Conditions générales d'utilisation", level: 1 }),
+  ).toBeVisible();
+  await expect(page.getByText("Version provisoire")).toBeVisible();
+  await expect(page.getByText("Version du 18 novembre 2026")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Article 14. Modification" })).toBeVisible();
+  await page.getByRole("main").getByRole("link", { name: "Critères de classement" }).last().click();
+  await expect(page).toHaveURL(/\/criteres-de-classement$/);
+
+  await page.goto("/confidentialite");
+  await expect(
+    page.getByRole("heading", { name: "Politique de confidentialité", level: 1 }),
+  ).toBeVisible();
+  await expect(page.getByRole("rowheader", { name: "Supabase" })).toBeVisible();
+  // Aucun passage « à compléter » ne reste dans un texte publié.
+  expect(await page.getByRole("article").innerText()).not.toMatch(/\[|\]|À compléter/);
+
+  await page.goto("/cookies");
+  await expect(page.getByRole("heading", { name: "Politique cookies", level: 1 })).toBeVisible();
+  await expect(page.getByRole("rowheader", { name: "menao_menu (cookie)" })).toBeVisible();
 });
