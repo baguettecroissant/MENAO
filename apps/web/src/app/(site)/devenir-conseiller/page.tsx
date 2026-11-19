@@ -11,12 +11,13 @@ import {
   Wallet,
 } from "lucide-react";
 import type { Metadata, Route } from "next";
+import Link from "next/link";
 import { ApplicationForm } from "@/components/recruitment/application-form";
 import { EarningsSimulator } from "@/components/recruitment/earnings-simulator";
 import { CheckLine, NumberedSteps } from "@/components/site/info-blocks";
 import { JsonLd } from "@/components/site/json-ld";
 import { SectionHeading } from "@/components/site/section-heading";
-import { ButtonLink } from "@/components/ui";
+import { ButtonLink, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { absoluteUrl } from "@/lib/site/seo";
 import { ORGANIZATION_ID, breadcrumbJsonLd } from "@/lib/site/structured-data";
@@ -93,7 +94,7 @@ export default async function RecruitmentPage() {
       />
 
       <section aria-labelledby="conseiller-titre" className="px-2 pt-2 sm:px-4 sm:pt-4">
-        <div className="relative mx-auto flex max-w-[1440px] flex-col overflow-hidden rounded-hero bg-[#0b1438] text-white lg:min-h-[38rem]">
+        <div className="relative mx-auto flex max-w-[1440px] flex-col overflow-hidden rounded-hero bg-[#0b1438] text-white xl:min-h-[38rem]">
           {/* eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4) */}
           <img
             src="/images/recrutement/equipe.webp"
@@ -103,19 +104,19 @@ export default async function RecruitmentPage() {
             width={1280}
             height={853}
             fetchPriority="high"
-            className="h-60 w-full object-cover object-[68%_30%] sm:h-80 lg:absolute lg:inset-0 lg:h-full lg:object-[70%_30%]"
+            className="h-60 w-full object-cover object-[68%_30%] sm:h-80 xl:absolute xl:inset-0 xl:h-full xl:object-[70%_30%]"
           />
           <div
             aria-hidden="true"
-            className="absolute inset-0 hidden bg-[linear-gradient(90deg,rgb(11_20_56/0.95)_0%,rgb(11_20_56/0.86)_34%,rgb(11_20_56/0.2)_58%,rgb(11_20_56/0)_72%)] lg:block"
+            className="absolute inset-0 hidden bg-[linear-gradient(90deg,rgb(11_20_56/0.95)_0%,rgb(11_20_56/0.86)_34%,rgb(11_20_56/0.2)_58%,rgb(11_20_56/0)_72%)] xl:block"
           />
-          <div className="relative flex max-w-[40rem] flex-col gap-5 px-5 py-8 sm:px-10 sm:py-12 lg:px-16 lg:py-24">
+          <div className="relative flex max-w-[40rem] flex-col gap-5 px-5 py-8 sm:px-10 sm:py-12 xl:px-16 xl:py-24">
             <span className="self-start rounded-full bg-white/15 px-3 py-1.5 text-[0.8125rem] font-bold">
               {t.eyebrow}
             </span>
             <h1
               id="conseiller-titre"
-              className="font-display text-[2.375rem] leading-none font-bold tracking-tight sm:text-[3.25rem] lg:text-[3.875rem]"
+              className="font-display text-[2.375rem] leading-none font-bold tracking-tight sm:text-[3.25rem] xl:text-[3.875rem]"
             >
               {t.heroTitle}
             </h1>
@@ -127,14 +128,12 @@ export default async function RecruitmentPage() {
                 <ArrowRight aria-hidden="true" className="size-4" />
                 {t.apply}
               </ButtonLink>
-              <ButtonLink
+              <Link
                 href={"#gains" as Route}
-                size="lg"
-                variant="secondary"
-                className="border-white/50 bg-[#0b1438]/30 text-white hover:bg-white/10"
+                className={`inline-flex min-h-12 items-center rounded-full border border-white/50 bg-[#0b1438]/30 px-7 text-base font-semibold text-white transition-colors hover:bg-white/10 ${focusRing}`}
               >
                 {t.simulate}
-              </ButtonLink>
+              </Link>
             </div>
             <ul className="flex flex-wrap gap-x-5 gap-y-2">
               {t.heroChecks.map((item) => (
