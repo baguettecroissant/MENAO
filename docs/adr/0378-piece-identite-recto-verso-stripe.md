@@ -20,7 +20,8 @@ Pendant un essai complet de l'inscription sur téléphone, deux frottements sont
   (`mergeIdentityReadings`). La date de naissance lue reste sur l'appareil (ADR 0375).
 - `artisan_documents` reçoit quatre colonnes : `piece`, `verso_path`, `verso_mime_type`,
   `partage_stripe`. Pas de nouvelle table ni de nouvelle politique : les droits de la table
-  s'appliquent (lecture par le propriétaire et l'équipe, écriture par le serveur).
+  s'appliquent (lecture par le propriétaire, un administrateur ou la vérification ; écriture par
+  le serveur).
 - `process-upload` reçoit un second fichier brut (`versoPath`), contrôlé et nettoyé comme le
   premier. Une application d'avant F-181 n'envoie ni type ni verso : son dépôt en un fichier reste
   accepté.

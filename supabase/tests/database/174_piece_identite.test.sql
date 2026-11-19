@@ -9,7 +9,8 @@ insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values
   ('17401740-0000-4000-8000-000000000002', 'piece.a2@example.test', '{}', '{"account_type":"artisan","siret":"00017420100012"}'),
   ('17401740-0000-4000-8000-000000000003', 'piece.part@example.test', '{}', '{}'),
   ('17401740-0000-4000-8000-000000000004', 'piece.sup@example.test', '{"role":"support"}', '{}'),
-  ('17401740-0000-4000-8000-000000000005', 'piece.adm@example.test', '{"role":"admin"}', '{}');
+  ('17401740-0000-4000-8000-000000000005', 'piece.adm@example.test', '{"role":"admin"}', '{}'),
+  ('17401740-0000-4000-8000-000000000006', 'piece.verif@example.test', '{"role":"verification"}', '{}');
 
 create function pg_temp.connecter(uid uuid, app_role text, aal text default 'aal1') returns void language sql as $$
   select set_config('request.jwt.claims', jsonb_build_object(
@@ -90,13 +91,26 @@ set local role authenticated;
 select is_empty($$ select 1 from public.artisan_documents where type = 'identite' $$, 'particulier : aucune pièce');
 reset role;
 
--- ---------- Support et administrateur ----------
+-- ---------- Support : pas d'accès aux pièces du dossier ----------
 select pg_temp.connecter('17401740-0000-4000-8000-000000000004', 'support', 'aal2');
+set local role authenticated;
+select is_empty($$ select 1 from public.artisan_documents where type = 'identite' $$, 'support : aucune pièce d''identité');
+reset role;
+
+-- ---------- Vérification et administrateur ----------
+select pg_temp.connecter('17401740-0000-4000-8000-000000000006', 'verification', 'aal2');
 set local role authenticated;
 select results_eq(
   $$ select count(*)::int from public.artisan_documents where type = 'identite' and artisan_id in
        (pg_temp.artisan('17401740-0000-4000-8000-000000000001'), pg_temp.artisan('17401740-0000-4000-8000-000000000002')) $$,
-  $$ values (2) $$, 'support : lit les pièces pour les vérifier');
+  $$ values (2) $$, 'vérification : lit les pièces pour les contrôler');
+select throws_ok(
+  $$ update public.artisan_documents set partage_stripe = true $$,
+  '42501', null, 'vérification : ne modifie pas le choix de l''artisan');
+reset role;
+select pg_temp.connecter('17401740-0000-4000-8000-000000000006', 'verification', 'aal1');
+set local role authenticated;
+select is_empty($$ select 1 from public.artisan_documents where type = 'identite' $$, 'vérification sans double authentification : aucune pièce');
 reset role;
 select pg_temp.connecter('17401740-0000-4000-8000-000000000005', 'admin', 'aal2');
 set local role authenticated;

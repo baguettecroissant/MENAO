@@ -3,7 +3,7 @@
 -- MENAO transmet cette pièce à Stripe pour ouvrir son compte de paiement.
 --
 -- Pas de nouvelle table : les colonnes suivent les droits de artisan_documents (lecture par le
--- propriétaire, un administrateur ou le support ; écriture par le serveur seulement).
+-- propriétaire, un administrateur ou la vérification ; écriture par le serveur seulement).
 
 alter table public.artisan_documents
   add column piece text,
