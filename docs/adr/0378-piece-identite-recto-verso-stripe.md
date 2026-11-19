@@ -32,7 +32,8 @@ Pendant un essai complet de l'inscription sur téléphone, deux frottements sont
 - Seules les images partent : Stripe refuse le PDF pour une pièce d'identité. Un PDF reste valable
   pour MENAO ; Stripe demandera alors la pièce lui-même.
 - L'artisan est informé au dépôt (« MENAO transmettra cette pièce à Stripe ») et peut refuser
-  (`partage_stripe`).
+  (`partage_stripe`). Une pièce déposée avant F-181 (`piece` vide) n'est jamais transmise :
+  l'artisan n'a pas vu cette information, même si `partage_stripe` vaut `true` par défaut.
 - Avant le formulaire de MENAO, deux encarts : ce qui est transmis pour l'artisan, et ce que
   Stripe va lui demander, dont la protection du compte par SMS.
 

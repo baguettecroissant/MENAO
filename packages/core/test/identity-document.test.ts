@@ -53,16 +53,27 @@ describe("pièce d'identité : lecture des deux côtés", () => {
 describe("pièce d'identité : transmission à Stripe", () => {
   it("transmet les deux côtés quand ce sont des images", () => {
     expect(
-      stripeIdentitySides({ share: true, mimeType: "image/jpeg", versoMimeType: "image/png" }),
+      stripeIdentitySides({
+        piece: "carte_identite",
+        share: true,
+        mimeType: "image/jpeg",
+        versoMimeType: "image/png",
+      }),
     ).toEqual(["recto", "verso"]);
   });
 
   it("ne transmet que le recto sans verso, ou avec un verso en PDF", () => {
     expect(
-      stripeIdentitySides({ share: true, mimeType: "image/jpeg", versoMimeType: null }),
+      stripeIdentitySides({
+        piece: "carte_identite",
+        share: true,
+        mimeType: "image/jpeg",
+        versoMimeType: null,
+      }),
     ).toEqual(["recto"]);
     expect(
       stripeIdentitySides({
+        piece: "carte_identite",
         share: true,
         mimeType: "image/png",
         versoMimeType: "application/pdf",
@@ -72,13 +83,30 @@ describe("pièce d'identité : transmission à Stripe", () => {
 
   it("ne transmet rien si l'artisan refuse ou si le recto est un PDF", () => {
     expect(
-      stripeIdentitySides({ share: false, mimeType: "image/jpeg", versoMimeType: "image/jpeg" }),
+      stripeIdentitySides({
+        piece: "carte_identite",
+        share: false,
+        mimeType: "image/jpeg",
+        versoMimeType: "image/jpeg",
+      }),
     ).toEqual([]);
     expect(
       stripeIdentitySides({
+        piece: "carte_identite",
         share: true,
         mimeType: "application/pdf",
         versoMimeType: "image/jpeg",
+      }),
+    ).toEqual([]);
+  });
+
+  it("ne transmet pas une pièce déposée avant le nouvel écran (artisan non informé)", () => {
+    expect(
+      stripeIdentitySides({
+        piece: null,
+        share: true,
+        mimeType: "image/jpeg",
+        versoMimeType: null,
       }),
     ).toEqual([]);
   });

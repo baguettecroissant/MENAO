@@ -441,6 +441,7 @@ export async function identityFilesForStripe(): Promise<{ front: string; back?: 
   const piece = pieces.find((d) => d.status === "valide") ?? pieces[0];
   if (!piece) return null;
   const sides = stripeIdentitySides({
+    piece: piece.piece,
     share: piece.partage_stripe,
     mimeType: piece.mime_type,
     versoMimeType: piece.verso_mime_type,

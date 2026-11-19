@@ -49,15 +49,18 @@ const stripeImage = (mime: string | null | undefined) =>
   STRIPE_IDENTITY_MIME_TYPES.some((type) => type === mime);
 
 /**
- * Côtés de la pièce déposée que MENAO peut transmettre à Stripe : aucun si l'artisan a refusé la
- * transmission ou si le recto n'est pas une image ; le verso seulement s'il existe et s'il est une
+ * Côtés de la pièce déposée que MENAO peut transmettre à Stripe : aucun si la pièce a été déposée
+ * avant F-181 (type inconnu : l'artisan n'a pas vu l'information sur la transmission), si l'artisan
+ * l'a refusée ou si le recto n'est pas une image ; le verso seulement s'il existe et s'il est une
  * image. Ce qui manque sera demandé à l'artisan par Stripe.
  */
 export function stripeIdentitySides(document: {
+  piece: string | null;
   share: boolean;
   mimeType: string | null;
   versoMimeType: string | null;
 }): IdentitySide[] {
+  if (!isIdentityPiece(document.piece)) return [];
   if (!document.share || !stripeImage(document.mimeType)) return [];
   return stripeImage(document.versoMimeType) ? ["recto", "verso"] : ["recto"];
 }

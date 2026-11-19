@@ -6,6 +6,7 @@ import { myArtisanKey } from "./team";
 
 type IdentityRow = {
   status: string;
+  piece: string | null;
   storage_path: string;
   mime_type: string;
   verso_path: string | null;
@@ -17,7 +18,7 @@ type IdentityRow = {
 async function loadIdentity(): Promise<IdentityRow | null> {
   const { data } = await supabase
     .from("artisan_documents")
-    .select("status, storage_path, mime_type, verso_path, verso_mime_type, partage_stripe")
+    .select("status, piece, storage_path, mime_type, verso_path, verso_mime_type, partage_stripe")
     .eq("artisan_id", await myArtisanKey())
     .eq("type", "identite")
     .neq("status", "refuse");
@@ -29,6 +30,7 @@ async function loadIdentity(): Promise<IdentityRow | null> {
 function sharedSides(row: IdentityRow | null) {
   return row
     ? stripeIdentitySides({
+        piece: row.piece,
         share: row.partage_stripe,
         mimeType: row.mime_type,
         versoMimeType: row.verso_mime_type,
