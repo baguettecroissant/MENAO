@@ -93,8 +93,14 @@ export default async function RecruitmentPage() {
         }}
       />
 
-      <section aria-labelledby="conseiller-titre" className="px-2 pt-2 sm:px-4 sm:pt-4">
-        <div className="relative mx-auto flex max-w-[1440px] flex-col overflow-hidden rounded-hero bg-[#0b1438] text-white xl:min-h-[38rem]">
+      {/* Bandeau comme celui de l'accueil (ADR 0199) : photo plein cadre arrondie, la pilule de
+          l'en-tête posée dessus (marge négative de sa hauteur) ; sur téléphone, la photo en haut
+          se fond dans le bleu nuit sous le texte. */}
+      <section
+        aria-labelledby="conseiller-titre"
+        className="-mt-[4.75rem] px-2 pt-2 sm:-mt-24 sm:px-4 sm:pt-4"
+      >
+        <div className="relative mx-auto max-w-[1440px] overflow-hidden rounded-hero bg-[#0b1438]">
           {/* eslint-disable-next-line @next/next/no-img-element -- images non optimisées par Vercel (spec §4.4) */}
           <img
             src="/images/recrutement/equipe.webp"
@@ -104,48 +110,56 @@ export default async function RecruitmentPage() {
             width={1280}
             height={853}
             fetchPriority="high"
-            className="h-60 w-full object-cover object-[68%_30%] sm:h-80 xl:absolute xl:inset-0 xl:h-full xl:object-[70%_30%]"
+            className="absolute inset-x-0 top-0 h-[400px] w-full object-cover object-[64%_30%] sm:h-full sm:object-[72%_30%]"
           />
           <div
             aria-hidden="true"
-            className="absolute inset-0 hidden bg-[linear-gradient(90deg,rgb(11_20_56/0.95)_0%,rgb(11_20_56/0.86)_34%,rgb(11_20_56/0.2)_58%,rgb(11_20_56/0)_72%)] xl:block"
+            className="absolute inset-0 hidden bg-[linear-gradient(90deg,rgb(11_20_56/0.95)_0%,rgb(11_20_56/0.82)_36%,rgb(11_20_56/0.15)_62%,rgb(11_20_56/0)_76%)] sm:block"
           />
-          <div className="relative flex max-w-[40rem] flex-col gap-5 px-5 py-8 sm:px-10 sm:py-12 xl:px-16 xl:py-24">
-            <span className="self-start rounded-full bg-white/15 px-3 py-1.5 text-[0.8125rem] font-bold">
-              {t.eyebrow}
-            </span>
-            <h1
-              id="conseiller-titre"
-              className="font-display text-[2.375rem] leading-none font-bold tracking-tight sm:text-[3.25rem] xl:text-[3.875rem]"
-            >
-              {t.heroTitle}
-            </h1>
-            <p className="text-[1.0625rem] leading-relaxed text-white/88 sm:text-[1.1875rem]">
-              {t.intro}
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <ButtonLink href={"#candidature" as Route} size="lg">
-                <ArrowRight aria-hidden="true" className="size-4" />
-                {t.apply}
-              </ButtonLink>
-              <Link
-                href={"#gains" as Route}
-                className={`inline-flex min-h-12 items-center rounded-full border border-white/50 bg-[#0b1438]/30 px-7 text-base font-semibold text-white transition-colors hover:bg-white/10 ${focusRing}`}
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-0 top-60 h-40 bg-gradient-to-b from-transparent to-[#0b1438] sm:hidden"
+          />
+          <div className="relative flex flex-col p-3 sm:min-h-[640px] sm:p-6 lg:min-h-[680px]">
+            {/* Place de la pilule de l'en-tête, posée par-dessus (ADR 0199). */}
+            <div aria-hidden="true" className="h-14 shrink-0" />
+            <div className="relative mt-auto flex flex-col gap-5 px-2 pt-[15rem] pb-4 text-white sm:max-w-[32rem] sm:pt-16 sm:px-4 lg:max-w-[36rem]">
+              <span className="self-start rounded-full bg-white/15 px-3 py-1.5 text-[0.8125rem] font-bold">
+                {t.eyebrow}
+              </span>
+              <h1
+                id="conseiller-titre"
+                className="font-display text-[2.5rem] leading-[1.02] font-bold tracking-tight sm:text-[3.5rem] lg:text-[4rem]"
               >
-                {t.simulate}
-              </Link>
-            </div>
-            <ul className="flex flex-wrap gap-x-5 gap-y-2">
-              {t.heroChecks.map((item) => (
-                <li
-                  key={item}
-                  className="flex items-center gap-1.5 text-sm font-semibold text-white/92"
+                {t.heroTitle}
+              </h1>
+              <p className="text-[1.0625rem] leading-relaxed text-white/88 sm:text-[1.1875rem]">
+                {t.intro}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <ButtonLink href={"#candidature" as Route} size="lg">
+                  <ArrowRight aria-hidden="true" className="size-4" />
+                  {t.apply}
+                </ButtonLink>
+                <Link
+                  href={"#gains" as Route}
+                  className={`inline-flex min-h-12 items-center rounded-full border border-white/50 bg-[#0b1438]/30 px-7 text-base font-semibold text-white transition-colors hover:bg-white/10 ${focusRing}`}
                 >
-                  <Check aria-hidden="true" className="size-4 text-[#7ee2b0]" strokeWidth={2.6} />
-                  {item}
-                </li>
-              ))}
-            </ul>
+                  {t.simulate}
+                </Link>
+              </div>
+              <ul className="flex flex-wrap gap-x-5 gap-y-2">
+                {t.heroChecks.map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-center gap-1.5 text-sm font-semibold text-white/92"
+                  >
+                    <Check aria-hidden="true" className="size-4 text-[#7ee2b0]" strokeWidth={2.6} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
         <ul className="mx-auto mt-4 grid max-w-[1440px] gap-3 sm:grid-cols-3 sm:gap-4">
