@@ -78,6 +78,7 @@ async function PaymentsStepContent({ searchParams }: PageProps<"/pro/onboarding/
     personal &&
     piece !== undefined &&
     stripeIdentitySides({
+      piece: piece.piece,
       share: piece.partage_stripe,
       mimeType: piece.mime_type,
       versoMimeType: piece.verso_mime_type,

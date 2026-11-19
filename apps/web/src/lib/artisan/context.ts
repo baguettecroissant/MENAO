@@ -73,7 +73,7 @@ export const getOnboardingContext = cache(async (allowMembers: boolean = false) 
     supabase
       .from("artisan_documents")
       .select(
-        "id, type, source, storage_path, mime_type, verso_path, verso_mime_type, partage_stripe, status, date_emission, date_fin, numero, assureur, couverture, refusal_reason",
+        "id, type, source, storage_path, mime_type, piece, verso_path, verso_mime_type, partage_stripe, status, date_emission, date_fin, numero, assureur, couverture, refusal_reason",
       )
       .eq("artisan_id", artisan.id),
     supabase

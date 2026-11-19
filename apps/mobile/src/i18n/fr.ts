@@ -564,6 +564,28 @@ export const fr = {
     resume: "Reprendre la configuration Stripe",
     complete: "Compléter mes informations sur Stripe",
     // Compléments saisis dans MENAO, transmis directement à Stripe (ADR 0215), comme sur le site.
+    // Avant Stripe (F-181, ADR 0378) : ce que MENAO transmet, et ce que Stripe va demander.
+    ahead: {
+      sentTitle: "Transmis pour vous",
+      company: { title: "Votre entreprise", hint: "Nom, SIREN et adresse du siège" },
+      identity: { title: "Votre identité", hint: "Nom et prénom du dirigeant" },
+      piece: {
+        title: "Votre pièce d'identité",
+        hint: "Celle que vous avez déposée dans votre dossier",
+      },
+      askedTitle: "Ce que Stripe va vous demander",
+      asked: [
+        {
+          title: "Protéger votre compte par SMS",
+          hint: "Un code reçu sur votre téléphone, puis un code de secours à noter. Comptez une minute.",
+        },
+        {
+          title: "Confirmer vos informations",
+          hint: "Elles sont déjà remplies : vérifiez et continuez.",
+        },
+        { title: "Accepter les conditions de Stripe", hint: "La dernière étape, en un toucher." },
+      ],
+    },
     prepare: {
       title: "Préparez votre compte de paiement",
       intro:
@@ -769,6 +791,58 @@ export const fr = {
       "Le code inscrit sur l'attestation : l'équipe MENAO le vérifie sur le site de l'URSSAF.",
     dateFin: "Valable jusqu'au",
     dateFinIdentite: "Date d'expiration (facultatif)",
+    // Pièce d'identité selon son type, recto et verso (F-181, ADR 0378), comme sur le site.
+    identity: {
+      question: "Quelle pièce présentez-vous ?",
+      pieces: {
+        carte_identite: "Carte d'identité",
+        passeport: "Passeport",
+        titre_sejour: "Titre de séjour",
+      },
+      sides: {
+        recto: {
+          title: "Recto",
+          hint: "Le côté avec votre photo",
+          deposited: "Recto déposé",
+          readOn: "Lu sur le recto",
+        },
+        verso: {
+          title: "Verso",
+          hint: "L'autre côté de la carte",
+          deposited: "Verso déposé",
+          readOn: "Lu sur le verso",
+        },
+        page: {
+          title: "Page d'identité",
+          hint: "La double page avec votre photo",
+          deposited: "Page d'identité déposée",
+          readOn: "Lu sur la page",
+        },
+      },
+      photo: "Photo",
+      library: "Mes photos",
+      file: "Fichier",
+      photoLabel: (side: string) => `${side} : prendre en photo`,
+      fileLabel: (side: string) => `${side} : choisir un fichier`,
+      change: "Changer",
+      changeLabel: (side: string) => `Changer : ${side}`,
+      readAll: "Lu automatiquement : vérifiez",
+      birthDate: "Date de naissance",
+      expiry: "Fin de validité",
+      versoLeft: "Il reste le verso : la date de validité s'y trouve souvent.",
+      photoHint: "Photo nette, à plat et bien éclairée. Photo ou PDF, 10 Mo maximum.",
+      // TODO(legal) : information sur la transmission de la pièce à Stripe et possibilité de la
+      // refuser, à faire valider par l'avocat (comme sur le site).
+      share: {
+        title: "Vous n'aurez pas à la refaire",
+        text: "MENAO transmettra cette pièce à Stripe pour ouvrir votre compte de paiement.",
+        decline: "Ne pas la transmettre",
+        declinedTitle: "Pièce non transmise à Stripe",
+        declinedText: "Stripe vous la redemandera à l'étape des paiements.",
+        accept: "La transmettre",
+      },
+      sideRequired: "Déposez tous les côtés demandés pour cette pièce.",
+    },
     datePlaceholder: "JJ/MM/AAAA",
     dateInvalid: "Date invalide (JJ/MM/AAAA).",
     assureur: "Assureur",

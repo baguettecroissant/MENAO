@@ -20,6 +20,7 @@ import {
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { fr } from "@/i18n/fr";
 import { env } from "./env";
+import { identityShareable } from "./stripe-identity";
 import { supabase } from "./supabase";
 import { myArtisanKey } from "./team";
 
@@ -41,6 +42,8 @@ export type Payments = {
   money: Money | null;
   /** Avant la création du compte : de quoi pré-remplir Stripe (ADR 0204, ADR 0215). */
   prefill: ConnectTokenPrefill | null;
+  /** Pièce d'identité déposée en photo et transmissible à Stripe (ADR 0378). */
+  pieceShareable: boolean;
 };
 
 export type Money = {
@@ -86,9 +89,11 @@ export async function loadPayments(): Promise<Payments | null> {
     disabledReason: a.connect_disabled_reason,
   });
   const open = connectOnboardingOpen(a.status);
-  const [money, prefill] = await Promise.all([
+  const [money, prefill, pieceShareable] = await Promise.all([
     open && status === "actif" ? loadMoney() : null,
     open && status === "a_demarrer" ? loadPrefill().catch(() => null) : null,
+    // Pièce d'identité transmissible à Stripe (ADR 0378), pour l'encart « Transmis pour vous ».
+    open && status === "a_demarrer" ? identityShareable().catch(() => false) : false,
   ]);
   return {
     open,
@@ -99,6 +104,7 @@ export async function loadPayments(): Promise<Payments | null> {
     deadline: a.connect_requirements_deadline,
     money,
     prefill,
+    pieceShareable,
   };
 }
 
