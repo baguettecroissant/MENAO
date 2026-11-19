@@ -19,6 +19,7 @@ import { z } from "zod";
 import { DateTimeFields } from "@/components/date-time-fields";
 import { PageHead, PrivacyNote, SoftBanner, StepsBar } from "@/components/pro/dossier-kit";
 import { DocumentHelpButton, HelpVideoCard } from "@/components/pro/onboarding-help";
+import { IdentityForm } from "@/components/pro/identity-form";
 import {
   CardHeading,
   FicheButton,
@@ -158,6 +159,23 @@ function DocumentScreen() {
     !blocked && type === "decennale" && (draft || verification) ? (
       <ExemptChoice exempt={exempt} onChange={reload} />
     ) : null;
+  if (!blocked && !exempt && dossier && type === "identite") {
+    // Pièce d'identité selon son type, recto et verso (ADR 0378).
+    return (
+      <IdentityForm
+        intro={intro}
+        help={
+          <>
+            <DocumentHelpButton type={type} />
+            <HelpVideoCard id="v05-photo" />
+          </>
+        }
+        guided={guide ? { nextNote, deposited } : undefined}
+        onDone={() => continueGuide(type)}
+        onSkip={() => continueGuide(type)}
+      />
+    );
+  }
   if (!blocked && !exempt && dossier) {
     return (
       <DocumentForm
@@ -598,15 +616,6 @@ function DocumentForm({
                 error={errors.numero}
               />
             </>
-          ) : null}
-          {type === "identite" ? (
-            <DateTimeFields
-              date={values.dateFin}
-              minDate={tomorrow()}
-              onDate={(dateFin) => setValues((v) => ({ ...v, dateFin }))}
-              dateLabel={t.dateFinIdentite}
-              error={errors.dateFin}
-            />
           ) : null}
         </>
       )}

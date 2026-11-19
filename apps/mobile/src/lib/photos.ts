@@ -39,7 +39,12 @@ export type PhotoTarget =
   | { purpose: "logo" }
   // Logo comme image de la fiche (ADR 0355) : sert aussi sur les documents.
   | { purpose: "image_logo" }
-  | { purpose: "document"; document: DocumentMetadata }
+  // Pièce d'identité (ADR 0378) : verso déposé, et choix de transmission à Stripe.
+  | {
+      purpose: "document";
+      document: DocumentMetadata & { shareWithStripe?: boolean };
+      versoPath?: string;
+    }
   | { purpose: "project_photo"; projectId: string }
   | { purpose: "chantier_photo"; chantierId: string }
   | { purpose: "message_attachment"; chantierId: string }

@@ -55,6 +55,8 @@ Pendant un essai complet de l'inscription sur téléphone, deux frottements sont
 
 - `TODO(legal)` : phrase d'information et possibilité de refus à faire valider par l'avocat ; la
   politique de confidentialité mentionne la transmission.
-- Application iPhone : même écran, dans une PR à part.
+- Application iPhone (PR à part) : même écran et même transmission à Stripe. Par côté, « Photo »
+  et « Mes photos », et un lien pour un fichier PDF (la photothèque est le cas courant sur
+  téléphone). La copie téléchargée pour l'envoi à Stripe est retirée du téléphone aussitôt.
 - Nom du titulaire : il n'est pas lu sur la pièce ; l'encadré montre la date de naissance et la
   fin de validité.

@@ -1,4 +1,9 @@
-import { completeConnectPrefill, parisToday, type ConnectDetails } from "@menao/core";
+import {
+  completeConnectPrefill,
+  parisToday,
+  type ConnectDetails,
+  type ConnectTokenPrefill,
+} from "@menao/core";
 import { useCallback, useState } from "react";
 import { StyleSheet, Text } from "react-native";
 import { ConnectPrepare } from "@/components/pro/connect-prepare";
@@ -7,10 +12,12 @@ import { FicheCard, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-ki
 import { MoneyPanel } from "@/components/pro/money-panel";
 import { PaymentsPanel } from "@/components/pro/payments-panel";
 import { StripeChecklist } from "@/components/pro/onboarding-help";
+import { StripeAhead } from "@/components/pro/stripe-ahead";
 import { StripeOnboarding } from "@/components/pro/stripe-onboarding";
 import { fr } from "@/i18n/fr";
 import { forgetBirthDate } from "@/lib/birth-date-memo";
 import { openHostedPage } from "@/lib/hosted";
+import { uploadIdentityToStripe } from "@/lib/stripe-identity";
 import {
   createConnect,
   createConnectTokens,
@@ -24,6 +31,10 @@ import { theme } from "@/ui/theme";
 import { withTeamPermission } from "@/components/team-gate";
 
 const t = fr.proPayments;
+
+/** Pré-remplissage avec une personne : le dirigeant, ou l'entrepreneur individuel. */
+const personalPrefill = (prefill: ConnectTokenPrefill) =>
+  prefill.person != null || prefill.account?.business_type === "individual";
 
 /**
  * Compte de paiement Stripe (ADR 0124), comme l'étape « Paiements » du site, ouvert dès l'envoi du
@@ -46,10 +57,15 @@ function PaymentsScreen() {
     setMessage(null);
     setBusy(true);
     const prefill = data?.prefill ?? null;
+    // Pièce d'identité déposée dans MENAO (ADR 0378) : envoyée à Stripe avec le reste.
+    const identityDocument =
+      prefill && personalPrefill(prefill)
+        ? await uploadIdentityToStripe(prefill.publishableKey)
+        : null;
     const tokens = prefill
       ? await createConnectTokens(
           prefill.publishableKey,
-          completeConnectPrefill(prefill, details ?? {}),
+          completeConnectPrefill(prefill, { ...(details ?? {}), identityDocument }),
         )
       : {};
     const failed = await createConnect(tokens, details?.website ?? null);
@@ -103,6 +119,7 @@ function PaymentsScreen() {
   }
 
   if (data === undefined) return <FicheSkeleton />;
+  const personal = data?.prefill ? personalPrefill(data.prefill) : false;
   return (
     <>
       <FicheScreen onRefresh={reload}>
@@ -117,19 +134,30 @@ function PaymentsScreen() {
         ) : (
           <>
             {/* Avant le formulaire Stripe (ADR 0348) : ce qu'il demande, à garder sous la main. */}
-            {data.status === "a_demarrer" ? <StripeChecklist /> : null}
+            {data.status === "a_demarrer" ? (
+              <StripeChecklist withoutIdentity={data.pieceShareable && personal} />
+            ) : null}
             <PaymentsPanel
               data={data}
               busy={busy}
               onStripe={openStripe}
               onCheck={check}
               prepare={
-                <ConnectPrepare
-                  prefill={data.prefill}
-                  today={parisToday()}
-                  busy={busy}
-                  onContinue={(details) => void start(details)}
-                />
+                <>
+                  <StripeAhead
+                    sent={{
+                      company: data.prefill?.account?.business_type === "company",
+                      identity: personal,
+                      piece: data.pieceShareable && personal,
+                    }}
+                  />
+                  <ConnectPrepare
+                    prefill={data.prefill}
+                    today={parisToday()}
+                    busy={busy}
+                    onContinue={(details) => void start(details)}
+                  />
+                </>
               }
             />
             {data.money ? <MoneyPanel data={data.money} /> : null}

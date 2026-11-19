@@ -164,14 +164,19 @@ function DocumentHelpSteps({ type, onLater }: { type: RequiredDocumentType; onLa
 const stripeIcons: LucideIcon[] = [IdCard, Landmark, Smartphone, CalendarDays];
 
 /** « Avant Stripe » (maquette « AideStripe ») : ce que le formulaire demande, avant de l'ouvrir. */
-export function StripeChecklist() {
+export function StripeChecklist({ withoutIdentity = false }: { withoutIdentity?: boolean }) {
+  // Pièce d'identité déjà transmise par MENAO (ADR 0378) : plus besoin de l'avoir sous la main.
+  const items = STRIPE_CHECKLIST.map((item, index) => ({
+    item,
+    icon: stripeIcons[index] ?? IdCard,
+  })).slice(withoutIdentity ? 1 : 0);
   return (
     <FicheCard padding={4.5} gap={3}>
       <CardHeading title={t.stripe.title} size={17} />
       <Text style={styles.body}>{t.stripe.intro}</Text>
-      {STRIPE_CHECKLIST.map((item, index) => (
+      {items.map(({ item, icon }) => (
         <View key={item.title} style={styles.item}>
-          <IconSquare icon={stripeIcons[index] ?? IdCard} tone="neutral" size={38} />
+          <IconSquare icon={icon} tone="neutral" size={38} />
           <View style={styles.itemTexts}>
             <Text style={styles.itemTitle}>{item.title}</Text>
             <Text style={styles.itemHint}>{item.hint}</Text>
