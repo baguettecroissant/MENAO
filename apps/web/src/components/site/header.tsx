@@ -62,17 +62,18 @@ export function SiteHeader() {
           </div>
           <div className="ml-auto flex items-center gap-1 xl:hidden">
             <NotificationBell />
-            {/* Sur téléphone et tablette : le bouton des artisans reste dans la barre. */}
-            <ButtonLink
-              href="/pro"
-              variant="dark"
-              size="sm"
-              aria-current={onPro ? "page" : undefined}
-              className="max-[359px]:hidden"
-            >
-              <span className="sm:hidden">{t.pro}</span>
-              <span className="hidden sm:inline">{t.proCta}</span>
-            </ButtonLink>
+            {/* Sur tablette : le bouton des artisans reste dans la barre. Sur téléphone, il est
+                dans le menu seulement (choix de l'utilisateur, 19/11/2026). */}
+            <span className="hidden sm:inline-flex">
+              <ButtonLink
+                href="/pro"
+                variant="dark"
+                size="sm"
+                aria-current={onPro ? "page" : undefined}
+              >
+                {t.proCta}
+              </ButtonLink>
+            </span>
           </div>
           <div className="hidden items-center gap-2 xl:flex">
             <NotificationBell />

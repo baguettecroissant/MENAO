@@ -11,9 +11,9 @@ que dans le menu replié. Les artisans, second public du site, le trouvaient mal
 ## Décision
 
 - **Bouton des artisans** : « Vous êtes artisan ? », plein, bleu nuit (variante `dark`), vers
-  `/pro`. Sur téléphone et tablette, il reste dans la barre à côté du menu : « Espace Pro » sous
-  640 px, le libellé complet au-delà. Sous 360 px, il cède sa place et reste en tête des actions
-  du menu. Marqué `aria-current` sur les pages de l'Espace Pro.
+  `/pro`. Sur tablette (dès 640 px), il reste dans la barre à côté du menu. Sur téléphone, il est
+  dans le menu seulement (choix de l'utilisateur après essai : la barre reste légère). Marqué
+  `aria-current` sur les pages de l'Espace Pro.
 - **Une seule action principale** : « Décrire mon projet » reste le seul bouton bleu, en dernier.
   « Mon espace client » devient un lien discret avec une icône : trois boutons pleins ou bordés
   côte à côte se disputaient l'attention.

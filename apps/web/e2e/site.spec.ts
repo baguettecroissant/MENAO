@@ -286,10 +286,10 @@ test("en-tête : bouton des artisans visible, trois liens au centre (F-182)", as
     "page",
   );
 
-  // Sur téléphone, le bouton reste dans la barre, menu fermé.
+  // Sur téléphone, le bouton n'est pas dans la barre : il est dans le menu.
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await expect(nav.getByRole("link", { name: "Espace Pro", exact: true })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Vous êtes artisan ?" })).toBeHidden();
   await nav.getByRole("button", { name: "Menu" }).click();
   await expect(
     page.locator("#menu-mobile").getByRole("link", { name: "Vous êtes artisan ?" }),
