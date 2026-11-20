@@ -1570,13 +1570,13 @@ export const fr = {
     },
     // Recrutement des conseillers MENAO (F-183, lot 77, ADR 0380). Montants lus dans le barème.
     recruitment: {
-      title: "Devenir conseiller MENAO",
+      title: "Devenir commercial MENAO",
       // Aucun montant sur la page (20/11/2026) : les primes sont présentées en réunion d'information.
-      metaTitle: "Devenir conseiller MENAO : indépendant, rémunération sans plafond",
+      metaTitle: "Devenir commercial MENAO : indépendant, rémunération sans plafond",
       metaDescription:
         "Faites découvrir MENAO aux artisans du bâtiment des Alpes-Maritimes. Indépendant, à votre rythme : plus vous travaillez, plus vous gagnez, sans plafond.",
       eyebrow: "Recrutement · Alpes-Maritimes",
-      heroTitle: "Devenez conseiller MENAO.",
+      heroTitle: "Devenez commercial MENAO.",
       intro:
         "Faites découvrir MENAO aux artisans du bâtiment de votre secteur. Vous êtes indépendant, vous choisissez vos horaires, et votre rémunération suit vos résultats : plus vous travaillez, plus vous gagnez.",
       apply: "Je candidate",
@@ -1587,7 +1587,7 @@ export const fr = {
         "Outils et formation fournis",
       ],
       photoAlt:
-        "Trois conseillers MENAO en polo marine marchent devant une voiture aux couleurs de MENAO, sur la Côte d'Azur.",
+        "Trois commerciaux MENAO en polo marine marchent devant une voiture aux couleurs de MENAO, sur la Côte d'Azur.",
       gains: [
         {
           value: "+",
@@ -1641,7 +1641,7 @@ export const fr = {
       toolsEyebrow: "Vos outils",
       toolsTitle: "Tout ce qu'il faut, dès le premier jour.",
       toolsLead:
-        "Votre espace conseiller sur l'ordinateur et le téléphone, et une formation avant de commencer.",
+        "Votre espace commercial sur l'ordinateur et le téléphone, et une formation avant de commencer.",
       tools: [
         {
           title: "Votre code et votre QR code",
@@ -1691,7 +1691,7 @@ export const fr = {
       faqTitle: "Avant de candidater.",
       faq: [
         {
-          q: "Quel statut faut-il pour devenir conseiller MENAO ?",
+          q: "Quel statut faut-il pour devenir commercial MENAO ?",
           a: "Un statut d'indépendant, par exemple auto-entrepreneur ou société. Pas encore de statut ? Dites-le dans le formulaire : nous en parlons pendant la réunion d'information.",
         },
         {
@@ -1768,7 +1768,7 @@ export const fr = {
         sent: "Candidature envoyée",
         title: (firstName: string) => `Merci ${firstName}. Choisissez votre réunion d'information.`,
         changeTitle: (firstName: string) => `${firstName}, choisissez votre réunion d'information.`,
-        lead: "30 minutes en visio avec l'équipe : MENAO, l'outil du conseiller, vos gains, puis vos questions. Caméra facultative.",
+        lead: "30 minutes en visio avec l'équipe : MENAO, l'outil du commercial, vos gains, puis vos questions. Caméra facultative.",
         slot: (day: string, from: string, to: string) => ({
           day,
           hours: `${from} – ${to} · en visio`,

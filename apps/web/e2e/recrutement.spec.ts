@@ -29,7 +29,7 @@ test("devenir conseiller : candidature, puis réunion d'information réservée",
 
   await page.goto("/devenir-conseiller?source=linkedin");
   await expect(
-    page.getByRole("heading", { level: 1, name: "Devenez conseiller MENAO." }),
+    page.getByRole("heading", { level: 1, name: "Devenez commercial MENAO." }),
   ).toBeVisible();
 
   // Gains sans aucun montant ni simulateur : plus vous travaillez, plus vous gagnez.
