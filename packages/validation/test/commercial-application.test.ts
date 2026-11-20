@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { commercialApplicationSchema } from "../src/commercial-application";
+import {
+  commercialApplicationSchema,
+  commercialApplicationSteps,
+} from "../src/commercial-application";
 import { messages } from "../src/messages";
 
 const valid = {
@@ -15,6 +18,8 @@ const valid = {
   source: "linkedin",
   motivation: "",
   consent: true,
+  linkedin_url: "",
+  cv_path: "6f1d2c1e-8b1a-4c55-9d3e-2b7a1f0c9e11/0b6a3f6e-1c2d-4e5f-8a9b-0c1d2e3f4a5b.pdf",
 };
 
 describe("candidature d'un conseiller", () => {
@@ -48,5 +53,41 @@ describe("candidature d'un conseiller", () => {
     const errors = result.error?.flatten().fieldErrors ?? {};
     expect(errors.consent).toEqual([messages.candidateConsent]);
     expect(errors.sector).toEqual([messages.candidateSector]);
+  });
+});
+
+describe("CV, LinkedIn et étapes (ADR 0382)", () => {
+  it("exige un CV rangé, au bon format", () => {
+    const missing = commercialApplicationSchema.safeParse({ ...valid, cv_path: "" });
+    expect(missing.error?.flatten().fieldErrors.cv_path).toEqual([messages.candidateCv]);
+    expect(commercialApplicationSchema.safeParse({ ...valid, cv_path: "../cv.pdf" }).success).toBe(
+      false,
+    );
+  });
+  it("complète et contrôle le lien LinkedIn, facultatif", () => {
+    expect(commercialApplicationSchema.parse(valid).linkedin_url).toBeNull();
+    expect(
+      commercialApplicationSchema.parse({ ...valid, linkedin_url: " linkedin.com/in/julie " })
+        .linkedin_url,
+    ).toBe("https://linkedin.com/in/julie");
+    expect(
+      commercialApplicationSchema.parse({
+        ...valid,
+        linkedin_url: "http://fr.linkedin.com/in/julie",
+      }).linkedin_url,
+    ).toBe("https://fr.linkedin.com/in/julie");
+    const bad = commercialApplicationSchema.safeParse({
+      ...valid,
+      linkedin_url: "https://exemple.test",
+    });
+    expect(bad.error?.flatten().fieldErrors.linkedin_url).toEqual([messages.candidateLinkedin]);
+  });
+  it("contrôle chaque étape seule", () => {
+    const [one, two, three] = commercialApplicationSteps;
+    expect(one.safeParse(valid).success).toBe(true);
+    expect(one.safeParse({ ...valid, email: "x" }).success).toBe(false);
+    expect(two.safeParse(valid).success).toBe(true);
+    expect(two.safeParse({ ...valid, source: "" }).success).toBe(false);
+    expect(three.safeParse({ ...valid, consent: false }).success).toBe(false);
   });
 });

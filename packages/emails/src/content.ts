@@ -98,6 +98,8 @@ export const NOTIFICATION_TYPES = [
   "recrutement_demo",
   // E-mail du lundi aux conseillers (ADR 0381).
   "conseiller_semaine",
+  // Bonne réception d'une candidature de commercial (ADR 0382).
+  "recrutement_recue",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -2196,6 +2198,19 @@ export function notificationContent(
         },
       };
     }
+    case "recrutement_recue":
+      return {
+        subject: "Nous avons bien reçu votre candidature",
+        preview: "Nous lisons votre CV et revenons vers vous pour un entretien.",
+        title: "Candidature bien reçue",
+        paragraphs: [
+          hello(ctx.firstName),
+          "Merci pour votre candidature pour devenir commercial MENAO. Nous l'avons bien reçue, avec votre CV.",
+          "Nous lisons chaque candidature avec attention et revenons vers vous pour vous proposer un entretien, au téléphone ou en visio.",
+        ],
+        quote: null,
+        cta: { label: "Revoir le métier de commercial MENAO", url: link("/devenir-conseiller") },
+      };
     case "conseiller_semaine": {
       // E-mail du lundi aux conseillers (ADR 0381) : leur semaine passée, l'objectif de la nouvelle.
       const week = dateDay(text(data, "semaine"));

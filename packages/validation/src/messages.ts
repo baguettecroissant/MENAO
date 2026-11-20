@@ -16,6 +16,11 @@ export const messages = {
   candidateSector: "Indiquez la ville ou le secteur où vous aimeriez travailler.",
   candidateChoice: "Choisissez une réponse.",
   candidateConsent: "Cochez la case pour que nous puissions traiter votre candidature.",
+  // CV et LinkedIn de la candidature (ADR 0382).
+  candidateCv: "Ajoutez votre CV en PDF.",
+  candidateCvType: "Votre CV doit être un fichier PDF.",
+  candidateCvTooLarge: "Votre CV dépasse 5 Mo : enregistrez-le en PDF plus léger.",
+  candidateLinkedin: "Lien LinkedIn invalide : copiez l'adresse de votre profil.",
   passwordTooShort: "Le mot de passe doit contenir au moins 8 caractères.",
   passwordTooLong: "Le mot de passe doit contenir au plus 72 caractères.",
   siretInvalid: "Numéro SIRET invalide (14 chiffres).",

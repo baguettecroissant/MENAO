@@ -19,19 +19,21 @@ const FIELDS = [
   "availability",
   "source",
   "motivation",
+  "linkedin_url",
+  "cv_path",
 ] as const;
 
 export type ApplicationState = FormState & {
   token?: string;
   firstName?: string;
   email?: string;
-  meetings?: MeetingSlot[];
 };
 
 /**
- * Candidature « Devenir conseiller MENAO » (F-183, ADR 0380) : contrôlée ici, puis en base
- * (`apply_as_commercial`, limites d'envoi). Renvoie le jeton et les réunions ouvertes, pour que le
- * candidat choisisse sa réunion d'information sans changer de page.
+ * Candidature « Devenir commercial MENAO » (F-183, ADR 0380 et 0382) : contrôlée ici, puis en base
+ * (`apply_as_commercial`, limites d'envoi), avec le CV déjà rangé par process-upload dans le
+ * dossier de la session anonyme du navigateur. Plus de réservation de réunion juste après l'envoi
+ * (lot 79) : le candidat voit la confirmation, l'équipe lit son CV.
  */
 export async function applyAsCommercial(
   _prev: ApplicationState,
@@ -59,6 +61,8 @@ export async function applyAsCommercial(
     p_source: d.source,
     p_motivation: d.motivation ?? "",
     p_consent: true,
+    p_cv_path: d.cv_path,
+    p_linkedin_url: d.linkedin_url ?? undefined,
   });
   if (error || !token) {
     return { error: error?.code === "22023" ? error.message : fr.errors.generic, values };
@@ -68,7 +72,6 @@ export async function applyAsCommercial(
     token,
     firstName: d.first_name,
     email: d.email,
-    meetings: await openMeetings(supabase),
   };
 }
 

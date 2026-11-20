@@ -1495,3 +1495,18 @@ describe("e-mail du lundi aux conseillers (ADR 0381)", () => {
     expect(renderNotification("conseiller_semaine", data, ctx).text).toContain("compte MENAO");
   });
 });
+
+describe("bonne réception d'une candidature (ADR 0382)", () => {
+  const ctx = { siteUrl: "https://menao.fr", firstName: "Julie" };
+  it("remercie, confirme le CV et annonce l'entretien", () => {
+    const content = notificationContent("recrutement_recue", {}, ctx);
+    expect(content.subject).toBe("Nous avons bien reçu votre candidature");
+    expect(content.paragraphs[0]).toBe("Bonjour Julie,");
+    expect(content.paragraphs.join(" ")).toContain("avec votre CV");
+    expect(content.cta.url).toBe("https://menao.fr/devenir-conseiller");
+  });
+  it("garde le pied de page des candidats, sans compte", () => {
+    const email = renderNotification("recrutement_recue", {}, ctx);
+    expect(email.text).not.toContain("compte MENAO");
+  });
+});

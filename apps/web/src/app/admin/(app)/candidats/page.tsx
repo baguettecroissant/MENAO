@@ -13,6 +13,7 @@ import { CopyLinkButton } from "@/components/admin/candidate-forms";
 import { FilterChips, listHref } from "@/components/admin/list-controls";
 import { ButtonLink, Card, StatusBadge, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { purgeDeletedCandidateCvs } from "@/lib/admin/candidate-cv";
 import { requireAdmin } from "@/lib/admin/guard";
 import { formatDayMonthShort, formatTime } from "@/lib/format";
 
@@ -71,6 +72,8 @@ export default async function AdminCandidatesPage({ searchParams }: PageProps<"/
   const params = await searchParams;
   const filter = recruitmentFilter(typeof params.etape === "string" ? params.etape : null);
   const { supabase } = await requireAdmin();
+  // CV des candidatures supprimées (2 ans) : effacés du stockage (ADR 0382).
+  await purgeDeletedCandidateCvs(supabase);
   const now = new Date();
   const since = new Date(now.getTime() - 30 * 24 * 3600 * 1000).toISOString();
   const [{ data: rows }, { data: stages }, { data: recent }, { data: meetings }] =

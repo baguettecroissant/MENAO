@@ -1570,129 +1570,168 @@ export const fr = {
     },
     // Recrutement des conseillers MENAO (F-183, lot 77, ADR 0380). Montants lus dans le barème.
     recruitment: {
-      title: "Devenir conseiller MENAO",
-      // Aucun montant sur la page (20/11/2026) : les primes sont présentées en réunion d'information.
-      metaTitle: "Devenir conseiller MENAO : indépendant, rémunération sans plafond",
+      // Page de recrutement des commerciaux, lot 79 (ADR 0382) : aucun montant, aucune mention
+      // d'IA ; candidature en 3 étapes avec CV, plus de réunion à réserver juste après l'envoi.
+      title: "Devenir commercial MENAO",
+      metaTitle: "Devenir commercial MENAO : indépendant, rémunération sans plafond",
       metaDescription:
-        "Faites découvrir MENAO aux artisans du bâtiment des Alpes-Maritimes. Indépendant, à votre rythme : plus vous travaillez, plus vous gagnez, sans plafond.",
-      eyebrow: "Recrutement · Alpes-Maritimes",
-      heroTitle: "Devenez conseiller MENAO.",
-      intro:
-        "Faites découvrir MENAO aux artisans du bâtiment de votre secteur. Vous êtes indépendant, vous choisissez vos horaires, et votre rémunération suit vos résultats : plus vous travaillez, plus vous gagnez.",
+        "MENAO arrive dans les Alpes-Maritimes : rejoignez l'équipe de départ des commerciaux. Indépendant, à votre rythme : plus vous travaillez, plus vous gagnez, sans plafond.",
+      eyebrow: "MENAO arrive dans les Alpes-Maritimes",
+      heroTitle: "Devenez commercial MENAO.",
+      introStart:
+        "On recrute l'équipe qui va faire entrer les artisans du 06 sur MENAO. Vous êtes indépendant, et ",
+      introStrong: "plus vous travaillez, plus vous gagnez",
+      introEnd: ".",
       apply: "Je candidate",
-      howItWorks: "Comment ça marche",
+      seeTool: "Voir l'outil",
       heroChecks: [
         "Indépendant, à votre rythme",
         "Rémunération sans plafond",
-        "Outils et formation fournis",
+        "Formé avant de démarrer",
       ],
       photoAlt:
-        "Trois conseillers MENAO en polo marine marchent devant une voiture aux couleurs de MENAO, sur la Côte d'Azur.",
-      gains: [
+        "Trois commerciaux MENAO en polo marine marchent devant une voiture aux couleurs de MENAO, sur la Côte d'Azur.",
+      why: [
         {
-          value: "+",
-          title: "Plus vous travaillez, plus vous gagnez",
-          text: "Chaque artisan que vous faites entrer vous rapporte",
-        },
-        { value: "0", title: "plafond", text: "aucune limite à vos gains, versés chaque mois" },
-        { value: "100 %", title: "indépendant", text: "vos horaires, votre secteur, votre rythme" },
-      ],
-      stepsEyebrow: "Le métier",
-      stepsTitle: "Simple à expliquer, facile à vendre.",
-      stepsLead:
-        "Aucune commission sur les chantiers des artisans, un abonnement fixe, 2 mois offerts pour essayer : MENAO se présente en dix minutes.",
-      steps: [
-        {
-          title: "Vous rencontrez les artisans",
-          text: "Sur le terrain, au téléphone, chez les grossistes : vous présentez MENAO aux artisans de votre secteur.",
+          title: "L'équipe de départ",
+          text: "MENAO s'ouvre dans le 06 : vous faites partie des premiers commerciaux.",
         },
         {
-          title: "Ils s'inscrivent avec votre code",
-          text: "Votre lien et votre QR code rattachent chaque inscription à votre nom, même s'il s'inscrit plus tard.",
+          title: "Démarrage en janvier",
+          text: "Entretiens et formation en décembre, terrain dès janvier.",
         },
         {
-          title: "L'équipe vérifie leur dossier",
-          text: "Assurance, Kbis, qualifications : dès que le dossier est validé, une prime est pour vous.",
+          title: "Un secteur à vous",
+          text: "Votre zone, vos artisans, suivis dans votre espace.",
         },
         {
-          title: "Ils s'abonnent, vous gagnez encore",
-          text: "Après ses 2 mois offerts, au premier paiement de l'artisan : une prime de plus, selon sa formule.",
+          title: "Sans plafond",
+          text: "Chaque artisan que vous faites entrer vous rapporte.",
         },
       ],
-      earnings: {
-        eyebrow: "Vos gains",
-        title: "Plus vous travaillez, plus vous gagnez.",
-        lead: "Pas de plafond : votre rémunération suit le nombre d'artisans que vous faites entrer. Les montants vous sont présentés pendant la réunion d'information.",
-        points: [
+      tool: {
+        eyebrow: "Votre outil sur le terrain",
+        title: "Vous n'êtes jamais seul face à l'artisan.",
+        lead: "Les artisans du 06 sur une carte, votre code à partager, vos résultats de la semaine : tout tient dans votre téléphone.",
+        checks: [
+          "Chaque inscrit rattaché à votre nom",
+          "Vos primes suivies en direct",
+          "Un guide terrain : appels, objections, règles",
+        ],
+        phones: [
           {
-            title: "Une prime par artisan validé",
-            text: "Dès que l'équipe accepte le dossier d'un artisan inscrit avec votre code.",
+            caption: "Les artisans de votre secteur",
+            alt: "Écran Prospects de l'espace commercial : la carte des artisans autour de Nice et la fiche d'un plombier.",
           },
           {
-            title: "Une prime de plus quand il s'abonne",
-            text: "À son premier paiement, après ses 2 mois offerts, selon sa formule.",
+            caption: "Votre code, vos inscrits",
+            alt: "Écran Mon code : le QR code et le code du commercial, ses chiffres et la liste de ses inscriptions.",
           },
           {
-            title: "Versé chaque mois, suivi en direct",
-            text: "Vos inscrits, vos validés et vos primes, dans votre espace.",
+            caption: "Votre semaine en direct",
+            alt: "Écran Mes résultats : la semaine en cours, les semaines passées, l'objectif commun et l'équipe.",
+          },
+        ],
+        carousel: "Écrans de l'espace commercial",
+      },
+      day: {
+        eyebrow: "Une journée type",
+        title: "Du terrain, et le bon outil à chaque étape.",
+        lead: "Vous organisez vos journées comme vous voulez. Voici à quoi elles ressemblent souvent.",
+        steps: [
+          {
+            time: "8 h 30",
+            title: "Votre journée est prête",
+            text: "Rendez-vous, appels et relances, dans « Ma journée ».",
+          },
+          {
+            time: "9 h 30",
+            title: "Visite chez un plombier",
+            text: "Sa fiche est prête : son métier, sa commune, vos notes de la dernière fois.",
+          },
+          {
+            time: "11 h",
+            title: "Un électricien rappelle",
+            text: "Il s'inscrit avec votre lien, depuis son téléphone.",
+          },
+          {
+            time: "14 h",
+            title: "Passage chez un grossiste",
+            text: "Là où les artisans du secteur se retrouvent le matin.",
+          },
+          {
+            time: "17 h 30",
+            title: "Le point sur vos visites",
+            text: "Une note dans la fiche de chaque artisan, pour la relance.",
+          },
+          {
+            time: "Le soir",
+            title: "+1 dans votre semaine",
+            text: "Un dossier validé : une prime de plus pour vous.",
           },
         ],
       },
-      toolsEyebrow: "Vos outils",
-      toolsTitle: "Tout ce qu'il faut, dès le premier jour.",
-      toolsLead:
-        "Votre espace conseiller sur l'ordinateur et le téléphone, et une formation avant de commencer.",
-      tools: [
-        {
-          title: "Votre code et votre QR code",
-          text: "Un lien à partager, des cartes à imprimer, chaque inscrit rattaché à votre nom.",
-        },
-        {
-          title: "Les entreprises du 06 sur une carte",
-          text: "Les artisans de votre secteur, issus du registre public, et leur suivi.",
-        },
-        {
-          title: "Un copilote pour chaque visite",
-          text: "La visite préparée, le message prêt, le compte rendu dicté.",
-        },
-        {
-          title: "Un entraînement noté sur 20",
-          text: "Face à un artisan joué par l'IA, avec les conseils d'un coach.",
-        },
-        {
-          title: "Vos gains en direct",
-          text: "Inscrits, validés, abonnés, et ce qui vous sera versé.",
-        },
-        {
-          title: "Un guide terrain complet",
-          text: "Les appels types, les objections, les règles à respecter.",
-        },
-      ],
-      profileEyebrow: "Pour qui ?",
-      profileTitle: "Vous aimez le terrain et le contact.",
-      alreadyTitle: "Vous voyez déjà des artisans pour votre travail ?",
-      alreadyText:
-        "Négoce de matériaux, outillage, fournitures, assurance… MENAO s'ajoute à ce que vous leur présentez déjà, sans un kilomètre de plus.",
-      lookingTitle: "Ce qu'on recherche",
-      looking: [
-        "À l'aise au téléphone et en face à face",
-        "Vous connaissez le 06 et ses artisans, ou vous apprenez vite",
-        "Un statut d'indépendant, ou prêt à en créer un",
-        "Une expérience du bâtiment est un plus, pas une obligation",
-      ],
-      processTitle: "Comment ça se passe",
-      process: [
-        "Vous envoyez votre candidature (2 minutes)",
-        "Vous choisissez tout de suite une réunion d'information en visio (30 minutes)",
-        "Un entretien, avec une mise en situation face à un artisan joué par l'IA",
-        "Votre code, votre espace et une formation pour démarrer",
-      ],
+      earnings: {
+        eyebrow: "Vos gains",
+        title: "Plus vous travaillez, plus vous gagnez.",
+        lead: "Pas de plafond, pas de fixe : votre rémunération suit les artisans que vous faites entrer. Les montants vous sont présentés pendant l'entretien.",
+        steps: [
+          {
+            title: "Un artisan s'inscrit avec votre code",
+            text: "Votre lien, votre QR code ou votre code saisi à l'inscription.",
+          },
+          {
+            title: "Son dossier est validé",
+            text: "Une prime pour vous, dès que l'équipe l'accepte.",
+          },
+          {
+            title: "Il s'abonne après ses 2 mois offerts",
+            text: "Une prime de plus, selon sa formule.",
+          },
+          {
+            title: "Et ainsi de suite, sans plafond",
+            text: "Chaque mois, tout est versé et suivi en direct.",
+          },
+        ],
+      },
+      profiles: {
+        eyebrow: "Pour qui ?",
+        title: "C'est pour vous si…",
+        items: [
+          {
+            title: "Vous êtes commercial terrain",
+            text: "Vous savez ouvrir une porte et conclure. Ici, vous vendez un outil simple, sans commission sur les chantiers : il se présente en dix minutes.",
+          },
+          {
+            title: "Vous voulez changer de métier",
+            text: "Vous aimez le contact et l'autonomie. Une formation et l'accompagnement de l'équipe vous préparent avant votre premier rendez-vous.",
+          },
+          {
+            title: "Vous voyez déjà des artisans",
+            text: "Négoce, outillage, assurance… MENAO s'ajoute à ce que vous leur présentez déjà, sans un kilomètre de plus.",
+          },
+        ],
+        checks: [
+          "À l'aise au téléphone et en face à face",
+          "Un statut d'indépendant, ou prêt à en créer un",
+          "Le bâtiment : un plus, pas une obligation",
+        ],
+      },
+      process: {
+        title: "De la candidature au terrain, en quatre étapes.",
+        steps: [
+          { title: "Candidature", text: "3 étapes, 2 minutes, avec votre CV." },
+          { title: "Nous lisons votre CV", text: "Chaque candidature reçoit une réponse." },
+          { title: "Entretien", text: "Au téléphone ou en visio, pour se connaître." },
+          { title: "Démarrage", text: "Votre code, votre espace, la formation, puis le terrain." },
+        ],
+      },
       faqEyebrow: "Questions fréquentes",
       faqTitle: "Avant de candidater.",
       faq: [
         {
-          q: "Quel statut faut-il pour devenir conseiller MENAO ?",
-          a: "Un statut d'indépendant, par exemple auto-entrepreneur ou société. Pas encore de statut ? Dites-le dans le formulaire : nous en parlons pendant la réunion d'information.",
+          q: "Quel statut faut-il pour devenir commercial MENAO ?",
+          a: "Un statut d'indépendant, par exemple auto-entrepreneur ou société. Pas encore de statut ? Dites-le dans le formulaire : nous en parlons pendant l'entretien.",
         },
         {
           q: "Ai-je des horaires ou un nombre d'artisans à atteindre ?",
@@ -1700,7 +1739,7 @@ export const fr = {
         },
         {
           q: "Quand et comment suis-je payé ?",
-          a: "Chaque mois, pour les primes acquises : une prime quand le dossier d'un artisan inscrit avec votre code est validé, puis une autre à son premier paiement, après ses 2 mois offerts. Sans plafond : plus vous faites entrer d'artisans, plus vous gagnez. Les montants vous sont présentés pendant la réunion d'information ; tout est suivi dans votre espace.",
+          a: "Chaque mois, pour les primes acquises : une prime quand le dossier d'un artisan inscrit avec votre code est validé, puis une autre à son premier paiement, après ses 2 mois offerts. Sans plafond : plus vous faites entrer d'artisans, plus vous gagnez. Les montants vous sont présentés pendant l'entretien ; tout est suivi dans votre espace.",
         },
         {
           q: "Sur quel secteur vais-je travailler ?",
@@ -1708,21 +1747,57 @@ export const fr = {
         },
         {
           q: "Faut-il connaître le bâtiment ?",
-          a: "Non, c'est un plus. Le guide, l'entraînement et le copilote vous aident à présenter MENAO simplement.",
+          a: "Non, c'est un plus. La formation et le guide terrain vous aident à présenter MENAO simplement.",
         },
         {
           q: "Que se passe-t-il si un artisan s'inscrit sans mon code ?",
           a: "Votre lien et votre QR code rattachent l'inscription à votre nom, même plus tard. Sans eux, l'artisan peut saisir votre code lors de son inscription, dans le champ « J'ai un code ».",
         },
       ],
-      formTitle: "Je candidate.",
+      formEyebrow: "L'équipe de départ se forme maintenant",
+      formTitle: "Rejoignez l'équipe de départ.",
       formLead:
-        "Deux minutes. Juste après, vous choisissez votre réunion d'information en visio : on vous présente MENAO, l'outil et vos gains, et vous posez toutes vos questions.",
+        "Trois étapes, avec votre CV. Nous lisons chaque candidature et revenons vers vous pour un entretien.",
       formChecks: [
-        "Aucun CV demandé pour commencer",
+        "3 étapes, 2 minutes",
+        "Votre CV en PDF (obligatoire), LinkedIn si vous voulez",
         "Réponse à chaque candidature",
-        "Vos données ne servent qu'au recrutement",
       ],
+      form: {
+        stepOf: (n: number) => `Étape ${n} sur 3`,
+        stepNames: ["Vous", "Votre profil", "Votre CV"],
+        stepTitles: [
+          "Faisons connaissance.",
+          "Votre profil, en quelques clics.",
+          "Votre CV, et c'est envoyé.",
+        ],
+        next: "Continuer",
+        back: "Retour",
+        sending: "Envoi de votre CV…",
+        cv: "Votre CV",
+        required: "(obligatoire)",
+        choose: "Choisir mon CV (PDF)",
+        cvHint: "PDF, 5 Mo au plus",
+        replace: "Remplacer",
+        linkedin: "Profil LinkedIn",
+        linkedinPlaceholder: "linkedin.com/in/…",
+        errors: {
+          too_large: "Votre CV dépasse 5 Mo : enregistrez-le en PDF plus léger.",
+          invalid_type: "Votre CV doit être un fichier PDF.",
+          unavailable: "Votre CV n'a pas pu être envoyé. Réessayez dans un instant.",
+        } as Record<string, string>,
+      },
+      sent: {
+        title: (firstName: string) => `Merci ${firstName}, votre candidature est envoyée.`,
+        text: (email: string) =>
+          `Nous lisons votre CV et revenons vers vous pour un entretien, au téléphone ou en visio. Un e-mail de confirmation vient de partir à ${email}.`,
+        next: [
+          "Nous lisons votre CV",
+          "Nous vous proposons un entretien",
+          "Votre code, votre espace et la formation",
+        ],
+        back: "Revenir à la page",
+      },
       fields: {
         firstName: "Prénom",
         lastName: "Nom",
@@ -1738,7 +1813,8 @@ export const fr = {
         sourceHint: "Déjà coché si vous arrivez par le lien d'une annonce.",
         motivation: "Pourquoi MENAO ?",
         optional: "(facultatif)",
-        consent: "J'accepte que MENAO conserve ma candidature pour me recontacter, 2 ans au plus.",
+        consent:
+          "J'accepte que MENAO conserve ma candidature et mon CV pour me recontacter, 2 ans au plus.",
         privacy: "Confidentialité",
       },
       options: {
@@ -1763,12 +1839,12 @@ export const fr = {
           autre: "Autre",
         },
       },
-      submit: "Envoyer et choisir ma réunion",
+      submit: "Envoyer ma candidature",
       meeting: {
         sent: "Candidature envoyée",
         title: (firstName: string) => `Merci ${firstName}. Choisissez votre réunion d'information.`,
         changeTitle: (firstName: string) => `${firstName}, choisissez votre réunion d'information.`,
-        lead: "30 minutes en visio avec l'équipe : MENAO, l'outil du conseiller, vos gains, puis vos questions. Caméra facultative.",
+        lead: "30 minutes en visio avec l'équipe : MENAO, l'outil du commercial, vos gains, puis vos questions. Caméra facultative.",
         slot: (day: string, from: string, to: string) => ({
           day,
           hours: `${from} – ${to} · en visio`,
@@ -12077,7 +12153,7 @@ export const fr = {
     candidates: {
       title: "Candidats",
       intro:
-        "Les candidatures de la page « Devenir conseiller MENAO », de la réunion d'information à la décision.",
+        "Les candidatures de la page « Devenir commercial MENAO », avec leur CV, de l'entretien à la décision.",
       nextMeeting: "Prochaine réunion d'information",
       noMeeting: "Aucune réunion prévue",
       meetingSeats: (booked: number, capacity: number) =>
@@ -12129,6 +12205,9 @@ export const fr = {
           `${sector} · ${status} · ${experience} de vente terrain`,
         application: "Sa candidature",
         receivedOn: (date: string) => `reçue le ${date}`,
+        // CV et profil LinkedIn (lot 79, ADR 0382).
+        cv: "Ouvrir son CV",
+        linkedin: "Profil LinkedIn",
         rows: {
           email: "E-mail",
           phone: "Téléphone",
