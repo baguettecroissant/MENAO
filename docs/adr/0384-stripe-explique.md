@@ -24,5 +24,7 @@ ni pourquoi il demande une pièce d'identité et un code par SMS, ni si MENAO to
 
 ## Conséquences
 
-- Le même texte pourra servir au mémo A4 des commerciaux et à l'application (écran des paiements,
-  PR suivante).
+- Le même texte pourra servir au mémo A4 des commerciaux.
+- Application iPhone (PR suivante, même lot) : même encart en haut de « Paiements » tant que le
+  compte n'est pas actif, même « i » sur le code par SMS, lien discret une fois actif ; le mémo
+  s'ouvre en volet du bas (`BottomSheet`), comme le prévoit la maquette.

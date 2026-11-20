@@ -53,7 +53,9 @@ reconduction, Entreprise comme les autres, commercial par lien (inscription en l
 - Les CGV restent hors ligne jusqu'à la relecture de l'avocat (TODO(legal) : cumul des clauses,
   rétractation, majoration d'impayé, plafond de hausse). La case renvoie à la page provisoire.
 - Le portail Stripe doit être reconfiguré sur chaque environnement (`pnpm stripe:setup`).
-- Application iPhone : elle affiche l'état de la formule sans achat ; l'arrêt se fait sur le site
-  (lot suivant pour les dates d'engagement dans l'application).
+- Application iPhone : « Ma formule » montre l'état et les dates qui comptent (mêmes calculs du
+  cœur, `subscription-term-view.ts`), et « Arrêter mon abonnement » existe aussi dans l'application
+  (écrans 4 et 5 de la maquette, fonction `billing-cancel`). Arrêter n'est pas acheter : ni prix,
+  ni moyen de paiement, ni changement de formule dans l'application (règle 10).
 - Hors de ce lot : prélèvement SEPA à part entière, mention de rétractation pour les inscriptions
   faites avec un commercial (à rédiger avec l'avocat).

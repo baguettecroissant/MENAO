@@ -555,6 +555,64 @@ export const fr = {
   /** Compte de paiement Stripe (ADR 0124), comme l'étape « Paiements » du site. */
   proPayments: {
     title: "Paiements",
+    // « Stripe, c'est quoi ? » (F-185, ADR 0384, maquette du lot 80), comme sur le site.
+    explainer: {
+      cardTitle: "Stripe, c'est quoi ?",
+      cardText:
+        "Le service qui encaisse les paiements de vos clients, comme le terminal de carte d'un magasin. L'argent arrive chez vous ; MENAO n'y touche jamais.",
+      open: "Comprendre en 1 minute",
+      link: "Stripe, c'est quoi ?",
+      infoLabel: "En savoir plus",
+      title: "Stripe en 1 minute",
+      lead: "Les réponses aux questions que se posent tous les artisans.",
+      items: [
+        {
+          id: "qui",
+          icon: "bank",
+          q: "Qui est Stripe ?",
+          a: "Une entreprise de paiement en ligne, agréée et contrôlée en Europe par la Banque centrale d'Irlande. Des millions d'entreprises dans le monde encaissent leurs clients avec elle.",
+        },
+        {
+          id: "usage",
+          icon: "card",
+          q: "À quoi ça vous sert ?",
+          a: "Vos clients paient l'acompte et le solde par carte, en ligne. Stripe reçoit l'argent et le vire sur votre compte bancaire, comme le terminal de carte d'un magasin.",
+        },
+        {
+          id: "argent",
+          icon: "shield",
+          q: "MENAO touche-t-il à votre argent ?",
+          a: "Jamais. Il va de votre client à votre compte Stripe, puis à votre banque. MENAO ne prend aucune commission sur vos chantiers.",
+        },
+        {
+          id: "identite",
+          icon: "id",
+          q: "Pourquoi votre pièce d'identité ?",
+          a: "La loi oblige tout service de paiement à vérifier qui reçoit l'argent, contre la fraude. Votre banque fait la même chose à l'ouverture d'un compte.",
+        },
+        {
+          id: "sms",
+          icon: "phone",
+          q: "Pourquoi un code par SMS ?",
+          a: "Il protège votre compte, comme votre banque en ligne : personne d'autre que vous ne peut changer le compte où arrive votre argent.",
+        },
+        {
+          id: "frais",
+          icon: "euro",
+          q: "Combien ça coûte ?",
+          a: "Des frais de Stripe sur chaque paiement reçu, déduits automatiquement, au tarif public de Stripe. Pas d'abonnement Stripe, rien à payer si vous n'encaissez rien.",
+        },
+        {
+          id: "delai",
+          icon: "clock",
+          q: "Quand l'argent arrive-t-il ?",
+          a: "Stripe le vire automatiquement sur votre compte bancaire, environ 3 jours ouvrés après chaque paiement (le tout premier virement prend 7 à 14 jours). Vous suivez tout dans votre espace Stripe.",
+        },
+      ],
+      pricing: "Voir les tarifs de Stripe",
+      done: "J'ai compris, je continue",
+      close: "Fermer",
+    },
     intro:
       "Vos clients vous paient directement sur votre compte, via Stripe (prestataire de paiement agréé). MENAO ne touche jamais l'argent de vos chantiers et ne prélève aucune commission.",
     fees: "Les frais de paiement Stripe sont déduits de chaque encaissement ; vous gérez vos paiements, remboursements et virements depuis votre propre tableau de bord Stripe.",
@@ -4656,6 +4714,76 @@ export const fr = {
       trial: (date: string) => `Essai gratuit jusqu'au ${date}`,
       ending: (date: string) => `Se termine le ${date}`,
       active: "En cours",
+    },
+    // Engagement d'un an (F-184, ADR 0383, maquette du lot 74), comme « Ma formule » sur le site.
+    termTitle: "Votre abonnement",
+    term: {
+      awaitingStatus: "Essai gratuit : il démarre à la mise en ligne de votre fiche",
+      trialStatus: (date: string) => `Essai gratuit jusqu'au ${date}`,
+      engagementRow: "Engagement",
+      awaitingEngagement: "12 mois à partir du premier paiement",
+      firstPaymentRow: "Premier prélèvement",
+      fromTo: (from: string, to: string) => `du ${from} au ${to}`,
+      renounceRow: "Pour renoncer sans frais",
+      before: (date: string) => `avant le ${date}`,
+      until: (date: string) => `jusqu'au ${date}`,
+      renewalRow: "Renouvellement",
+      renewalOn: (date: string) => `le ${date}, pour un an`,
+      stopRow: "Pour arrêter à l'échéance",
+      stopBy: (date: string) => `au plus tard le ${date}`,
+      stoppingRow: "Fin de l'abonnement",
+      stoppingOn: (date: string) => `le ${date}, à votre demande`,
+      stopLink: "Arrêter mon abonnement",
+      stopped:
+        "Votre demande d'arrêt est enregistrée. Un e-mail de confirmation vous a été envoyé.",
+    },
+    stop: {
+      back: "Ma formule",
+      title: "Arrêter mon abonnement",
+      trialTitle: "Vous êtes en essai gratuit",
+      trialText: (date: string) =>
+        `Jusqu'au ${date}. Renoncer ne vous coûte rien et votre engagement d'un an ne commence pas.`,
+      awaitingText:
+        "Votre fiche n'est pas encore en ligne : votre essai n'a pas commencé. Renoncer ne vous coûte rien.",
+      toPay: "À payer",
+      zero: "0 €",
+      profile: "Votre fiche",
+      profileUntil: (date: string) => `en ligne jusqu'au ${date}`,
+      profileNow: "retirée tout de suite",
+      documents: "Vos devis et factures",
+      documentsValue: "toujours accessibles",
+      renounce: "Renoncer sans frais",
+      keep: "Garder mon abonnement",
+      yearIntro: (date: string) => `Votre année d'abonnement court jusqu'au ${date}.`,
+      atRenewal: "Arrêter à l'échéance",
+      atNextRenewal: "Arrêter à l'échéance suivante",
+      noFee: "0 € de frais",
+      atRenewalText: (end: string, deadline: string) =>
+        `Votre abonnement continue jusqu'au ${end}, puis s'arrête. À demander au plus tard le ${deadline}.`,
+      lateText: (end: string) =>
+        `La date limite pour l'échéance de cette année est passée : votre abonnement est renouvelé une fois, jusqu'au ${end}, puis s'arrête.`,
+      noExitTitle: (date: string) => `Pas d'arrêt avant le ${date}`,
+      noExitText:
+        "Votre engagement d'un an court jusqu'à cette date : les mensualités restent dues jusque-là, comme prévu à votre inscription.",
+      periodEndText: (date: string) =>
+        `Votre abonnement s'arrête à la fin de la période déjà payée, le ${date}.`,
+      confirm: (date: string) => `Confirmer : arrêt le ${date}`,
+      reasonsLegend: "Pourquoi partez-vous ? (facultatif)",
+      reasons: {
+        demandes: "Pas assez de demandes",
+        prix: "Trop cher",
+        activite: "J'arrête mon activité",
+        autre: "Autre",
+      },
+      alreadyRequested: (date: string) =>
+        `Votre demande d'arrêt est enregistrée : votre abonnement prend fin le ${date}.`,
+    },
+    stopErrors: {
+      already_requested: "Votre demande d'arrêt est déjà enregistrée.",
+      no_subscription: "Aucun abonnement à arrêter.",
+      rate_limited: "Trop de tentatives. Réessayez dans quelques minutes.",
+      forbidden: "Seul le titulaire du compte peut arrêter l'abonnement.",
+      unavailable: "Le service est momentanément indisponible. Réessayez dans quelques minutes.",
     },
     month: "Ce mois-ci",
     usage: {

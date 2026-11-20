@@ -2,6 +2,7 @@ import { planHighlights, type PlanHighlightKey } from "@menao/core";
 import {
   Check,
   ChevronDown,
+  ChevronRight,
   Euro,
   FileCheck,
   Inbox,
@@ -14,6 +15,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react-native";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState, type ReactNode } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
@@ -55,6 +57,7 @@ const CARD_WIDTH = 200;
 const CARD_GAP = spacing(2.5);
 // Au-delà, la précision passe sous le libellé pour ne pas l'écraser.
 const SHORT_VALUE = 12;
+const SHORT_TERM_VALUE = 16;
 
 /**
  * « Ma formule » dans l'application (lot 69, ADR 0363 ; repensée au lot 71, ADR 0369, maquette
@@ -65,10 +68,12 @@ const SHORT_VALUE = 12;
  */
 function PlanScreen() {
   const [plan, reload] = useFocusData(loadMyPlan);
+  const { arret } = useLocalSearchParams<{ arret?: string }>();
   if (plan === undefined) return <FicheSkeleton />;
   return (
     <FicheScreen onRefresh={reload}>
       <PageHead title={t.title} />
+      {arret === "ok" ? <Notice tone="success">{t.term.stopped}</Notice> : null}
       {plan === null ? <Notice tone="error">{fr.errors.generic}</Notice> : <Plan plan={plan} />}
     </FicheScreen>
   );
@@ -80,6 +85,9 @@ function Plan({ plan }: { plan: MyPlan }) {
   return (
     <>
       <Hero plan={plan} />
+      {plan.term && (plan.term.rows.length > 0 || plan.term.canStop) ? (
+        <Term term={plan.term} />
+      ) : null}
 
       <View style={styles.sectionHead}>
         <Text role="heading" style={styles.sectionTitle}>
@@ -171,6 +179,51 @@ function Plan({ plan }: { plan: MyPlan }) {
       ) : null}
       <Text style={styles.note}>{fr.account.subscriptionText}</Text>
     </>
+  );
+}
+
+/**
+ * Les dates qui comptent (maquette du lot 74, écran 3) et l'arrêt, dans MENAO. Ni moyen de
+ * paiement, ni changement de formule dans l'application (CLAUDE.md règle 10).
+ */
+function Term({ term }: { term: NonNullable<MyPlan["term"]> }) {
+  return (
+    <FicheCard padding={4} gap={0}>
+      <Text role="heading" style={[styles.cardTitle, styles.termTitle]}>
+        {t.termTitle}
+      </Text>
+      {term.rows.map(([label, value], index) => {
+        // Valeur longue sous le libellé, pour ne pas couper les dates (comme le détail plus bas).
+        const stacked = value.length > SHORT_TERM_VALUE;
+        return (
+          <View
+            key={label}
+            style={[
+              styles.termRow,
+              stacked && styles.termRowStacked,
+              index > 0 && styles.termRowBorder,
+            ]}
+          >
+            <Text style={styles.termLabel}>{label}</Text>
+            <Text style={[styles.termValue, stacked && styles.termValueStacked]}>{value}</Text>
+          </View>
+        );
+      })}
+      {term.canStop ? (
+        <Tappable
+          role="link"
+          onPress={() => {
+            haptic.select();
+            router.push("/pro-formule-arreter");
+          }}
+          scaleTo={0.985}
+          style={[styles.termRow, styles.termRowBorder, styles.stopLink]}
+        >
+          <Text style={styles.stopText}>{t.term.stopLink}</Text>
+          <ChevronRight size={18} color={colors["muted-foreground"]} />
+        </Tappable>
+      ) : null}
+    </FicheCard>
   );
 }
 
@@ -474,6 +527,27 @@ const styles = StyleSheet.create({
   meter: { marginTop: "auto", gap: spacing(1.5) },
   meterLabel: { fontFamily: font.semibold, fontSize: 12.5, color: colors.foreground },
   cardTitle: { fontFamily: font.bold, fontSize: 15, color: colors.foreground },
+  termTitle: { paddingBottom: spacing(2) },
+  termRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    gap: spacing(3),
+    paddingVertical: spacing(2.75),
+  },
+  termRowStacked: { flexDirection: "column", alignItems: "flex-start", gap: 2 },
+  termRowBorder: { borderTopWidth: 1, borderTopColor: colors.border },
+  termLabel: { fontFamily: font.regular, fontSize: 14, color: colors.label },
+  termValue: {
+    flexShrink: 1,
+    textAlign: "right",
+    fontFamily: font.semibold,
+    fontSize: 14,
+    color: colors.foreground,
+  },
+  termValueStacked: { textAlign: "left" },
+  stopLink: { alignItems: "center" },
+  stopText: { fontFamily: font.semibold, fontSize: 14.5, color: colors.label },
   gauge: { gap: spacing(1.5) },
   gaugeHead: { flexDirection: "row", justifyContent: "space-between", gap: spacing(3) },
   gaugeLabel: { fontFamily: font.bold, fontSize: 13.5, color: colors.foreground },

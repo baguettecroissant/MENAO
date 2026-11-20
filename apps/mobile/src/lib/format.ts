@@ -78,6 +78,11 @@ export function formatDay(iso: string): string {
   return dayLong.format(new Date(iso));
 }
 
+/** Jour civil (AAAA-MM-JJ) en toutes lettres : « 15 mars 2027 », sans décalage d'heure. */
+export function formatCivilDay(day: string): string {
+  return dayLong.format(new Date(`${day}T12:00:00Z`));
+}
+
 /** « dimanche 25 octobre » et « 08h30 », comme sur le site (heure de Paris). */
 export function formatDayAndTime(iso: string): { day: string; time: string } {
   const date = new Date(iso);

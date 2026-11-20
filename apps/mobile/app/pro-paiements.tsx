@@ -13,6 +13,7 @@ import { MoneyPanel } from "@/components/pro/money-panel";
 import { PaymentsPanel } from "@/components/pro/payments-panel";
 import { StripeChecklist } from "@/components/pro/onboarding-help";
 import { StripeAhead } from "@/components/pro/stripe-ahead";
+import { StripeExplainerCard, StripeExplainerLink } from "@/components/pro/stripe-explainer";
 import { StripeOnboarding } from "@/components/pro/stripe-onboarding";
 import { fr } from "@/i18n/fr";
 import { forgetBirthDate } from "@/lib/birth-date-memo";
@@ -133,6 +134,8 @@ function PaymentsScreen() {
           </FicheCard>
         ) : (
           <>
+            {/* « Stripe, c'est quoi ? » (lot 80, ADR 0384) : tant que le compte n'est pas actif. */}
+            {data.status !== "actif" ? <StripeExplainerCard /> : null}
             {/* Avant le formulaire Stripe (ADR 0348) : ce qu'il demande, à garder sous la main. */}
             {data.status === "a_demarrer" ? (
               <StripeChecklist withoutIdentity={data.pieceShareable && personal} />
@@ -161,6 +164,7 @@ function PaymentsScreen() {
               }
             />
             {data.money ? <MoneyPanel data={data.money} /> : null}
+            {data.status === "actif" ? <StripeExplainerLink /> : null}
           </>
         )}
       </FicheScreen>
