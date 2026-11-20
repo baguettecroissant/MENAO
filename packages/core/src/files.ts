@@ -5,6 +5,8 @@
  */
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+/** CV d'une candidature de commercial (ADR 0382) : PDF de 5 Mo au plus, comme le stockage. */
+export const CANDIDATE_CV_MAX_BYTES = 5 * 1024 * 1024;
 
 export type DetectedFileType = "pdf" | "jpeg" | "png";
 

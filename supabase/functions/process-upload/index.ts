@@ -1,4 +1,4 @@
-// Edge Function process-upload (F-05, F-14, F-20, F-22, F-40, F-42, F-43, F-62, F-181) : vérifie un fichier déposé par l'utilisateur dans
+// Edge Function process-upload (F-05, F-14, F-20, F-22, F-40, F-42, F-43, F-62, F-181, F-183) : vérifie un fichier déposé par l'utilisateur dans
 // « uploads/<user_id>/<uuid> » (type réel, taille), supprime les métadonnées des images, puis le
 // range dans son espace définitif et l'enregistre. Le fichier brut est toujours supprimé.
 // TODO [À VALIDER] : analyse antivirus des documents (prestataire à choisir).
@@ -8,6 +8,7 @@ import { identitySides, isIdentityPiece } from "../../../packages/core/src/ident
 import { messageAttachmentKind } from "../../../packages/core/src/messaging.ts";
 import { MAX_PROJECT_PHOTOS } from "../../../packages/core/src/project.ts";
 import {
+  CANDIDATE_CV_MAX_BYTES,
   MAX_UPLOAD_BYTES,
   MIME_TYPES,
   detectFileType,
@@ -34,6 +35,7 @@ const ALLOWED: Record<Purpose, DetectedFileType[]> = {
   message_attachment: ["pdf", "jpeg", "png"],
   ticket_photo: ["jpeg", "png"],
   expense_document: ["pdf", "jpeg", "png"],
+  candidate_cv: ["pdf"],
 };
 const EXTENSIONS: Record<DetectedFileType, string> = { pdf: "pdf", jpeg: "jpg", png: "png" };
 
@@ -47,7 +49,8 @@ type Purpose =
   | "chantier_photo"
   | "message_attachment"
   | "ticket_photo"
-  | "expense_document";
+  | "expense_document"
+  | "candidate_cv";
 type DocumentInput = {
   type: string;
   dateEmission?: string | null;
@@ -75,8 +78,12 @@ export type ProcessUploadStatus =
   | "rate_limited"
   | "unavailable";
 
-function respond(status: ProcessUploadStatus, httpStatus = 200): Response {
-  return new Response(JSON.stringify({ status }), {
+function respond(
+  status: ProcessUploadStatus,
+  httpStatus = 200,
+  extra: Record<string, string> = {},
+): Response {
+  return new Response(JSON.stringify({ status, ...extra }), {
     status: httpStatus,
     headers: { "Content-Type": "application/json" },
   });
@@ -168,6 +175,15 @@ Deno.serve(
         }
       }
       const file = { bytes, type, name: `${crypto.randomUUID()}.${EXTENSIONS[type]}` };
+
+      // CV d'une candidature de commercial (ADR 0382) : tout compte, même anonyme (le navigateur
+      // du candidat) ; rangé dans son dossier, rattaché ensuite par apply_as_commercial.
+      if (purpose === "candidate_cv") {
+        if (bytes.length > CANDIDATE_CV_MAX_BYTES) return respond("too_large", 413);
+        const cvPath = `${user.id}/${file.name}`;
+        await store(admin, "candidate-cvs", cvPath, file);
+        return respond("ok", 200, { path: cvPath });
+      }
 
       if (purpose === "avatar") {
         await saveAvatar(admin, user.id, file);

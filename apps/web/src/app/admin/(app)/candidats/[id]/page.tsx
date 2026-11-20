@@ -5,7 +5,7 @@ import {
   normalizeInterviewGrid,
   type RecruitmentStage,
 } from "@menao/core";
-import { ArrowLeft, Mail, Phone } from "lucide-react";
+import { ArrowLeft, ExternalLink, FileText, Mail, Phone } from "lucide-react";
 import type { Metadata, Route } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
@@ -17,6 +17,7 @@ import {
 } from "@/components/admin/candidate-forms";
 import { Button, ButtonLink, Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { candidateCvUrl } from "@/lib/admin/candidate-cv";
 import { requireAdmin } from "@/lib/admin/guard";
 import { inviteCandidate } from "@/lib/admin/recruitment-actions";
 import { formatDayMonthShort, formatDayTimeInline, formatPhone } from "@/lib/format";
@@ -43,7 +44,7 @@ const reviewSchema = z.object({
 });
 
 /**
- * Fiche d'un candidat conseiller (F-183, lot 77, ADR 0380) : grille d'entretien, sa candidature,
+ * Fiche d'un candidat commercial (F-183, lots 77 et 79, ADR 0380 et 0382) : grille d'entretien, sa candidature (CV, LinkedIn),
  * test de vente, étape et actions (démo, invitation, réponse polie). Réservé aux admins.
  */
 export default async function AdminCandidatePage({ params }: PageProps<"/admin/candidats/[id]">) {
@@ -56,6 +57,8 @@ export default async function AdminCandidatePage({ params }: PageProps<"/admin/c
     .eq("id", id)
     .maybeSingle();
   if (!c) notFound();
+  // CV de la candidature (lot 79, ADR 0382) : lien temporaire de 10 minutes.
+  const cvUrl = await candidateCvUrl(supabase, c.cv_path);
   const stage = c.stage as RecruitmentStage;
   const grid = normalizeInterviewGrid(c.interview_grid);
   const average = interviewAverage(grid);
@@ -144,6 +147,28 @@ export default async function AdminCandidatePage({ params }: PageProps<"/admin/c
                 <Phone aria-hidden="true" className="size-4" />
                 {formatPhone(c.phone)}
               </a>
+              {cvUrl && (
+                <a
+                  href={cvUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 font-semibold text-primary-strong"
+                >
+                  <FileText aria-hidden="true" className="size-4" />
+                  {d.cv}
+                </a>
+              )}
+              {c.linkedin_url && (
+                <a
+                  href={c.linkedin_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 font-semibold text-primary-strong"
+                >
+                  <ExternalLink aria-hidden="true" className="size-4" />
+                  {d.linkedin}
+                </a>
+              )}
             </div>
             <dl className="flex flex-col">
               {rows.map(([k, v]) => (

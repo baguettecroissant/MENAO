@@ -2009,6 +2009,22 @@ export type Database = {
         };
         Relationships: [];
       };
+      candidate_cv_deletions: {
+        Row: {
+          created_at: string;
+          cv_path: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          cv_path: string;
+        };
+        Update: {
+          created_at?: string;
+          cv_path?: string;
+        };
+        Relationships: [];
+      };
       certifications: {
         Row: {
           artisan_id: string;
@@ -2607,6 +2623,7 @@ export type Database = {
           callback_requested: boolean;
           consent_at: string;
           created_at: string;
+          cv_path: string | null;
           email: string;
           experience: string;
           first_name: string;
@@ -2618,6 +2635,7 @@ export type Database = {
           last_contact_at: string;
           last_name: string;
           legal_status: string;
+          linkedin_url: string | null;
           meeting_id: string | null;
           motivation: string | null;
           phone: string;
@@ -2640,6 +2658,7 @@ export type Database = {
           callback_requested?: boolean;
           consent_at?: string;
           created_at?: string;
+          cv_path?: string | null;
           email: string;
           experience: string;
           first_name: string;
@@ -2651,6 +2670,7 @@ export type Database = {
           last_contact_at?: string;
           last_name: string;
           legal_status: string;
+          linkedin_url?: string | null;
           meeting_id?: string | null;
           motivation?: string | null;
           phone: string;
@@ -2672,6 +2692,7 @@ export type Database = {
           callback_requested?: boolean;
           consent_at?: string;
           created_at?: string;
+          cv_path?: string | null;
           email?: string;
           experience?: string;
           first_name?: string;
@@ -2683,6 +2704,7 @@ export type Database = {
           last_contact_at?: string;
           last_name?: string;
           legal_status?: string;
+          linkedin_url?: string | null;
           meeting_id?: string | null;
           motivation?: string | null;
           phone?: string;
@@ -7012,6 +7034,7 @@ export type Database = {
         Returns: undefined;
       };
       admin_copy_launch_tasks: { Args: { p_from: string; p_to: string }; Returns: number };
+      admin_cv_deletions_done: { Args: { p_paths: string[] }; Returns: undefined };
       admin_decide_artisan: {
         Args: {
           p_artisan_id: string;
@@ -7463,11 +7486,13 @@ export type Database = {
         Args: {
           p_availability: string;
           p_consent: boolean;
+          p_cv_path: string;
           p_email: string;
           p_experience: string;
           p_first_name: string;
           p_last_name: string;
           p_legal_status: string;
+          p_linkedin_url?: string;
           p_motivation: string;
           p_phone: string;
           p_sector: string;
@@ -8991,7 +9016,8 @@ export type Database = {
         | "recrutement_annulation"
         | "recrutement_reponse"
         | "recrutement_demo"
-        | "conseiller_semaine";
+        | "conseiller_semaine"
+        | "recrutement_recue";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -9343,6 +9369,7 @@ export const Constants = {
         "recrutement_reponse",
         "recrutement_demo",
         "conseiller_semaine",
+        "recrutement_recue",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],

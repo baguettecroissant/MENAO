@@ -21,20 +21,41 @@ create temp table jetons (nom text primary key, jeton uuid);
 create temp table reunions (nom text primary key, id uuid);
 grant select, insert on jetons, reunions to anon, authenticated;
 
-create function pg_temp.candidater(nom text, email text, phone text) returns uuid language sql as $$
-  insert into jetons values (nom, public.apply_as_commercial(
-    initcap(nom), 'Exemple', email, phone, 'Nice', 'auto_entrepreneur', true, 'plus_2_ans',
-    'temps_partiel', 'linkedin', null, true)) returning jeton;
+-- Candidature comme le navigateur (lot 79, ADR 0382) : session anonyme et CV rangé dans le dossier
+-- de ce compte.
+create function pg_temp.candidater(nom text, email text, phone text) returns uuid language plpgsql as $$
+declare
+  uid uuid := gen_random_uuid();
+  cv text := uid || '/' || gen_random_uuid() || '.pdf';
+  jeton uuid;
+begin
+  insert into auth.users (id, is_anonymous, raw_app_meta_data, raw_user_meta_data)
+    values (uid, true, '{}', '{}');
+  insert into storage.objects (bucket_id, name) values ('candidate-cvs', cv);
+  perform set_config('request.jwt.claims',
+    jsonb_build_object('sub', uid, 'role', 'authenticated', 'is_anonymous', true)::text, true);
+  jeton := public.apply_as_commercial(initcap(nom), 'Exemple', email, phone, 'Nice',
+    'auto_entrepreneur', true, 'plus_2_ans', 'temps_partiel', 'linkedin', null, true, cv, null);
+  insert into jetons values (nom, jeton);
+  return jeton;
+end;
 $$;
-grant execute on function pg_temp.candidater(text, text, text) to anon;
 
 -- Barème public : lisible sans compte.
 set local role anon;
 select lives_ok($$ select * from public.commercial_bonus_rates() $$, 'visiteur : barème lisible');
 
--- Candidatures sans compte.
+-- Sans session (ni anonyme ni connectée) : la candidature passe par le navigateur (lot 79).
+select throws_ok($$ select public.apply_as_commercial('Paul', 'Exemple', 'paul175@example.test', '+33600000004',
+  'Nice', 'auto_entrepreneur', true, 'aucune', 'temps_plein', 'facebook', null, true, null) $$,
+  '42501', null, 'visiteur sans session : refusé');
+select throws_ok($$ select count(*) from public.commercial_candidates $$, '42501', null,
+  'visiteur : table des candidats fermée');
+reset role;
+
+-- Candidatures (session anonyme du navigateur, CV déposé).
 select isnt(pg_temp.candidater('julie', 'julie175@example.test', '+33600000001'), null,
-  'visiteur : candidature reçue, jeton renvoyé');
+  'candidature reçue, jeton renvoyé');
 select pg_temp.candidater('karim', 'karim175@example.test', '+33600000002');
 select pg_temp.candidater('lea', 'lea175@example.test', '+33600000003');
 select throws_ok($$ select pg_temp.candidater('julie2', 'JULIE175@example.test', '+33600000009') $$,
@@ -42,17 +63,14 @@ select throws_ok($$ select pg_temp.candidater('julie2', 'JULIE175@example.test',
 select throws_ok($$ select pg_temp.candidater('autre', 'autre175@example.test', '+33600000001') $$,
   '22023', null, 'même téléphone sous 90 jours : refusé');
 select throws_ok($$ select public.apply_as_commercial('Paul', 'Exemple', 'pas-un-email', '+33600000004',
-  'Nice', 'auto_entrepreneur', true, 'aucune', 'temps_plein', 'facebook', null, true) $$,
+  'Nice', 'auto_entrepreneur', true, 'aucune', 'temps_plein', 'facebook', null, true, null) $$,
   '22023', null, 'e-mail invalide : refusé');
 select throws_ok($$ select public.apply_as_commercial('Paul', 'Exemple', 'paul175@example.test', '+33600000004',
-  'Nice', 'auto_entrepreneur', true, 'aucune', 'temps_plein', 'tiktok', null, true) $$,
+  'Nice', 'auto_entrepreneur', true, 'aucune', 'temps_plein', 'tiktok', null, true, null) $$,
   '22023', null, 'provenance inconnue : refusée');
 select throws_ok($$ select public.apply_as_commercial('Paul', 'Exemple', 'paul175@example.test', '+33600000004',
-  'Nice', 'auto_entrepreneur', true, 'aucune', 'temps_plein', 'facebook', null, false) $$,
+  'Nice', 'auto_entrepreneur', true, 'aucune', 'temps_plein', 'facebook', null, false, null) $$,
   '22023', null, 'sans accord : refusé');
-select throws_ok($$ select count(*) from public.commercial_candidates $$, '42501', null,
-  'visiteur : table des candidats fermée');
-reset role;
 
 -- Réunions : créées par un administrateur (aal2) seulement.
 select pg_temp.connecter('e1750000-0000-4000-8000-000000000002', 'commercial');
@@ -128,7 +146,7 @@ select throws_ok($$ insert into public.notifications (candidate_id, type, channe
     'recrutement_reponse', 'sms', '{}') $$, '23514', null, 'candidat : e-mail seulement');
 
 -- L'envoi trouve l'adresse et le prénom du candidat.
-select is((select first_name from public.claim_notifications(100) where email = 'julie175@example.test'),
+select is((select distinct first_name from public.claim_notifications(100) where email = 'julie175@example.test'),
   'Julie', 'envoi : adresse et prénom du candidat');
 
 -- Rappels : la veille, puis une heure avant, une seule fois chacun.
