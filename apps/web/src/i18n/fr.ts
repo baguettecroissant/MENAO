@@ -8529,7 +8529,7 @@ export const fr = {
         },
         {
           q: "Puis-je arrêter mon abonnement ?",
-          a: "Oui. Au mois, à tout moment depuis votre espace pro. À l'année, l'engagement court 12 mois à partir du premier paiement ; vous partez sans frais si nous vous apportons moins de 4 demandes 2 mois de suite, ou si vous cessez votre activité.",
+          a: "Oui. Pendant les 2 mois d'essai gratuit, vous renoncez sans frais, en ligne. Ensuite, l'abonnement court un an à partir du premier paiement : vous l'arrêtez pour l'échéance depuis votre espace pro ou par lettre recommandée, au plus tard 3 mois avant. Un e-mail vous le rappelle.",
         },
       ],
       finalTitle: "Votre prochain chantier vous attend.",
