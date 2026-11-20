@@ -174,9 +174,7 @@ export default function RecruitmentPage() {
                 </span>
                 <span className="flex flex-col gap-1">
                   <b className="font-display text-lg tracking-tight sm:text-xl">{item.title}</b>
-                  <span className="text-[0.9375rem] leading-relaxed text-label">
-                    {item.text}
-                  </span>
+                  <span className="text-[0.9375rem] leading-relaxed text-label">{item.text}</span>
                 </span>
               </li>
             );
