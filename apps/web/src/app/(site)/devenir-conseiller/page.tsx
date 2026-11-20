@@ -161,20 +161,20 @@ export default function RecruitmentPage() {
           </div>
         </div>
         {/* Pourquoi maintenant. */}
-        <ul className="mx-auto mt-3 grid max-w-[1440px] overflow-hidden rounded-[1.375rem] bg-[#0b1438] text-white sm:mt-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mx-auto mt-3 grid max-w-[1440px] overflow-hidden rounded-[1.375rem] border border-border bg-surface text-foreground sm:mt-4 sm:grid-cols-2 lg:grid-cols-4">
           {t.why.map((item, i) => {
             const Icon = WHY_ICONS[i] ?? Rocket;
             return (
               <li
                 key={item.title}
-                className="flex gap-3.5 border-white/12 px-5 py-5 not-first:border-t sm:flex-col sm:gap-2.5 sm:px-6 sm:py-6 sm:not-first:border-t-0 sm:even:border-l lg:not-first:border-l"
+                className="flex gap-3.5 border-border px-5 py-5 not-first:border-t sm:flex-col sm:gap-2.5 sm:px-6 sm:py-6 sm:not-first:border-t-0 sm:even:border-l lg:not-first:border-l"
               >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#7ee2b0]/16 text-[#7ee2b0]">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary">
                   <Icon aria-hidden="true" className="size-5" />
                 </span>
                 <span className="flex flex-col gap-1">
                   <b className="font-display text-lg tracking-tight sm:text-xl">{item.title}</b>
-                  <span className="text-[0.9375rem] leading-relaxed text-white/75">
+                  <span className="text-[0.9375rem] leading-relaxed text-label">
                     {item.text}
                   </span>
                 </span>
