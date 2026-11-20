@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 // Recrutement des conseillers (F-183, lot 77, ADR 0380) : une réunion est posée avec la clé
 // serveur de l'instance locale de la CI ; un candidat arrive par le lien d'une annonce (provenance
-// pré-cochée), voit le simulateur, candidate, puis réserve sa réunion sans compte. Données fictives.
+// pré-cochée), voit les gains sans montant, candidate, puis réserve sa réunion sans compte. Données fictives.
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 const headers = {
@@ -32,11 +32,11 @@ test("devenir conseiller : candidature, puis réunion d'information réservée",
     page.getByRole("heading", { level: 1, name: "Devenez conseiller MENAO." }),
   ).toBeVisible();
 
-  // Simulateur : l'exemple de la maquette, puis un abonné Entreprise de plus.
-  const total = page.locator("#gains output[aria-live]");
-  await expect(total).toHaveText(/1\s640\s€/);
-  await page.getByRole("button", { name: "Un abonné Entreprise de plus" }).click();
-  await expect(total).toHaveText(/1\s840\s€/);
+  // Gains sans aucun montant ni simulateur : plus vous travaillez, plus vous gagnez.
+  await expect(
+    page.getByRole("heading", { name: "Plus vous travaillez, plus vous gagnez." }),
+  ).toBeVisible();
+  await expect(page.locator("main")).not.toContainText("€");
 
   // Formulaire : provenance pré-cochée par le lien de l'annonce ; erreurs avant l'envoi.
   const form = page.locator("#candidature");

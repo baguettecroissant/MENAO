@@ -1,4 +1,3 @@
-import { maxSubscriptionCents, recruitmentRates, type RecruitmentRates } from "@menao/core";
 import {
   ArrowRight,
   Award,
@@ -13,7 +12,6 @@ import {
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { ApplicationForm } from "@/components/recruitment/application-form";
-import { EarningsSimulator } from "@/components/recruitment/earnings-simulator";
 import { CheckLine, NumberedSteps } from "@/components/site/info-blocks";
 import { JsonLd } from "@/components/site/json-ld";
 import { SectionHeading } from "@/components/site/section-heading";
@@ -21,7 +19,6 @@ import { ButtonLink, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { absoluteUrl } from "@/lib/site/seo";
 import { ORGANIZATION_ID, breadcrumbJsonLd } from "@/lib/site/structured-data";
-import { createPublicClient } from "@/lib/supabase/public";
 
 const t = fr.pages.recruitment;
 const PATH = "/devenir-conseiller";
@@ -33,44 +30,14 @@ export const metadata: Metadata = {
   alternates: { canonical: PATH },
 };
 
-// Barème lu en base (commercial_bonus_settings), page régénérée toutes les heures (spec §4.4).
-export const revalidate = 3600;
-
-const euros = (cents: number) =>
-  new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: cents % 100 === 0 ? 0 : 2,
-  }).format(cents / 100);
-
-/** « 30 €, 100 € ou 200 € » : primes d'abonnement distinctes, de la plus petite à la plus haute. */
-function subscriptionList(rates: RecruitmentRates): string {
-  const amounts = [...new Set(Object.values(rates.subscriptionCents))].sort((a, b) => a - b);
-  const labels = amounts.map(euros);
-  return labels.length <= 1
-    ? (labels[0] ?? "")
-    : `${labels.slice(0, -1).join(", ")} ou ${labels[labels.length - 1]}`;
-}
-
-async function loadRates(): Promise<RecruitmentRates> {
-  const { data } = await createPublicClient().rpc("commercial_bonus_rates");
-  return recruitmentRates(data?.[0] ?? null);
-}
-
 /**
- * Devenir conseiller MENAO (F-183, lot 77, ADR 0380) : l'offre, le simulateur de gains, les
- * outils, le profil recherché, les questions, puis la candidature et le choix de la réunion
- * d'information en visio. Page statique ; la candidature passe par des actions serveur.
+ * Devenir conseiller MENAO (F-183, lot 77, ADR 0380) : l'offre, le métier, les gains (sans aucun
+ * montant ni simulateur depuis le 20/11/2026 : plus vous travaillez, plus vous gagnez ; montants
+ * présentés en réunion d'information), les outils, le profil recherché, les questions, puis la
+ * candidature et le choix de la réunion d'information en visio. Page statique ; la candidature
+ * passe par des actions serveur.
  */
-export default async function RecruitmentPage() {
-  const rates = await loadRates();
-  const validation = euros(rates.validationCents);
-  const list = subscriptionList(rates);
-  const gains = [
-    t.gains.validation(validation),
-    t.gains.subscription(euros(maxSubscriptionCents(rates)), list),
-    t.gains.ceiling,
-  ];
+export default function RecruitmentPage() {
   return (
     <main className="bg-background">
       <JsonLd
@@ -142,10 +109,10 @@ export default async function RecruitmentPage() {
                   {t.apply}
                 </ButtonLink>
                 <Link
-                  href={"#gains" as Route}
+                  href={"#metier" as Route}
                   className={`inline-flex min-h-12 items-center rounded-full border border-white/50 bg-[#0b1438]/30 px-7 text-base font-semibold text-white transition-colors hover:bg-white/10 ${focusRing}`}
                 >
-                  {t.simulate}
+                  {t.howItWorks}
                 </Link>
               </div>
               <ul className="flex flex-wrap gap-x-5 gap-y-2">
@@ -163,7 +130,7 @@ export default async function RecruitmentPage() {
           </div>
         </div>
         <ul className="mx-auto mt-4 grid max-w-[1440px] gap-3 sm:grid-cols-3 sm:gap-4">
-          {gains.map((g) => (
+          {t.gains.map((g) => (
             <li
               key={g.title}
               className="flex items-center gap-4 rounded-[1.25rem] border border-border bg-surface px-5 py-4 shadow-card"
@@ -180,7 +147,11 @@ export default async function RecruitmentPage() {
         </ul>
       </section>
 
-      <section aria-labelledby="conseiller-metier" className="py-14 sm:py-20">
+      <section
+        id="metier"
+        aria-labelledby="conseiller-metier"
+        className="scroll-mt-24 py-14 sm:py-20"
+      >
         <div className="mx-auto flex max-w-6xl flex-col gap-9 px-4 sm:px-6">
           <SectionHeading
             id="conseiller-metier"
@@ -188,7 +159,7 @@ export default async function RecruitmentPage() {
             title={t.stepsTitle}
             subtitle={t.stepsLead}
           />
-          <NumberedSteps items={t.steps(validation, list)} />
+          <NumberedSteps items={t.steps} />
         </div>
       </section>
 
@@ -200,11 +171,24 @@ export default async function RecruitmentPage() {
         <div className="mx-auto flex max-w-6xl flex-col gap-9 px-4 sm:px-6">
           <SectionHeading
             id="conseiller-gains"
-            eyebrow={t.simulator.eyebrow}
-            title={t.simulator.title}
-            subtitle={t.simulator.lead(validation, list)}
+            eyebrow={t.earnings.eyebrow}
+            title={t.earnings.title}
+            subtitle={t.earnings.lead}
           />
-          <EarningsSimulator rates={rates} />
+          <ul className="grid gap-4 md:grid-cols-3">
+            {t.earnings.points.map((point) => (
+              <li
+                key={point.title}
+                className="reveal flex flex-col gap-2 rounded-[1.25rem] border border-border bg-surface p-6 shadow-card"
+              >
+                <span className="flex size-10 items-center justify-center rounded-full bg-success-soft text-success">
+                  <Check aria-hidden="true" className="size-5" strokeWidth={2.6} />
+                </span>
+                <b className="text-[1.0625rem]">{point.title}</b>
+                <span className="leading-relaxed text-label">{point.text}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -287,7 +271,7 @@ export default async function RecruitmentPage() {
         <div className="mx-auto flex max-w-3xl flex-col gap-7 px-4 sm:px-6">
           <SectionHeading id="conseiller-questions" eyebrow={t.faqEyebrow} title={t.faqTitle} />
           <div className="divide-y divide-border overflow-hidden rounded-[1.25rem] border border-border bg-surface">
-            {t.faq(validation, list).map((item) => (
+            {t.faq.map((item) => (
               <details key={item.q} className="group">
                 <summary className="flex min-h-touch cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-semibold sm:px-6 [&::-webkit-details-marker]:hidden">
                   {item.q}
