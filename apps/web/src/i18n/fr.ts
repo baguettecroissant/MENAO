@@ -8375,8 +8375,9 @@ export const fr = {
       perMonth: "HT / mois",
       trial: "Essai gratuit de 2 mois",
       soon: "Bientôt disponible",
-      // Formule mise en avant (ADR 0200), paramètre `plans.recommandee`.
-      recommended: "Recommandé",
+      // Formule mise en avant (ADR 0200), paramètre `plans.recommandee`. Pas « Recommandé » ni
+      // « La plus choisie » avant le lancement (retour de l'utilisateur du 20/11/2026).
+      recommended: "Meilleur rapport qualité-prix",
       start: "Essayer gratuitement",
       // Paiement au mois ou à l'année (ADR 0200).
       billing: {
@@ -8393,6 +8394,7 @@ export const fr = {
       requests: {
         limited: (n: number) => `Jusqu'à ${n} demandes de chantier par mois`,
         unlimited: "Demandes de chantier illimitées",
+        note: "Le nombre de demandes est un plafond mensuel, pas une garantie.",
       },
       // Engagement d'un an (F-184, ADR 0383, décisions du 20 novembre 2026).
       engagement: {
@@ -8440,7 +8442,7 @@ export const fr = {
         eyebrow: "Comparatif des formules",
         heading: "Premium travaille pendant que vous êtes sur le chantier.",
         lead: "Toutes les formules reçoivent des demandes vérifiées et encaissent sans commission. Premium ajoute une secrétaire au téléphone, des devis prêts d'avance et le suivi de votre argent.",
-        recommendedBadge: "Recommandé",
+        recommendedBadge: "Meilleur rapport qualité-prix",
         adds: (plan: string, base: string, n: number) =>
           `${plan} : tout ${base}, plus ${n} fonctions.`,
         addsLead: "Les six qui changent vos journées :",
@@ -10078,6 +10080,7 @@ export const fr = {
           featured: "Meilleur rapport qualité-prix",
           requestsLimited: (n: number) => `Jusqu'à ${n} demandes de chantier par mois`,
           requestsUnlimited: "Demandes de chantier illimitées",
+          requestsNote: "Le nombre de demandes est un plafond mensuel, pas une garantie.",
           freeTitle: "Les 2 premiers mois, rien n'est prélevé.",
           freeText: "Pendant ces 2 mois, vous pouvez vous désabonner sans frais, en ligne.",
           trial: "Essai gratuit",

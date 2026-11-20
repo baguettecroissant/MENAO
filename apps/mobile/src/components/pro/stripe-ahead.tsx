@@ -1,6 +1,7 @@
 import { Check } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { fr } from "@/i18n/fr";
+import { StripeExplainerLink } from "./stripe-explainer";
 import { theme } from "@/ui/theme";
 
 const t = fr.proPayments.ahead;
@@ -48,7 +49,11 @@ export function StripeAhead({ sent }: { sent: StripeAheadSent }) {
               <Text style={styles.numberText}>{index + 1}</Text>
             </View>
             <View style={styles.texts}>
-              <Text style={styles.title}>{item.title}</Text>
+              <View style={styles.titleRow}>
+                <Text style={styles.title}>{item.title}</Text>
+                {/* Le code par SMS surprend : le mémo s'ouvre sur cette question (lot 80). */}
+                {index === 0 ? <StripeExplainerLink focus="sms" asIcon /> : null}
+              </View>
               <Text style={styles.hint}>{item.hint}</Text>
             </View>
           </View>
@@ -109,7 +114,8 @@ const styles = StyleSheet.create({
   },
   numberText: { fontFamily: font.bold, fontSize: 13, color: colors["primary-strong"] },
   texts: { flex: 1, gap: 1 },
-  title: { fontFamily: font.semibold, fontSize: 14.5, color: colors.foreground },
+  titleRow: { flexDirection: "row", alignItems: "center", gap: spacing(2) },
+  title: { flexShrink: 1, fontFamily: font.semibold, fontSize: 14.5, color: colors.foreground },
   hint: {
     fontFamily: font.regular,
     fontSize: 13,

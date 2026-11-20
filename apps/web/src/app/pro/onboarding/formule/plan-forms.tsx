@@ -98,6 +98,7 @@ export function PlanCheckout({
               </span>
             </label>
           ))}
+          <p className="text-[0.8125rem] text-label">{c.requestsNote}</p>
         </fieldset>
         <fieldset className="flex gap-1 rounded-pill bg-border/60 p-1">
           <legend className="sr-only">{c.periodLegend}</legend>
