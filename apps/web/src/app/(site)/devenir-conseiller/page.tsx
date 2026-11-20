@@ -158,6 +158,10 @@ export default function RecruitmentPage() {
                   </li>
                 ))}
               </ul>
+              <p className="inline-flex items-center gap-2 self-start rounded-2xl bg-white px-4 py-2 text-sm font-bold text-foreground shadow-sm sm:rounded-full">
+                <Users aria-hidden="true" className="size-4 text-primary" strokeWidth={2.4} />
+                {t.welcomeWomen}
+              </p>
             </div>
           </div>
         </div>
@@ -326,6 +330,10 @@ export default function RecruitmentPage() {
               </li>
             ))}
           </ul>
+          <p className="mx-auto inline-flex items-center gap-2.5 rounded-full bg-primary-soft px-5 py-3 text-center text-base font-bold text-primary-strong sm:text-lg">
+            <Users aria-hidden="true" className="size-5 shrink-0" strokeWidth={2.4} />
+            {t.welcomeWomen}
+          </p>
         </div>
       </section>
 

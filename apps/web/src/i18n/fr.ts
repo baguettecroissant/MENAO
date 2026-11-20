@@ -1589,6 +1589,8 @@ export const fr = {
         "Rémunération sans plafond",
         "Formé avant de démarrer",
       ],
+      // Mise en avant dans le bandeau et sous « C'est pour vous si… » (demande du 20/11/2026).
+      welcomeWomen: "Les candidatures féminines sont les bienvenues",
       photoAlt:
         "Trois commerciaux MENAO en polo marine marchent devant une voiture aux couleurs de MENAO, sur la Côte d'Azur.",
       why: [
@@ -1678,7 +1680,6 @@ export const fr = {
           "À l'aise au téléphone et en face à face",
           "Un statut d'indépendant, ou prêt à en créer un",
           "Le bâtiment : un plus, pas une obligation",
-          "Les candidatures féminines sont les bienvenues",
         ],
       },
       process: {
