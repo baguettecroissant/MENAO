@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ENGAGEMENT_GUARANTEE,
   TRIAL_DAYS,
   annualPriceCents,
   monthlyEquivalentCents,
@@ -120,23 +119,6 @@ export function PlanComparisonTable({
         groups={split.differences}
         common={split.common}
       />
-
-      <p className="flex justify-center">
-        <span className="inline-flex items-center gap-3 rounded-[1.25rem] border border-border bg-surface py-3 pr-5 pl-3 text-sm lg:rounded-pill">
-          <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-success-soft text-success">
-            <ShieldCheck aria-hidden="true" className="size-4" />
-          </span>
-          <span>
-            <b className="font-semibold">{c.guaranteeLabel}</b>{" "}
-            <span className="text-label">
-              {c.guarantee(
-                ENGAGEMENT_GUARANTEE.minRequests,
-                ENGAGEMENT_GUARANTEE.consecutiveMonths,
-              )}
-            </span>
-          </span>
-        </span>
-      </p>
     </section>
   );
 }

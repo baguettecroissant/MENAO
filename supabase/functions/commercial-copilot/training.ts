@@ -28,7 +28,7 @@ export const PERSONAS: Record<TrainingPersona, { sheet: string; opener: string }
     opener: "Oui ? C'est pour quoi ?",
     sheet: `Plombier-chauffagiste de 52 ans à Antibes, entreprise individuelle, 25 ans de métier, un apprenti. Il a déjà payé une plateforme qui revendait chaque demande à cinq artisans : il s'en méfie. Il trouve ses clients par le bouche-à-oreille.
 Objections, une à une : « Encore une plateforme qui revend mes contacts ? », « Qui vous paie, vous ? C'est quoi l'arnaque ? », « Je vais devoir m'engager ? ».
-Il avance si le commercial l'écoute, répond précisément (abonnement fixe, aucune commission, 3 artisans au plus par demande, sans engagement au mois, essai gratuit) et ne force pas. Il ferme si on insiste après un non, si on promet des chantiers ou si les réponses sont floues.`,
+Il avance si le commercial l'écoute, répond précisément (abonnement fixe, aucune commission, 3 artisans au plus par demande, 2 mois d'essai gratuits puis un abonnement d'un an à prix fixe, clairement affiché à l'inscription) et ne force pas. Il ferme si on insiste après un non, si on promet des chantiers ou si les réponses sont floues.`,
   },
   presse: {
     opener: "Allô ? Oui, je suis sur un chantier, faites vite.",

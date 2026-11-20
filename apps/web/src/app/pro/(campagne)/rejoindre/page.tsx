@@ -1,5 +1,4 @@
 import { BadgeCheck, CircleCheck, Headset, Inbox, Mic, ShieldCheck, Wallet } from "lucide-react";
-import { ENGAGEMENT_GUARANTEE } from "@menao/core";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
@@ -191,13 +190,8 @@ export default async function CampaignPage() {
               <div className="flex gap-3.5 rounded-2xl bg-success-soft p-4">
                 <ShieldCheck aria-hidden="true" className="size-6 shrink-0 text-success" />
                 <div className="flex flex-col gap-0.5">
-                  <p className="font-bold text-success">{t.engagement.guarantee.title}</p>
-                  <p className="text-sm text-label">
-                    {t.engagement.guarantee.text(
-                      ENGAGEMENT_GUARANTEE.minRequests,
-                      ENGAGEMENT_GUARANTEE.consecutiveMonths,
-                    )}
-                  </p>
+                  <p className="font-bold text-success">{t.engagement.trial.title}</p>
+                  <p className="text-sm text-label">{t.engagement.trial.text}</p>
                 </div>
               </div>
               <CampaignSignupLink />

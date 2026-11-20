@@ -241,7 +241,9 @@ const portalParams = {
     invoice_history: { enabled: true },
     payment_method_update: { enabled: true },
     customer_update: { enabled: true, allowed_updates: ["email", "address", "tax_id"] },
-    subscription_cancel: { enabled: true, mode: "at_period_end" },
+    // Engagement d'un an (ADR 0383) : l'arrêt se demande dans MENAO (date limite, échéance,
+    // confirmation), plus dans le portail.
+    subscription_cancel: { enabled: false },
     subscription_update:
       open.length > 1
         ? {

@@ -524,9 +524,9 @@ export async function submitOnboarding(): Promise<FormState> {
 type BillingStatus = keyof typeof t.plans.errors | "ok";
 
 async function invokeBilling(
-  fn: "billing-checkout" | "billing-portal" | "billing-topup",
+  fn: "billing-checkout" | "billing-portal" | "billing-topup" | "billing-cancel",
   body: Record<string, unknown>,
-) {
+): Promise<{ url?: string; ok?: true; error?: string }> {
   const { supabase } = await getOnboardingContext();
   const { data, error } = await supabase.functions.invoke<{ status: BillingStatus; url?: string }>(
     fn,
@@ -535,7 +535,7 @@ async function invokeBilling(
       body: { ...body, origin: env.NEXT_PUBLIC_SITE_URL },
     },
   );
-  if (data?.status === "ok" && data.url) return { url: data.url };
+  if (data?.status === "ok") return data.url ? { url: data.url } : { ok: true };
   let status: BillingStatus = data?.status ?? "unavailable";
   if (error instanceof FunctionsHttpError) {
     const parsed = (await error.context.json().catch(() => null)) as { status?: string } | null;
@@ -553,7 +553,15 @@ export async function startCheckout(_prev: FormState, formData: FormData): Promi
   if (!plan.success) return { error: t.plans.errors.plan_unavailable };
   // Au mois par défaut ; à l'année si l'artisan l'a choisi (ADR 0200).
   const periodicite = text(formData, "periodicite") === "annuel" ? "annuel" : "mensuel";
-  const result = await invokeBilling("billing-checkout", { plan: plan.data, periodicite });
+  // Engagement d'un an (ADR 0383) : case distincte des conditions de vente, toutes deux exigées.
+  if (text(formData, "engagement") !== "oui") return { error: t.plans.errors.engagement_required };
+  if (text(formData, "cgv") !== "oui") return { error: t.plans.errors.cgv_required };
+  const result = await invokeBilling("billing-checkout", {
+    plan: plan.data,
+    periodicite,
+    engagement: true,
+    cgv: true,
+  });
   if ("url" in result && result.url) redirect(result.url as Route);
   return { error: result.error };
 }
@@ -567,6 +575,21 @@ export async function startTopUp(_prev: FormState, formData: FormData): Promise<
     .parse(text(formData, "offer") ?? "recharge_100");
   const result = await invokeBilling("billing-topup", { offer });
   if ("url" in result && result.url) redirect(result.url as Route);
+  return { error: result.error };
+}
+
+/**
+ * Arrêt de l'abonnement depuis MENAO (ADR 0383) : sans frais pendant l'essai, sinon à l'échéance.
+ * Le motif est facultatif.
+ */
+export async function stopSubscription(_prev: FormState, formData: FormData): Promise<FormState> {
+  const motif = z
+    .enum(["demandes", "prix", "activite", "autre"])
+    .optional()
+    .catch(undefined)
+    .parse(text(formData, "motif") ?? undefined);
+  const result = await invokeBilling("billing-cancel", { motif });
+  if (result.ok) redirect("/pro/onboarding/formule?arret=ok" as Route);
   return { error: result.error };
 }
 

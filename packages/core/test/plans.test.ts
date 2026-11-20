@@ -2,11 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   ANNUAL_FREE_MONTHS,
   BILLING_PERIODS,
-  ENGAGEMENT_GUARANTEE,
   ENGAGEMENT_MONTHS,
   annualPriceCents,
   checkoutNotice,
-  engagementExitAllowed,
   monthlyEquivalentCents,
   planAddedFeatures,
   planComparison,
@@ -29,39 +27,15 @@ describe("formules et engagement (F-15, ADR 0200)", () => {
     expect(monthlyEquivalentCents(1500000)).toBe(125000);
   });
 
-  it("paiement : au mois ou à l'année, texte affiché au moment de payer", () => {
+  it("paiement : au mois ou à l'année, engagement d'un an affiché au moment de payer (ADR 0383)", () => {
     expect(BILLING_PERIODS).toEqual(["mensuel", "annuel"]);
-    expect(
-      checkoutNotice("annuel", {
-        firstPayment: "26 décembre 2026",
-        annualPrice: "1 500 €",
-        monthlyPrice: "150 €",
-      }),
-    ).toBe(
-      "Engagement de 12 mois à partir du premier paiement, le 26 décembre 2026, après les 2 mois d'essai : 1 500 € HT payés d'avance pour l'année (2 mois offerts). Garantie : moins de 4 demandes 2 mois de suite, ou activité cessée, et vous partez sans frais.",
+    const values = { annualPrice: "1 500 €", monthlyPrice: "150 €" };
+    expect(checkoutNotice("mensuel", values)).toBe(
+      "Engagement d'un an à partir du premier paiement, à la fin des 2 mois d'essai, qui démarrent à la mise en ligne de votre fiche : 150 € HT par mois pendant 12 mois. Rien n'est prélevé avant, et vous pouvez renoncer sans frais pendant l'essai.",
     );
-    expect(
-      checkoutNotice("mensuel", {
-        firstPayment: "26 décembre 2026",
-        annualPrice: "1 500 €",
-        monthlyPrice: "150 €",
-      }),
-    ).toBe(
-      "Sans engagement : aucun prélèvement avant le 26 décembre 2026, puis 150 € HT par mois, résiliable à tout moment.",
+    expect(checkoutNotice("annuel", values)).toBe(
+      "Engagement d'un an à partir du premier paiement, à la fin des 2 mois d'essai, qui démarrent à la mise en ligne de votre fiche : 1 500 € HT payés d'avance pour l'année (2 mois offerts). Rien n'est prélevé avant, et vous pouvez renoncer sans frais pendant l'essai.",
     );
-  });
-
-  it("garantie : moins de 4 demandes 2 mois de suite, ou activité cessée, et l'artisan part sans frais", () => {
-    expect(ENGAGEMENT_GUARANTEE).toEqual({ minRequests: 4, consecutiveMonths: 2 });
-    // Demandes reçues par mois complet, du plus ancien au plus récent.
-    expect(engagementExitAllowed({ monthlyRequests: [6, 3, 2], ceasedActivity: false })).toBe(true);
-    expect(engagementExitAllowed({ monthlyRequests: [3, 4, 2], ceasedActivity: false })).toBe(
-      false,
-    );
-    expect(engagementExitAllowed({ monthlyRequests: [2, 3, 5], ceasedActivity: false })).toBe(true);
-    expect(engagementExitAllowed({ monthlyRequests: [3], ceasedActivity: false })).toBe(false);
-    expect(engagementExitAllowed({ monthlyRequests: [], ceasedActivity: true })).toBe(true);
-    expect(engagementExitAllowed({ monthlyRequests: [9, 9], ceasedActivity: true })).toBe(true);
   });
 
   it("cellule du comparatif : inclus, absent ou texte", () => {

@@ -1,12 +1,5 @@
 import "server-only";
-import {
-  ANNUAL_FREE_MONTHS,
-  ENGAGEMENT_GUARANTEE,
-  ENGAGEMENT_MONTHS,
-  annualPriceCents,
-  monthlyEquivalentCents,
-  planComparison,
-} from "@menao/core";
+import { annualPriceCents, monthlyEquivalentCents, planComparison } from "@menao/core";
 import { fr } from "@/i18n/fr";
 import { createPublicClient } from "@/lib/supabase/public";
 
@@ -81,12 +74,11 @@ export async function proAssistantKnowledge(): Promise<string> {
       ...(plan.ouverte ? [] : [k.planSoon]),
       ...avantagesOf(plan.avantages).map((avantage) => `- ${avantage}`),
     ]),
-    `- ${t.engagement.monthly.title} : ${t.engagement.monthly.text}`,
-    `- ${t.engagement.yearly.title} : ${t.engagement.yearly.text(ENGAGEMENT_MONTHS, ANNUAL_FREE_MONTHS)}`,
-    `- ${t.engagement.guarantee.title} : ${t.engagement.guarantee.text(
-      ENGAGEMENT_GUARANTEE.minRequests,
-      ENGAGEMENT_GUARANTEE.consecutiveMonths,
-    )}`,
+    `### ${t.engagement.title}`,
+    ...t.engagement.steps.map((step, i) => `${i + 1}. ${step.title} : ${step.text}`),
+    `- ${t.engagement.stop.title} : ${t.engagement.stop.text}`,
+    `- ${t.engagement.year.title} : ${t.engagement.year.text}`,
+    "- MENAO ne garantit aucun nombre de demandes ni de chantiers.",
     t.plansNote,
     ...(comparison.length
       ? [

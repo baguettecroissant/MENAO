@@ -11,6 +11,7 @@ export * from "./files";
 export * from "./expiry";
 export * from "./billing";
 export * from "./plans";
+export * from "./subscription-term";
 export * from "./connect";
 export * from "./connect-prefill";
 export * from "./connect-overview";

@@ -52,6 +52,10 @@ export type SubscriptionSnapshot = {
   currentPeriodEnd: string | null;
   trialEnd: string | null;
   cancelAtPeriodEnd: boolean;
+  /** Fin programmée à une date précise (arrêt à l'échéance d'un engagement, ADR 0383). */
+  cancelAt: string | null;
+  /** Version de la case d'engagement acceptée (métadonnée posée au paiement), sinon null. */
+  engagementVersion: string | null;
   /** Fin effective de l'abonnement (résilié), pour dater les résiliations (ADR 0051). */
   endedAt: string | null;
   /** Paiement au mois ou à l'année (ADR 0200), d'après la périodicité du prix ; null si inconnue. */
@@ -88,6 +92,11 @@ export function subscriptionFromStripe(input: unknown): SubscriptionSnapshot | n
     currentPeriodEnd: iso(item.current_period_end) ?? iso(input.current_period_end),
     trialEnd: iso(input.trial_end),
     cancelAtPeriodEnd: input.cancel_at_period_end === true,
+    cancelAt: iso(input.cancel_at),
+    engagementVersion:
+      typeof metadata.engagement_version === "string" && metadata.engagement_version
+        ? metadata.engagement_version.slice(0, 40)
+        : null,
     endedAt: iso(input.ended_at),
     period: interval === "year" ? "annuel" : interval === "month" ? "mensuel" : null,
   };
