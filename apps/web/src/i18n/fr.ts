@@ -1571,40 +1571,37 @@ export const fr = {
     // Recrutement des conseillers MENAO (F-183, lot 77, ADR 0380). Montants lus dans le barème.
     recruitment: {
       title: "Devenir conseiller MENAO",
-      metaTitle: "Devenir conseiller MENAO : indépendant, payé à chaque artisan",
+      // Aucun montant sur la page (20/11/2026) : les primes sont présentées en réunion d'information.
+      metaTitle: "Devenir conseiller MENAO : indépendant, rémunération sans plafond",
       metaDescription:
-        "Faites découvrir MENAO aux artisans du bâtiment des Alpes-Maritimes. Indépendant, à votre rythme, payé pour chaque artisan validé, sans plafond.",
+        "Faites découvrir MENAO aux artisans du bâtiment des Alpes-Maritimes. Indépendant, à votre rythme : plus vous travaillez, plus vous gagnez, sans plafond.",
       eyebrow: "Recrutement · Alpes-Maritimes",
       heroTitle: "Devenez conseiller MENAO.",
       intro:
-        "Faites découvrir MENAO aux artisans du bâtiment de votre secteur. Vous êtes indépendant, vous choisissez vos horaires, et vous êtes payé pour chaque artisan que vous faites entrer.",
+        "Faites découvrir MENAO aux artisans du bâtiment de votre secteur. Vous êtes indépendant, vous choisissez vos horaires, et votre rémunération suit vos résultats : plus vous travaillez, plus vous gagnez.",
       apply: "Je candidate",
-      simulate: "Calculer mes gains",
+      howItWorks: "Comment ça marche",
       heroChecks: [
         "Indépendant, à votre rythme",
-        "Payé à chaque artisan validé",
+        "Rémunération sans plafond",
         "Outils et formation fournis",
       ],
       photoAlt:
         "Trois conseillers MENAO en polo marine marchent devant une voiture aux couleurs de MENAO, sur la Côte d'Azur.",
-      gains: {
-        validation: (amount: string) => ({
-          value: amount,
-          title: "par artisan validé",
-          text: "dès que son dossier est accepté",
-        }),
-        subscription: (amount: string, list: string) => ({
-          value: `+${amount}`,
-          title: "au plus, quand il s'abonne",
-          text: `${list} selon sa formule`,
-        }),
-        ceiling: { value: "0", title: "plafond", text: "versé chaque mois, sans limite" },
-      },
+      gains: [
+        {
+          value: "+",
+          title: "Plus vous travaillez, plus vous gagnez",
+          text: "Chaque artisan que vous faites entrer vous rapporte",
+        },
+        { value: "0", title: "plafond", text: "aucune limite à vos gains, versés chaque mois" },
+        { value: "100 %", title: "indépendant", text: "vos horaires, votre secteur, votre rythme" },
+      ],
       stepsEyebrow: "Le métier",
       stepsTitle: "Simple à expliquer, facile à vendre.",
       stepsLead:
         "Aucune commission sur les chantiers des artisans, un abonnement fixe, 2 mois offerts pour essayer : MENAO se présente en dix minutes.",
-      steps: (validation: string, list: string) => [
+      steps: [
         {
           title: "Vous rencontrez les artisans",
           text: "Sur le terrain, au téléphone, chez les grossistes : vous présentez MENAO aux artisans de votre secteur.",
@@ -1615,29 +1612,31 @@ export const fr = {
         },
         {
           title: "L'équipe vérifie leur dossier",
-          text: `Assurance, Kbis, qualifications : dès que le dossier est validé, vous gagnez ${validation}.`,
+          text: "Assurance, Kbis, qualifications : dès que le dossier est validé, une prime est pour vous.",
         },
         {
           title: "Ils s'abonnent, vous gagnez encore",
-          text: `Après ses 2 mois offerts, au premier paiement : ${list} de plus selon sa formule.`,
+          text: "Après ses 2 mois offerts, au premier paiement de l'artisan : une prime de plus, selon sa formule.",
         },
       ],
-      simulator: {
+      earnings: {
         eyebrow: "Vos gains",
-        title: "Calculez ce que vous pouvez gagner.",
-        lead: (validation: string, list: string) =>
-          `Le calcul suit le barème : ${validation} par artisan validé, puis ${list} quand il s'abonne, selon sa formule.`,
-        validated: "Artisans validés par mois",
-        subscribers: "Dont abonnés, selon leur formule",
-        planLabel: (plan: string) => `Abonnés en ${plan}`,
-        less: (plan: string) => `Un abonné ${plan} de moins`,
-        more: (plan: string) => `Un abonné ${plan} de plus`,
-        lineValidation: (count: number, unit: string) => `${count} validés × ${unit}`,
-        linePlan: (count: number, plan: string, unit: string) =>
-          `${count} abonnés en ${plan} × ${unit}`,
-        example: "Exemple pour un mois",
-        disclaimer:
-          "Avant vos cotisations d'indépendant. C'est un exemple de calcul, pas une promesse de revenus : tout dépend du nombre d'artisans que vous faites entrer. La prime d'abonnement arrive après les 2 mois offerts à l'artisan.",
+        title: "Plus vous travaillez, plus vous gagnez.",
+        lead: "Pas de plafond : votre rémunération suit le nombre d'artisans que vous faites entrer. Les montants vous sont présentés pendant la réunion d'information.",
+        points: [
+          {
+            title: "Une prime par artisan validé",
+            text: "Dès que l'équipe accepte le dossier d'un artisan inscrit avec votre code.",
+          },
+          {
+            title: "Une prime de plus quand il s'abonne",
+            text: "À son premier paiement, après ses 2 mois offerts, selon sa formule.",
+          },
+          {
+            title: "Versé chaque mois, suivi en direct",
+            text: "Vos inscrits, vos validés et vos primes, dans votre espace.",
+          },
+        ],
       },
       toolsEyebrow: "Vos outils",
       toolsTitle: "Tout ce qu'il faut, dès le premier jour.",
@@ -1690,18 +1689,18 @@ export const fr = {
       ],
       faqEyebrow: "Questions fréquentes",
       faqTitle: "Avant de candidater.",
-      faq: (validation: string, list: string) => [
+      faq: [
         {
           q: "Quel statut faut-il pour devenir conseiller MENAO ?",
           a: "Un statut d'indépendant, par exemple auto-entrepreneur ou société. Pas encore de statut ? Dites-le dans le formulaire : nous en parlons pendant la réunion d'information.",
         },
         {
           q: "Ai-je des horaires ou un nombre d'artisans à atteindre ?",
-          a: "Non. Vous êtes indépendant : vous organisez vos journées et vos tournées comme vous le souhaitez. Le guide et les outils sont des conseils, pas des consignes.",
+          a: "Aucun horaire : vous êtes indépendant et vous organisez vos journées et vos tournées comme vous le souhaitez. Un objectif d'artisans validés par semaine est fixé avec vous au démarrage, et votre espace vous montre où vous en êtes.",
         },
         {
           q: "Quand et comment suis-je payé ?",
-          a: `Chaque mois, pour les primes acquises : ${validation} quand le dossier d'un artisan inscrit avec votre code est validé, puis ${list} selon sa formule à son premier paiement, après ses 2 mois offerts. Tout est suivi dans votre espace.`,
+          a: "Chaque mois, pour les primes acquises : une prime quand le dossier d'un artisan inscrit avec votre code est validé, puis une autre à son premier paiement, après ses 2 mois offerts. Sans plafond : plus vous faites entrer d'artisans, plus vous gagnez. Les montants vous sont présentés pendant la réunion d'information ; tout est suivi dans votre espace.",
         },
         {
           q: "Sur quel secteur vais-je travailler ?",
