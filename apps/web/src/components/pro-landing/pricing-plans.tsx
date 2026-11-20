@@ -90,7 +90,7 @@ export function PricingPlans({
               }`}
             >
               {plan.recommandee && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-pill bg-primary px-3 py-1 text-xs font-bold tracking-wide text-primary-foreground uppercase">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-pill bg-primary px-3 py-1 text-xs font-bold tracking-wide whitespace-nowrap text-primary-foreground uppercase">
                   {t.recommended}
                 </span>
               )}
@@ -208,6 +208,7 @@ export function PricingPlans({
           );
         })}
       </ul>
+      <p className="-mt-3 text-center text-sm text-muted-foreground">{t.requests.note}</p>
 
       {!compact && (
         <section aria-labelledby="abonnement-titre" className="flex flex-col gap-4">

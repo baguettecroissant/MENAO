@@ -332,7 +332,7 @@ function DesktopTable({
                   } ${i === plans.length - 1 ? "rounded-tr-[1.5rem]" : ""}`}
                 >
                   {strong && (
-                    <span className="mx-auto mb-2 block w-fit rounded-pill bg-primary px-2.5 py-1 text-[0.6875rem] font-bold tracking-[0.08em] text-primary-foreground uppercase">
+                    <span className="mx-auto mb-2 block w-fit rounded-pill bg-primary px-2.5 py-1 text-[0.6875rem] font-bold tracking-[0.04em] whitespace-nowrap text-primary-foreground uppercase">
                       {c.recommendedBadge}
                     </span>
                   )}
