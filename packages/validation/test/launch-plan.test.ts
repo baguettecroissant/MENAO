@@ -733,10 +733,14 @@ describe("réglages du rythme des conseillers (ADR 0381)", () => {
     });
   });
   it("garde un objectif commun vide, mais exige le rythme", () => {
-    expect(paceSettingsFormSchema.parse({ ...base, objectif_valides: "" }).objectif_valides).toBeNull();
+    expect(
+      paceSettingsFormSchema.parse({ ...base, objectif_valides: "" }).objectif_valides,
+    ).toBeNull();
     expect(paceSettingsFormSchema.safeParse({ ...base, rythme_semaine: "" }).success).toBe(false);
     expect(paceSettingsFormSchema.safeParse({ ...base, rythme_semaine: "0" }).success).toBe(false);
-    expect(paceSettingsFormSchema.safeParse({ ...base, semaines_demarrage: "13" }).success).toBe(false);
+    expect(paceSettingsFormSchema.safeParse({ ...base, semaines_demarrage: "13" }).success).toBe(
+      false,
+    );
   });
   it("refuse une fin avant le début", () => {
     expect(
@@ -746,13 +750,19 @@ describe("réglages du rythme des conseillers (ADR 0381)", () => {
   it("lit l'objectif propre d'un conseiller", () => {
     const id = "6f1d2c1e-8b1a-4c55-9d3e-2b7a1f0c9e11";
     expect(
-      commercialPaceFormSchema.parse({ commercial_id: id, rythme_semaine: "4", rythme_raison: " Temps partiel " }),
+      commercialPaceFormSchema.parse({
+        commercial_id: id,
+        rythme_semaine: "4",
+        rythme_raison: " Temps partiel ",
+      }),
     ).toEqual({ commercial_id: id, rythme_semaine: 4, rythme_raison: "Temps partiel" });
     expect(commercialPaceFormSchema.parse({ commercial_id: id, rythme_semaine: "" })).toEqual({
       commercial_id: id,
       rythme_semaine: null,
       rythme_raison: null,
     });
-    expect(commercialPaceFormSchema.safeParse({ commercial_id: "", rythme_semaine: "4" }).success).toBe(false);
+    expect(
+      commercialPaceFormSchema.safeParse({ commercial_id: "", rythme_semaine: "4" }).success,
+    ).toBe(false);
   });
 });

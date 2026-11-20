@@ -2205,7 +2205,8 @@ export function notificationContent(
       const team = integer(data, "equipe");
       const target = integer(data, "cible");
       const targetDay = dateDay(text(data, "date_cible"));
-      const validated = (n: number) => `${n}\u00a0artisan${n > 1 ? "s" : ""} validé${n > 1 ? "s" : ""}`;
+      const validated = (n: number) =>
+        `${n}\u00a0artisan${n > 1 ? "s" : ""} validé${n > 1 ? "s" : ""}`;
       const result =
         goal === null || goal === 0
           ? null
@@ -2215,7 +2216,9 @@ export function notificationContent(
       return {
         subject: `Votre semaine : ${validated(done)}`,
         preview:
-          next === null ? "Votre semaine passée chez MENAO." : `Objectif de cette semaine : ${next}.`,
+          next === null
+            ? "Votre semaine passée chez MENAO."
+            : `Objectif de cette semaine : ${next}.`,
         title: "Votre semaine",
         paragraphs: [
           hello(ctx.firstName),
