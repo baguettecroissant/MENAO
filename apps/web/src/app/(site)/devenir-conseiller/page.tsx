@@ -1,20 +1,15 @@
 import {
   ArrowRight,
-  Award,
   BriefcaseBusiness,
   CalendarDays,
   Check,
   FileText,
   Map as MapIcon,
-  MapPin,
-  NotebookPen,
-  Phone,
   Play,
   Repeat,
   Rocket,
   Send,
   Store,
-  Sun,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -31,7 +26,6 @@ import { ORGANIZATION_ID, breadcrumbJsonLd } from "@/lib/site/structured-data";
 const t = fr.pages.recruitment;
 const PATH = "/devenir-conseiller";
 const WHY_ICONS = [Rocket, CalendarDays, MapIcon, TrendingUp];
-const DAY_ICONS = [Sun, MapPin, Phone, Store, NotebookPen, Award];
 const PROFILE_ICONS = [BriefcaseBusiness, Repeat, Store];
 const PROCESS_ICONS = [Send, FileText, Users, Rocket];
 /** Écrans de l'espace commercial (lot 79), exportés de la maquette : 840 × 1732, fond transparent. */
@@ -69,7 +63,7 @@ function PhoneShot({ index, className = "" }: { index: number; className?: strin
 
 /**
  * Devenir commercial MENAO (F-183, lots 77 et 79, ADR 0380 et 0382) : bandeau, pourquoi
- * maintenant, l'outil montré sur trois téléphones, une journée type, l'escalier des gains (sans
+ * maintenant, l'outil montré sur trois téléphones, l'escalier des gains (sans
  * montant), les profils, le déroulé, les questions, puis la candidature en 3 étapes avec CV. Page
  * statique ; la candidature passe par une action serveur. Aucune mention d'IA ni de montant.
  */
@@ -246,49 +240,8 @@ export default function RecruitmentPage() {
         </div>
       </section>
 
-      {/* Une journée type. */}
-      <section aria-labelledby="commercial-journee" className="py-14 sm:py-24">
-        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 sm:px-6">
-          <SectionHeading
-            id="commercial-journee"
-            eyebrow={t.day.eyebrow}
-            title={t.day.title}
-            subtitle={t.day.lead}
-          />
-          <ol className="grid gap-0 lg:grid-cols-6">
-            {t.day.steps.map((step, i) => {
-              const Icon = DAY_ICONS[i] ?? Sun;
-              const last = i === t.day.steps.length - 1;
-              return (
-                <li
-                  key={step.time}
-                  className="relative flex gap-4 pb-6 lg:flex-col lg:gap-3 lg:pr-4 lg:pb-0"
-                >
-                  {!last && (
-                    <span
-                      aria-hidden="true"
-                      className="absolute top-12 bottom-0 left-[1.4rem] border-l-2 border-dashed border-border-strong lg:top-[1.4rem] lg:right-0 lg:bottom-auto lg:left-12 lg:border-t-2 lg:border-l-0"
-                    />
-                  )}
-                  <span
-                    className={`relative z-[1] flex size-11 shrink-0 items-center justify-center rounded-full text-white ${last ? "bg-success" : "bg-foreground"}`}
-                  >
-                    <Icon aria-hidden="true" className="size-5" />
-                  </span>
-                  <span className="flex flex-col gap-1">
-                    <b className="font-display text-[0.9375rem] text-primary-strong">{step.time}</b>
-                    <b className="text-[1.0625rem] leading-snug">{step.title}</b>
-                    <span className="text-[0.9375rem] leading-relaxed text-label">{step.text}</span>
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      </section>
-
       {/* Plus vous travaillez, plus vous gagnez : l'escalier, sans montant. */}
-      <section aria-labelledby="commercial-gains" className="pb-14 sm:pb-24">
+      <section aria-labelledby="commercial-gains" className="py-14 sm:py-24">
         <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 sm:px-6 lg:flex-row lg:items-end lg:gap-16">
           <div className="flex flex-col gap-4 lg:w-[23rem] lg:shrink-0 lg:pb-2">
             <span className="self-start rounded-full bg-primary-soft px-3 py-1.5 text-[0.8125rem] font-bold text-primary-strong">

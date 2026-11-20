@@ -1598,7 +1598,7 @@ export const fr = {
         },
         {
           title: "Démarrage en janvier",
-          text: "Entretiens et formation en décembre, terrain dès janvier.",
+          text: "Entretiens début décembre, formation les 4 et 5 janvier, puis le terrain.",
         },
         {
           title: "Un secteur à vous",
@@ -1633,43 +1633,6 @@ export const fr = {
           },
         ],
         carousel: "Écrans de l'espace commercial",
-      },
-      day: {
-        eyebrow: "Une journée type",
-        title: "Du terrain, et le bon outil à chaque étape.",
-        lead: "Vous organisez vos journées comme vous voulez. Voici à quoi elles ressemblent souvent.",
-        steps: [
-          {
-            time: "8 h 30",
-            title: "Votre journée est prête",
-            text: "Rendez-vous, appels et relances, dans « Ma journée ».",
-          },
-          {
-            time: "9 h 30",
-            title: "Visite chez un plombier",
-            text: "Sa fiche est prête : son métier, sa commune, vos notes de la dernière fois.",
-          },
-          {
-            time: "11 h",
-            title: "Un électricien rappelle",
-            text: "Il s'inscrit avec votre lien, depuis son téléphone.",
-          },
-          {
-            time: "14 h",
-            title: "Passage chez un grossiste",
-            text: "Là où les artisans du secteur se retrouvent le matin.",
-          },
-          {
-            time: "17 h 30",
-            title: "Le point sur vos visites",
-            text: "Une note dans la fiche de chaque artisan, pour la relance.",
-          },
-          {
-            time: "Le soir",
-            title: "+1 dans votre semaine",
-            text: "Un dossier validé : une prime de plus pour vous.",
-          },
-        ],
       },
       earnings: {
         eyebrow: "Vos gains",
@@ -1715,6 +1678,7 @@ export const fr = {
           "À l'aise au téléphone et en face à face",
           "Un statut d'indépendant, ou prêt à en créer un",
           "Le bâtiment : un plus, pas une obligation",
+          "Les candidatures féminines sont les bienvenues",
         ],
       },
       process: {
