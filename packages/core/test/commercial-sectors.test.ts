@@ -39,8 +39,8 @@ describe("secteurs des commerciaux (ADR 0367)", () => {
     expect(sectorOfZone([])).toBeNull();
   });
 
-  it("objectifs par métier : 66 artisans par mois, 11 métiers", () => {
+  it("objectifs par métier : 30 artisans par mois (7 par semaine), 11 métiers", () => {
     expect(COMMERCIAL_TRADE_TARGETS).toHaveLength(11);
-    expect(COMMERCIAL_MONTHLY_TARGET).toBe(66);
+    expect(COMMERCIAL_MONTHLY_TARGET).toBe(30);
   });
 });

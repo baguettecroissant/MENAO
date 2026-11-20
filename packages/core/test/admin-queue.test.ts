@@ -72,3 +72,11 @@ describe("file « À traiter » du back-office (ADR 0133)", () => {
     ]);
   });
 });
+
+describe("conseillers en point à prévoir (ADR 0381)", () => {
+  it("passe dans « Important », pôle croissance", () => {
+    expect(adminQueue({ conseillers: 2 })).toEqual([
+      { kind: "conseillers", count: 2, severity: "important", pole: "activite", deadline: null },
+    ]);
+  });
+});

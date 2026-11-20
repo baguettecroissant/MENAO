@@ -101,22 +101,25 @@ export function sectorOfZone(codes: readonly string[]): CommercialSector | null 
   );
 }
 
-/** Objectif mensuel par métier, au rythme de 3 artisans par jour (mois normal de 22 jours). */
+/**
+ * Objectif mensuel par métier : 30 artisans validés par mois, soit le rythme de 7 par semaine
+ * (ADR 0381 ; 66 au rythme de 3 par jour avant, ADR 0367), réparti comme avant entre les métiers.
+ */
 export const COMMERCIAL_TRADE_TARGETS: readonly { trade: string; perMonth: number }[] = [
-  { trade: "Plombiers – chauffagistes", perMonth: 10 },
-  { trade: "Électriciens", perMonth: 10 },
-  { trade: "Maçons – gros œuvre", perMonth: 9 },
-  { trade: "Peintres – plaquistes", perMonth: 9 },
-  { trade: "Menuisiers – serruriers", perMonth: 7 },
-  { trade: "Carreleurs – soliers", perMonth: 5 },
-  { trade: "Couvreurs – charpentiers", perMonth: 4 },
-  { trade: "Terrassiers – VRD", perMonth: 3 },
-  { trade: "Climatisation – pompes à chaleur", perMonth: 3 },
-  { trade: "Paysagistes – piscinistes", perMonth: 3 },
-  { trade: "Rénovation tous corps d'état", perMonth: 3 },
+  { trade: "Plombiers – chauffagistes", perMonth: 5 },
+  { trade: "Électriciens", perMonth: 5 },
+  { trade: "Maçons – gros œuvre", perMonth: 5 },
+  { trade: "Peintres – plaquistes", perMonth: 4 },
+  { trade: "Menuisiers – serruriers", perMonth: 3 },
+  { trade: "Carreleurs – soliers", perMonth: 2 },
+  { trade: "Couvreurs – charpentiers", perMonth: 2 },
+  { trade: "Terrassiers – VRD", perMonth: 1 },
+  { trade: "Climatisation – pompes à chaleur", perMonth: 1 },
+  { trade: "Paysagistes – piscinistes", perMonth: 1 },
+  { trade: "Rénovation tous corps d'état", perMonth: 1 },
 ];
 
-/** Total mensuel des objectifs par métier (66). */
+/** Total mensuel des objectifs par métier (30). */
 export const COMMERCIAL_MONTHLY_TARGET = COMMERCIAL_TRADE_TARGETS.reduce(
   (sum, t) => sum + t.perMonth,
   0,

@@ -650,6 +650,55 @@ export const fr = {
     title: "Mes résultats",
     intro:
       "Les artisans inscrits avec votre code, leur validation et leur abonnement, puis vos primes.",
+    // Ma semaine, objectif commun et classement (F-184, lot 78, ADR 0381).
+    pace: {
+      weekLabel: (from: string, to: string) => `Ma semaine · du ${from} au ${to}`,
+      ringLabel: (done: number, goal: number) =>
+        `${done.toLocaleString("fr-FR")} validé${done > 1 ? "s" : ""} sur ${goal.toLocaleString("fr-FR")} cette semaine`,
+      validated: "validés",
+      remaining: (n: number) => `Encore ${n} validé${n > 1 ? "s" : ""} d'ici dimanche.`,
+      reached: "Objectif de la semaine atteint. Bravo !",
+      noGoal: "Votre objectif commence la semaine de votre arrivée.",
+      pending: (n: number) =>
+        n === 0
+          ? "Aucun de vos inscrits n'attend la vérification de son dossier."
+          : n === 1
+            ? "1 de vos inscrits attend la vérification de son dossier : s'il est validé cette semaine, il compte."
+            : `${n} de vos inscrits attendent la vérification de leur dossier : s'ils sont validés cette semaine, ils comptent.`,
+      signups: "Mes inscriptions",
+      myDay: "Ma journée",
+      hintLabel: "Repère :",
+      hint: (goal: number, visits: number) =>
+        `${goal} validés par semaine, c'est en général ${visits} visites par jour, 4 jours par semaine. Vous organisez vos journées comme vous voulez.`,
+      hintShort: (visits: number) =>
+        `Repère : environ ${visits} visites par jour, 4 jours par semaine. Vos horaires, c'est vous qui les choisissez.`,
+      weeksTitle: "Semaine par semaine",
+      weeksCaption: "Mes artisans validés des 8 dernières semaines, face à l'objectif",
+      week: "Semaine",
+      goal: "objectif",
+      weeksNote: (weeks: number, ramp: number, goal: number) =>
+        weeks > 0
+          ? `Les ${weeks} premières semaines : démarrage à ${ramp} par semaine, puis ${goal}. La semaine en cours est en pointillés.`
+          : `${goal} par semaine. La semaine en cours est en pointillés.`,
+      team: {
+        label: "Objectif commun",
+        count: (goal: number, day: string | null) =>
+          `artisans validés sur ${goal.toLocaleString("fr-FR")}${day ? ` au ${day}` : ""}`,
+        expected: (n: number) =>
+          `Le trait blanc, c'est où l'équipe devrait en être (${n.toLocaleString("fr-FR")}).`,
+        needed: (n: number) => `Il en faut ${n} par semaine d'ici là : chaque validé compte.`,
+        done: "Objectif atteint : bravo à toute l'équipe !",
+      },
+      ranking: {
+        title: "L'équipe",
+        lead: "validés, moyenne sur 4 semaines",
+        you: "(vous)",
+        perWeek: "par semaine",
+        perWeekShort: "/ sem.",
+      },
+      email: "Chaque lundi à 8 h, un e-mail : votre semaine passée et l'objectif de la nouvelle.",
+      unavailable: "Le suivi de votre semaine est momentanément indisponible.",
+    },
     figures: {
       signups: "Inscrits",
       validated: "Validés",
@@ -679,7 +728,7 @@ export const fr = {
     },
     trades: {
       title: "Objectif par métier",
-      lead: "Par mois, au rythme de 3 artisans par jour. Réduit de moitié environ en août et en décembre.",
+      lead: "Par mois, au rythme de 7 artisans validés par semaine. Réduit de moitié environ en août et en décembre.",
       trade: "Métier",
       perMonth: "Par mois",
       total: "Total",
@@ -10808,6 +10857,12 @@ export const fr = {
         leadsHint:
           "En retard sur l'objectif du mois, ou deux mois de suite sous l'objectif : voir la cause probable et agir (zone, fiche, recrutement de clients).",
         leadsAction: "Voir les objectifs",
+        // Rythme des conseillers (ADR 0381).
+        pace: (n: number) =>
+          n > 1 ? `${n} conseillers en retard à revoir` : "1 conseiller en retard à revoir",
+        paceHint:
+          "Deux semaines de suite sous la moitié de son objectif : proposer un échange et un accompagnement.",
+        paceAction: "Voir le rythme",
         webhooks: (n: number) =>
           n > 1
             ? `${n} notifications Stripe ou DocuSeal en échec`
@@ -11644,11 +11699,141 @@ export const fr = {
         deleteConfirm: "Confirmer : supprimer la tâche",
         cancel: "Annuler",
       },
+      // Rythme des conseillers vers l'objectif commun (F-184, lot 78, ADR 0381).
+      pace: {
+        title: "Rythme",
+        intro:
+          "Le rythme de l'équipe vers l'objectif commun, et celui de chaque conseiller cette semaine.",
+        settingsLink: "Régler les objectifs",
+        noGoal:
+          "Aucun objectif commun pour l'instant : réglez l'objectif et ses dates pour suivre le rythme de l'équipe.",
+        alert: {
+          behind: (n: number) => `En retard de ${n} artisan${n > 1 ? "s" : ""}.`,
+          ahead: (n: number) => `En avance de ${n} artisan${n > 1 ? "s" : ""}.`,
+          onTrack: "Pile dans le rythme.",
+          gap: (n: number) =>
+            ` Pour finir à l'objectif, il faut ${n} validé${n > 1 ? "s" : ""} de plus par semaine qu'aujourd'hui.`,
+          candidates: "Voir les candidats",
+        },
+        kpis: {
+          validated: (day: string) => `Validés au ${day}`,
+          expected: (n: number) => `prévu : ${n.toLocaleString("fr-FR")} à ce jour`,
+          rate: "Rythme des 3 dernières semaines",
+          perWeek: (n: number) => `${n.toLocaleString("fr-FR")} / sem.`,
+          needed: (n: number, day: string) => `il faut ${n} / sem. jusqu'au ${day}`,
+          noRate: "pas encore de semaine terminée",
+          projection: (day: string) => `Projection au ${day}`,
+          projectionShort: (n: number) => `≈ ${n.toLocaleString("fr-FR")}`,
+          missing: (n: number) =>
+            n > 0
+              ? `il manquerait environ ${n.toLocaleString("fr-FR")} artisan${n > 1 ? "s" : ""}`
+              : "objectif atteint à ce rythme",
+          active: "Conseillers actifs",
+          points: (n: number) =>
+            n === 0 ? "aucun point à prévoir" : `${n} point${n > 1 ? "s" : ""} à prévoir`,
+        },
+        curve: {
+          title: (goal: number) => `Vers ${goal.toLocaleString("fr-FR")} artisans validés`,
+          caption: "Artisans validés en cumul, semaine par semaine, face au plan",
+          actual: "Validés, réel",
+          plan: "Prévu",
+          projection: "Au rythme actuel",
+          today: (n: number) => `${n.toLocaleString("fr-FR")} aujourd'hui`,
+          goal: (n: number, day: string) => `${n.toLocaleString("fr-FR")} au ${day}`,
+          projected: (n: number) => `≈ ${n.toLocaleString("fr-FR")} au rythme actuel`,
+          week: "Semaine",
+          cumul: "Validés (cumul)",
+          planned: "Prévu (cumul)",
+        },
+        channels: (n: number) => `D'où viennent les ${n.toLocaleString("fr-FR")}`,
+        table: {
+          title: "Les conseillers cette semaine",
+          lead: (from: string, to: string) =>
+            `semaine du ${from} au ${to} · mise à jour à chaque validation`,
+          name: "Conseiller",
+          done: "Validés / objectif",
+          progress: "Avancement",
+          average: "Moyenne 4 sem.",
+          last: "Dernier validé",
+          state: "État",
+          none: "Aucun conseiller actif pour l'instant.",
+          ownGoal: (n: number, reason: string | null) =>
+            `objectif propre : ${n}${reason ? ` · ${reason}` : ""}`,
+          never: "aucun",
+          noGoal: "—",
+        },
+        states: {
+          avance: "En avance",
+          rythme: "Dans le rythme",
+          retard: "En retard",
+          point: "Point à prévoir",
+          demarrage: "Démarrage",
+        },
+        rule: "« Point à prévoir » : deux semaines de suite sous la moitié de l'objectif. L'équipe propose un échange et un accompagnement. Les objectifs portent sur les artisans validés, jamais sur des horaires ou un nombre de visites.",
+        settings: {
+          title: "Régler les objectifs",
+          intro:
+            "L'objectif commun, le rythme de chaque conseiller et le suivi. Les conseillers voient leur objectif dans « Mes résultats ».",
+          back: "Retour au rythme",
+          common: "Objectif commun",
+          goal: "Artisans validés",
+          goalHint: "Vide : aucun objectif commun.",
+          end: "Pour le",
+          start: "Départ du décompte",
+          startHint: "Les validés d'avant comptent aussi. Mêmes dates que l'onglet Chiffres.",
+          perCommercial: "Objectif par conseiller",
+          perCommercialLead:
+            "En artisans validés par semaine. L'objectif par métier des conseillers suit ce rythme.",
+          rampWeeks: "Semaines de démarrage",
+          rampWeeksHint: "Comptées depuis l'arrivée du conseiller.",
+          ramp: "Pendant le démarrage",
+          rampHint: "Validés par semaine.",
+          rhythm: "Ensuite, par semaine",
+          rhythmHint: (n: number) => `≈ ${n} par mois`,
+          visits: "Repère affiché par jour",
+          visitsHint: "Visites par jour : un repère, pas une obligation.",
+          follow: "Suivi",
+          email: "E-mail du lundi aux conseillers",
+          emailHint: "À 8 h : leur semaine passée et l'objectif de la nouvelle.",
+          ranking: "Classement visible des conseillers",
+          rankingHint:
+            "Prénom et initiale, moyenne sur 4 semaines. Décochez pour le garder pour l'équipe.",
+          alert: "Alerte « Point à prévoir »",
+          alertHint:
+            "Deux semaines de suite sous 50 % de l'objectif : alerte dans « À traiter » et dans l'onglet Rythme.",
+          save: "Enregistrer",
+          saved: "Objectifs enregistrés.",
+          // TODO(legal) : clause d'objectifs du contrat des conseillers à faire valider (ADR 0381).
+          legal:
+            "Les conseillers sont indépendants : le contrat fixe un objectif de résultats (artisans validés), pas d'horaires ni de visites imposées. Clause à faire valider par l'avocat avant les premières signatures.",
+          own: {
+            title: "Objectif propre à un conseiller",
+            lead: "Temps partiel, arrivée en cours de mois : un autre objectif par semaine.",
+            commercial: "Conseiller",
+            choose: "Choisir un conseiller",
+            perWeek: "Par semaine",
+            perWeekHint: "Vide : il reprend le rythme commun.",
+            reason: "Raison",
+            reasonHint: "Temps partiel, démarrage en cours de mois…",
+            save: "Enregistrer l'objectif",
+            saved: "Objectif propre enregistré.",
+            none: "Aucun objectif propre : tous suivent le rythme commun.",
+            current: (n: number, reason: string | null) =>
+              `${n} par semaine${reason ? ` · ${reason}` : ""}`,
+          },
+        },
+        errors: {
+          invalid: "Vérifiez les champs signalés.",
+          generic: "L'enregistrement a échoué. Réessayez.",
+          unavailable: "Le rythme est momentanément indisponible.",
+        },
+      },
       // Onglets des pages Lancement (F-66, lot 2, ADR 0209) : une seule entrée dans le menu.
       tabs: {
         label: "Pages du lancement",
         planning: "Planning",
         figures: "Chiffres",
+        pace: "Rythme",
         codes: "Codes de suivi",
       },
       /** Canal d'arrivée d'une inscription d'artisan (LAUNCH_CHANNELS). */

@@ -80,6 +80,7 @@ export * from "./accountant";
 export * from "./phone-calendar";
 export * from "./prospects";
 export * from "./commercial-results";
+export * from "./commercial-pace";
 export * from "./commercial-sectors";
 export * from "./launch-plan";
 export * from "./launch-figures";

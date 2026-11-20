@@ -62,6 +62,7 @@ Projets Supabase : staging `izwdfxynzegntubminth`, production `ffidtbwxiyqybyfdq
 
 - [ ] Déposer les vidéos de l'aide à l'inscription dans le compartiment public `aide-videos` (ADR 0349) : `SUPABASE_ACCESS_TOKEN=… node scripts/aide-videos.mjs --project ffidtbwxiyqybyfdqmkj --dossier medias/films/aide/sortie` (versions légères fabriquées hors dépôt).
 - [ ] Recrutement des conseillers (ADR 0380) : régler le barème des primes (Réglages › Commerciaux), puis poser au moins une réunion d'information avec son lien de visio (Apporteurs › Candidats › Gérer les réunions) avant de diffuser `/devenir-conseiller`.
+- [ ] Rythme des conseillers (ADR 0381) : saisir l'objectif commun et ses dates (Lancement › Rythme › Régler les objectifs) ; faire valider la clause d'objectifs du contrat des conseillers par l'avocat avant les premières signatures.
 
 ### Authentification (Ensemble)
 - [ ] `scripts/supabase-auth.mjs --project ffidtbwxiyqybyfdqmkj --production oui --site-url https://menao.fr --extra-urls https://www.menao.fr --app-urls menao://** --smtp oui` (avec la clé SMTP Resend de production) :

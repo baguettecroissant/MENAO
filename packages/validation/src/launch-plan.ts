@@ -10,6 +10,7 @@ import {
   LAUNCH_TASK_REF_PATTERN,
   LAUNCH_TASK_STATUSES,
   normalizePartnerCode,
+  PACE_LIMITS,
 } from "@menao/core";
 import { z } from "zod";
 import { messages } from "./messages";
@@ -479,3 +480,87 @@ export function parseMyLaunchPlan(data: unknown): MyLaunchPlan {
     }),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Rythme des conseillers (F-184, lot 78, ADR 0381)
+// ---------------------------------------------------------------------------
+
+/** Nombre entier obligatoire, mêmes règles que `optionalInt`. */
+const requiredInt = (min: number, max: number, error: string) =>
+  optionalInt(min, max, error).transform((value, ctx) => {
+    if (value === null) {
+      ctx.addIssue({ code: "custom", message: error });
+      return z.NEVER;
+    }
+    return value;
+  });
+
+/**
+ * Réglages du rythme (`admin_save_pace_settings`), remplacés en entier : objectif commun
+ * d'artisans validés (vide : aucun), départ du décompte et date de l'objectif (début et fin du
+ * recrutement, les mêmes que l'onglet Chiffres), rythme par conseiller, démarrage, repère de visites
+ * par jour, et les trois cases du suivi (e-mail du lundi, classement visible, alerte).
+ */
+export const paceSettingsFormSchema = z
+  .object({
+    objectif_valides: optionalInt(
+      PACE_LIMITS.objectif.min,
+      PACE_LIMITS.objectif.max,
+      messages.paceObjectiveInvalid,
+    ),
+    debut_recrutement: optionalDate,
+    fin_recrutement: optionalDate,
+    rythme_semaine: requiredInt(
+      PACE_LIMITS.rythme.min,
+      PACE_LIMITS.rythme.max,
+      messages.paceRhythmInvalid,
+    ),
+    rythme_demarrage: requiredInt(
+      PACE_LIMITS.demarrage.min,
+      PACE_LIMITS.demarrage.max,
+      messages.paceRampInvalid,
+    ),
+    semaines_demarrage: requiredInt(
+      PACE_LIMITS.semainesDemarrage.min,
+      PACE_LIMITS.semainesDemarrage.max,
+      messages.paceRampWeeksInvalid,
+    ),
+    repere_visites_jour: requiredInt(
+      PACE_LIMITS.repere.min,
+      PACE_LIMITS.repere.max,
+      messages.paceVisitsInvalid,
+    ),
+    email_lundi: checkbox,
+    classement_visible: checkbox,
+    alerte_retard: checkbox,
+  })
+  .superRefine(checkRecruitment);
+export type PaceSettingsFormInput = z.input<typeof paceSettingsFormSchema>;
+export type PaceSettingsForm = z.output<typeof paceSettingsFormSchema>;
+
+/**
+ * Objectif propre à un conseiller (`admin_set_commercial_pace`) : nombre par semaine (vide : il
+ * reprend le rythme commun) et sa raison (temps partiel…), 80 caractères au plus.
+ */
+export const commercialPaceFormSchema = z.object({
+  commercial_id: optionalId(messages.paceCommercialUnknown).transform((id, ctx) => {
+    if (id === null) {
+      ctx.addIssue({ code: "custom", message: messages.paceCommercialUnknown });
+      return z.NEVER;
+    }
+    return id;
+  }),
+  rythme_semaine: optionalInt(
+    PACE_LIMITS.rythme.min,
+    PACE_LIMITS.rythme.max,
+    messages.paceRhythmInvalid,
+  ),
+  rythme_raison: z
+    .string()
+    .trim()
+    .max(PACE_LIMITS.raison, { message: messages.paceReasonTooLong })
+    .nullish()
+    .transform((value) => value || null),
+});
+export type CommercialPaceFormInput = z.input<typeof commercialPaceFormSchema>;
+export type CommercialPaceForm = z.output<typeof commercialPaceFormSchema>;

@@ -2771,6 +2771,8 @@ export type Database = {
           created_by: string | null;
           id: string;
           nom: string;
+          rythme_raison: string | null;
+          rythme_semaine: number | null;
           status: Database["public"]["Enums"]["commercial_status"];
           updated_at: string;
           user_id: string | null;
@@ -2783,6 +2785,8 @@ export type Database = {
           created_by?: string | null;
           id?: string;
           nom: string;
+          rythme_raison?: string | null;
+          rythme_semaine?: number | null;
           status?: Database["public"]["Enums"]["commercial_status"];
           updated_at?: string;
           user_id?: string | null;
@@ -2794,6 +2798,8 @@ export type Database = {
           created_by?: string | null;
           id?: string;
           nom?: string;
+          rythme_raison?: string | null;
+          rythme_semaine?: number | null;
           status?: Database["public"]["Enums"]["commercial_status"];
           updated_at?: string;
           user_id?: string | null;
@@ -3222,9 +3228,18 @@ export type Database = {
       };
       launch_settings: {
         Row: {
+          alerte_retard: boolean;
+          classement_visible: boolean;
           debut_recrutement: string | null;
+          email_lundi: boolean;
+          email_lundi_envoye: string | null;
           fin_recrutement: string | null;
           id: boolean;
+          objectif_valides: number | null;
+          repere_visites_jour: number;
+          rythme_demarrage: number;
+          rythme_semaine: number;
+          semaines_demarrage: number;
           seuil_couverture: number;
           seuil_fiche_complete: number;
           updated_at: string;
@@ -3232,18 +3247,36 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          alerte_retard?: boolean;
+          classement_visible?: boolean;
           debut_recrutement?: string | null;
+          email_lundi?: boolean;
+          email_lundi_envoye?: string | null;
           fin_recrutement?: string | null;
           id?: boolean;
+          objectif_valides?: number | null;
+          repere_visites_jour?: number;
+          rythme_demarrage?: number;
+          rythme_semaine?: number;
+          semaines_demarrage?: number;
           seuil_couverture?: number;
           seuil_fiche_complete?: number;
           updated_at?: string;
           updated_by?: string | null;
         };
         Update: {
+          alerte_retard?: boolean;
+          classement_visible?: boolean;
           debut_recrutement?: string | null;
+          email_lundi?: boolean;
+          email_lundi_envoye?: string | null;
           fin_recrutement?: string | null;
           id?: boolean;
+          objectif_valides?: number | null;
+          repere_visites_jour?: number;
+          rythme_demarrage?: number;
+          rythme_semaine?: number;
+          semaines_demarrage?: number;
           seuil_couverture?: number;
           seuil_fiche_complete?: number;
           updated_at?: string;
@@ -6942,6 +6975,7 @@ export type Database = {
         }[];
       };
       admin_commercial_detail: { Args: { p_id: string }; Returns: Json };
+      admin_commercial_pace: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_commercials: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -7234,6 +7268,21 @@ export type Database = {
         };
         Returns: string;
       };
+      admin_save_pace_settings: {
+        Args: {
+          p_alerte_retard: boolean;
+          p_classement_visible: boolean;
+          p_debut_recrutement?: string;
+          p_email_lundi: boolean;
+          p_fin_recrutement?: string;
+          p_objectif_valides?: number;
+          p_repere_visites_jour: number;
+          p_rythme_demarrage: number;
+          p_rythme_semaine: number;
+          p_semaines_demarrage: number;
+        };
+        Returns: undefined;
+      };
       admin_save_partner: {
         Args: {
           p_code: string;
@@ -7279,6 +7328,10 @@ export type Database = {
       };
       admin_send_candidate_demo: { Args: { p_id: string }; Returns: undefined };
       admin_set_commercial_demo: { Args: { p_enabled: boolean }; Returns: undefined };
+      admin_set_commercial_pace: {
+        Args: { p_commercial: string; p_rythme_raison?: string; p_rythme_semaine?: number };
+        Returns: undefined;
+      };
       admin_set_commercial_status: {
         Args: { p_id: string; p_status: Database["public"]["Enums"]["commercial_status"] };
         Returns: undefined;
@@ -7938,6 +7991,7 @@ export type Database = {
       commercial_demo_open: { Args: { p_key: string }; Returns: boolean };
       commercial_do_not_contact: { Args: { p_id: string }; Returns: undefined };
       commercial_follow_prospect: { Args: { p_id: string }; Returns: undefined };
+      commercial_pace: { Args: Record<PropertyKey, never>; Returns: Json };
       commercial_prospect: {
         Args: { p_id: string };
         Returns: {
@@ -8936,7 +8990,8 @@ export type Database = {
         | "recrutement_rappel"
         | "recrutement_annulation"
         | "recrutement_reponse"
-        | "recrutement_demo";
+        | "recrutement_demo"
+        | "conseiller_semaine";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -9287,6 +9342,7 @@ export const Constants = {
         "recrutement_annulation",
         "recrutement_reponse",
         "recrutement_demo",
+        "conseiller_semaine",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],
