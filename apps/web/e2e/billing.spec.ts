@@ -23,6 +23,7 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
   // Formule et carte (ADR 0383) : formule, mode de paiement, calendrier, puis deux cases.
   const base = page.getByRole("radio", { name: /^Base/ });
   await expect(page.getByText("150 € / mois")).toBeVisible();
+  await expect(page.getByText("Jusqu'à 25 demandes de chantier par mois")).toBeVisible();
   // Premium mise en avant (encadré vert, badge), cochée par défaut (ADR 0200).
   await expect(page.getByRole("radio", { name: /Premium/ })).toBeChecked();
   await expect(page.getByText("Meilleur rapport qualité-prix")).toBeVisible();

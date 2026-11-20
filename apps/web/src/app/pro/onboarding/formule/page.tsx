@@ -5,6 +5,7 @@ import {
   parseAiAgents,
   parseClientReminders,
   planChoiceOpen,
+  planMonthlyRequests,
   subscriptionTermSummary,
 } from "@menao/core";
 import type { Route } from "next";
@@ -47,7 +48,9 @@ async function PlanStepContent({ searchParams }: PageProps<"/pro/onboarding/form
   const { supabase, artisan, subscription, snapshot } = await getOnboardingContext();
   const { data: plans } = await supabase
     .from("plans")
-    .select("code, nom, accroche, prix_mensuel_ht_centimes, avantages, ouverte, recommandee")
+    .select(
+      "code, nom, accroche, prix_mensuel_ht_centimes, avantages, ouverte, recommandee, limites",
+    )
     .order("ordre");
 
   // Avant la validation : la formule se choisit et se paie déjà (ADR 0353, ADR 0370), rien n'est
@@ -283,6 +286,7 @@ async function PlanStepContent({ searchParams }: PageProps<"/pro/onboarding/form
           accroche: p.accroche,
           monthlyCents: p.prix_mensuel_ht_centimes,
           featured: p.recommandee,
+          requests: planMonthlyRequests(p.limites),
         }))}
         defaultCode={chosenCode}
       />

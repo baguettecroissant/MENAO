@@ -31,6 +31,18 @@ export function checkoutNotice(
   return `${start} : ${values.annualPrice} HT payés d'avance pour l'année (${ANNUAL_FREE_MONTHS} mois offerts). ${end}`;
 }
 
+/**
+ * Demandes de chantier par mois d'une formule (`plans.limites.demandes_mois`, ADR 0290) : un plafond,
+ * jamais une promesse. Nombre, « illimite » si la formule n'a pas de plafond, null sans limites lues.
+ */
+export function planMonthlyRequests(limites: unknown): number | "illimite" | null {
+  if (!limites || typeof limites !== "object" || Array.isArray(limites)) return null;
+  if (!("demandes_mois" in limites)) return null;
+  const value = (limites as Record<string, unknown>).demandes_mois;
+  if (value === null) return "illimite";
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
+}
+
 /** Prix de l'année payée d'avance : 10 mois sur 12. */
 export function annualPriceCents(monthlyCents: number): number {
   return monthlyCents * (ENGAGEMENT_MONTHS - ANNUAL_FREE_MONTHS);

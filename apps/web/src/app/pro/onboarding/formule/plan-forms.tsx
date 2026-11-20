@@ -27,6 +27,8 @@ export type CheckoutPlan = {
   monthlyCents: number;
   /** Formule mise en avant (`plans.recommandee`) : encadré vert et badge. */
   featured: boolean;
+  /** Demandes de chantier par mois (plafond), sous le nom de la formule. */
+  requests: number | "illimite" | null;
 };
 
 /**
@@ -76,7 +78,15 @@ export function PlanCheckout({
               />
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="text-[0.96875rem] font-bold">{p.nom}</span>
-                {p.accroche && <span className="text-sm text-label">{p.accroche}</span>}
+                {p.requests != null ? (
+                  <span className="text-sm font-semibold text-foreground">
+                    {p.requests === "illimite"
+                      ? c.requestsUnlimited
+                      : c.requestsLimited(p.requests)}
+                  </span>
+                ) : (
+                  p.accroche && <span className="text-sm text-label">{p.accroche}</span>
+                )}
               </span>
               <span className="flex flex-col items-end">
                 <span className="font-bold whitespace-nowrap">

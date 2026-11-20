@@ -6,7 +6,7 @@ import {
   annualPriceCents,
   monthlyEquivalentCents,
 } from "@menao/core";
-import { CircleCheck, Info, ShieldCheck, Sparkles } from "lucide-react";
+import { CircleCheck, Inbox, Info, ShieldCheck, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { ButtonLink, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -30,6 +30,8 @@ export type PricingPlan = {
   recommandee: boolean;
   /** Assistants IA inclus, en une ligne (droits `plans.limites.agents`, ADR 0265). */
   agents?: string | null;
+  /** Demandes de chantier par mois (plafond), en tête de la carte : la première raison de venir. */
+  requests?: number | "illimite" | null;
 };
 
 /**
@@ -105,6 +107,22 @@ export function PricingPlans({
                   </p>
                 )}
               </div>
+              {/* Les demandes de chantier d'abord (retour de l'utilisateur du 20/11/2026). */}
+              {plan.requests != null && (
+                <p
+                  className={`flex items-center gap-2.5 rounded-xl px-3.5 py-3 font-display text-[1.0625rem] leading-snug font-bold ${
+                    plan.recommandee ? "bg-white/12 text-white" : "bg-success-soft text-foreground"
+                  }`}
+                >
+                  <Inbox
+                    aria-hidden="true"
+                    className={`size-5 shrink-0 ${plan.recommandee ? "text-[#7ee2b0]" : "text-success"}`}
+                  />
+                  {plan.requests === "illimite"
+                    ? t.requests.unlimited
+                    : t.requests.limited(plan.requests)}
+                </p>
+              )}
               <div className="flex flex-col gap-1.5">
                 {/* À l'année : le prix ramené au mois, le montant facturé par an en dessous. */}
                 <p>

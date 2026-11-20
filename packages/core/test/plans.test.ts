@@ -11,6 +11,7 @@ import {
   planFeatureDiffers,
   splitPlanComparison,
   planFeatureCell,
+  planMonthlyRequests,
   subscriptionPayback,
 } from "../src/plans";
 
@@ -36,6 +37,14 @@ describe("formules et engagement (F-15, ADR 0200)", () => {
     expect(checkoutNotice("annuel", values)).toBe(
       "Engagement d'un an à partir du premier paiement, à la fin des 2 mois d'essai, qui démarrent à la mise en ligne de votre fiche : 1 500 € HT payés d'avance pour l'année (2 mois offerts). Rien n'est prélevé avant, et vous pouvez renoncer sans frais pendant l'essai.",
     );
+  });
+
+  it("demandes de chantier par mois : 10, 25, illimitées (plafond lu en base)", () => {
+    expect(planMonthlyRequests({ demandes_mois: 10 })).toBe(10);
+    expect(planMonthlyRequests({ demandes_mois: null })).toBe("illimite");
+    expect(planMonthlyRequests({ comptes: 1 })).toBeNull();
+    expect(planMonthlyRequests(null)).toBeNull();
+    expect(planMonthlyRequests({ demandes_mois: "dix" })).toBeNull();
   });
 
   it("cellule du comparatif : inclus, absent ou texte", () => {

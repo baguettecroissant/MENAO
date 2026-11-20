@@ -1,4 +1,4 @@
-import { planComparison } from "@menao/core";
+import { planComparison, planMonthlyRequests } from "@menao/core";
 import type { PricingPlan } from "@/components/pro-landing/pricing-plans";
 import { fr } from "@/i18n/fr";
 import { createPublicClient } from "@/lib/supabase/public";
@@ -30,6 +30,7 @@ export async function loadPricing() {
     ouverte: plan.ouverte,
     recommandee: plan.recommandee,
     agents: planAgentsLine(plan.limites),
+    requests: planMonthlyRequests(plan.limites),
   }));
   const comparison = planComparison(
     features ?? [],

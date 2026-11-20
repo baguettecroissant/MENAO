@@ -8389,6 +8389,11 @@ export const fr = {
           `Soit ${annual} HT facturés par an, ${free} mois offerts`,
         yearlyEngagement: (months: number) => `Payé d'avance pour ${months} mois`,
       },
+      // Demandes de chantier par mois, en tête de chaque formule (plafond, jamais une promesse).
+      requests: {
+        limited: (n: number) => `Jusqu'à ${n} demandes de chantier par mois`,
+        unlimited: "Demandes de chantier illimitées",
+      },
       // Engagement d'un an (F-184, ADR 0383, décisions du 20 novembre 2026).
       engagement: {
         title: "Comment marche votre abonnement",
@@ -10011,6 +10016,8 @@ export const fr = {
           ht: "hors taxes",
           calendarTitle: "Votre calendrier",
           featured: "Meilleur rapport qualité-prix",
+          requestsLimited: (n: number) => `Jusqu'à ${n} demandes de chantier par mois`,
+          requestsUnlimited: "Demandes de chantier illimitées",
           freeTitle: "Les 2 premiers mois, rien n'est prélevé.",
           freeText: "Pendant ces 2 mois, vous pouvez vous désabonner sans frais, en ligne.",
           trial: "Essai gratuit",
