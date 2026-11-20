@@ -37,6 +37,13 @@ const PROCESS_ICONS = [Send, FileText, Users, Rocket];
 /** Écrans de l'espace commercial (lot 79), exportés de la maquette : 840 × 1732, fond transparent. */
 const PHONES = ["prospects", "code", "resultats"] as const;
 const STAIRS = ["h-28", "h-40", "h-52", "h-64"];
+/** Sur téléphone, l'escalier se couche : des barres de plus en plus longues (maquette du lot 79). */
+const STAIRS_MOBILE = [
+  "max-sm:w-[60px]",
+  "max-sm:w-[110px]",
+  "max-sm:w-[160px]",
+  "max-sm:w-[210px]",
+];
 
 export const metadata: Metadata = {
   title: `${t.metaTitle} — MENAO`,
@@ -301,24 +308,26 @@ export default function RecruitmentPage() {
               return (
                 <li
                   key={step.title}
-                  className="flex items-center gap-4 sm:flex-col sm:items-stretch sm:gap-3"
+                  className="flex items-end gap-3 sm:flex-col sm:items-stretch sm:gap-3"
                 >
-                  <span className="order-2 flex flex-col gap-1 sm:order-1">
-                    <b className="text-sm text-primary-strong">0{i + 1}</b>
-                    <b className="text-[1.0625rem] leading-snug">{step.title}</b>
-                    <span className="text-[0.9375rem] leading-relaxed text-label">{step.text}</span>
+                  <span className="order-2 flex min-w-0 flex-1 flex-col gap-1 sm:order-1 sm:flex-none">
+                    <b className="text-sm text-primary-strong max-sm:hidden">0{i + 1}</b>
+                    <b className="text-sm leading-snug sm:text-[1.0625rem]">{step.title}</b>
+                    <span className="text-[0.9375rem] leading-relaxed text-label max-sm:hidden">
+                      {step.text}
+                    </span>
                   </span>
                   <span
                     aria-hidden="true"
-                    className={`order-1 flex w-14 shrink-0 items-start justify-center rounded-2xl pt-3 sm:order-2 sm:w-auto ${
+                    className={`order-1 flex shrink-0 items-start justify-center rounded-2xl pt-3 sm:order-2 sm:w-auto ${
                       STAIRS[i] ?? "h-28"
-                    } ${
+                    } ${STAIRS_MOBILE[i] ?? "max-sm:w-[60px]"} ${
                       last
                         ? "border-2 border-dashed border-primary bg-[repeating-linear-gradient(135deg,var(--color-primary-soft)_0_10px,transparent_10px_20px)] text-primary"
                         : "bg-[linear-gradient(180deg,var(--color-primary)_0%,#2f4fe0_100%)] text-white"
-                    } max-sm:h-auto max-sm:min-h-14 max-sm:items-center max-sm:pt-0`}
+                    } max-sm:h-[34px] max-sm:rounded-[10px] max-sm:pt-0`}
                   >
-                    <TrendingUp className="size-6" />
+                    <TrendingUp className="size-6 max-sm:hidden" />
                   </span>
                 </li>
               );
