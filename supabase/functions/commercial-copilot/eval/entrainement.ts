@@ -163,7 +163,7 @@ const REVIEWS: ReviewCase[] = [
         text: "Il y a aussi le Score MENAO, le classement par disponibilité, le dossier vérifié par l'équipe, les relances, les notifications et l'export comptable.",
       },
       { role: "artisan", text: "Oui, oui. Bon, j'ai un rendez-vous." },
-      { role: "commercial", text: "Et l'essai est de 2 mois gratuits, sans engagement au mois." },
+      { role: "commercial", text: "Et l'essai est de 2 mois gratuits." },
       { role: "artisan", text: "Au revoir." },
     ],
     total: [0, 10],

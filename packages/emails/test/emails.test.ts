@@ -677,6 +677,47 @@ describe("contenu des notifications (F-41)", () => {
     expect(last.paragraphs[2]).toContain("redevient visible automatiquement");
   });
 
+  it("engagement d'un an (ADR 0383) : fin d'essai, reconduction et arrêt, sans surprise", () => {
+    const trial = notificationContent(
+      "essai_fin_proche",
+      {
+        etape: 7,
+        formule: "Premium",
+        periodicite: "mensuel",
+        montant_centimes: 50000,
+        premier_paiement: "2027-03-15",
+        fin_engagement: "2028-03-14",
+      },
+      ctx,
+    );
+    expect(trial.subject).toBe("Votre essai gratuit MENAO se termine dans 7 jours");
+    expect(trial.paragraphs[1]?.replace(/\s/g, " ")).toBe(
+      "Formule Premium, 500,00 € HT par mois. Premier prélèvement le 15 mars 2027. Votre abonnement d'un an court ensuite jusqu'au 14 mars 2028.",
+    );
+    expect(trial.cta.url).toBe("https://menao.example/pro/onboarding/formule/arreter");
+    expect(notificationContent("essai_fin_proche", { etape: 1 }, ctx).subject).toBe(
+      "Votre essai gratuit MENAO se termine demain",
+    );
+
+    const renewal = notificationContent(
+      "abonnement_reconduction",
+      { echeance: "2028-03-15", date_limite: "2027-12-14" },
+      ctx,
+    );
+    expect(renewal.subject).toBe("Votre abonnement MENAO se renouvelle le 15 mars 2028");
+    expect(renewal.paragraphs[2]).toContain("au plus tard le 14 décembre 2027");
+
+    const stop = notificationContent("abonnement_arret", { fin: "2028-03-14" }, ctx);
+    expect(stop.subject).toBe("Votre arrêt est enregistré");
+    expect(stop.paragraphs[1]).toBe(
+      "Votre abonnement prend fin le 14 mars 2028. Votre fiche reste en ligne jusqu'à cette date.",
+    );
+    expect(
+      notificationContent("abonnement_arret", { fin: "2027-03-14", essai: true }, ctx)
+        .paragraphs[1],
+    ).toContain("rien ne vous sera prélevé");
+  });
+
   it("suspension pour deux plaintes de clients (ADR 0158)", () => {
     const content = notificationContent("compte_suspendu", { par: "plaintes" }, ctx);
     expect(content.subject).toBe("Votre profil MENAO est suspendu le temps d'une vérification");

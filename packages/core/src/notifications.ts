@@ -39,13 +39,16 @@ export type EmailPreferenceKey = keyof typeof OPTIONAL_NOTIFICATIONS;
 /**
  * Notifications envoyées par e-mail seulement, jamais affichées dans l'application ni en push :
  * le paiement de l'abonnement artisan (CLAUDE.md règle 10, ADR 0158), le mois offert de
- * démarrage (ADR 0166) et la relance d'activation, qui renvoie vers le choix de la formule
- * (ADR 0219).
+ * démarrage (ADR 0166), la relance d'activation, qui renvoie vers le choix de la formule
+ * (ADR 0219), et les rappels de l'engagement d'un an (fin d'essai, reconduction, arrêt, ADR 0383).
  */
 export const WEB_ONLY_NOTIFICATIONS: readonly string[] = [
   "abonnement_impaye",
   "mois_offert",
   "activation_relance",
+  "essai_fin_proche",
+  "abonnement_reconduction",
+  "abonnement_arret",
 ];
 export type EmailPreferences = Record<EmailPreferenceKey, boolean>;
 

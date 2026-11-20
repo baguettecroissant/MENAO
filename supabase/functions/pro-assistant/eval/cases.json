@@ -8,7 +8,7 @@
   {
     "id": "prix-3",
     "question": "Il y a un engagement ?",
-    "attendu": ["sans engagement|à tout moment|au mois"]
+    "attendu": ["un an|12 mois|douze mois"]
   },
   {
     "id": "prix-4",
@@ -152,10 +152,13 @@
     "id": "suite-2",
     "historique": [
       { "role": "user", "text": "Combien ça coûte ?" },
-      { "role": "assistant", "text": "La formule Base coûte 150 € HT par mois, sans engagement." }
+      {
+        "role": "assistant",
+        "text": "La formule Base coûte 150 € HT par mois, avec un engagement d'un an après 2 mois d'essai gratuits."
+      }
     ],
     "question": "Et je peux arrêter quand je veux ?",
-    "attendu": ["mois|tout moment|espace pro"]
+    "attendu": ["essai|échéance|3 mois|trois mois"]
   },
   { "id": "anglais-1", "question": "Do you speak English? How much is it?", "attendu": ["150"] }
 ]

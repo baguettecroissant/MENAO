@@ -1,9 +1,9 @@
 // Edge Function billing-checkout (F-15) : ouvre une session Stripe Checkout d'abonnement pour
 // l'artisan connecté, dès le début de son dossier (ADR 0370). Web uniquement (CLAUDE.md règle 10).
-// Au mois ou à l'année (ADR 0200) : l'engagement et sa date de début s'affichent près du bouton.
+// Engagement d'un an (ADR 0383) : la case d'engagement et les conditions de vente sont exigées ;
+// leur acceptation est conservée avant la page de paiement. L'essai démarre à la mise en ligne de
+// la fiche (billing-go-live) : d'ici là, la fin d'essai posée ici n'est qu'une borne provisoire.
 import {
-  TRIAL_DAYS,
-  firstPaymentDate,
   subscriptionGrantsAccess,
   type SubscriptionStatus,
 } from "../../../packages/core/src/billing.ts";
@@ -14,9 +14,20 @@ import {
   checkoutNotice,
   type BillingPeriod,
 } from "../../../packages/core/src/plans.ts";
+import {
+  CGV_VERSION,
+  TERM_CHECKBOX_TEXT,
+  TERM_TEXT_VERSION,
+} from "../../../packages/core/src/subscription-term.ts";
 import { adminClient, currentArtisan, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
 import { logStripeError, returnOrigin, stripeClient } from "../_shared/stripe.ts";
+
+/**
+ * Fin d'essai provisoire, avant la mise en ligne : billing-go-live la ramène à 60 jours après la mise
+ * en ligne. Assez longue pour qu'aucun prélèvement n'ait lieu pendant la vérification du dossier.
+ */
+const PROVISIONAL_TRIAL_DAYS = 365;
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response(null, { status: 405 });
@@ -30,8 +41,13 @@ Deno.serve(async (req) => {
   const body = (await req.json().catch(() => ({}))) as {
     plan?: string;
     periodicite?: string;
+    engagement?: boolean;
+    cgv?: boolean;
     origin?: string;
   };
+  // Case d'engagement distincte des conditions de vente (CGV, article 6) : les deux sont exigées.
+  if (body.engagement !== true) return json({ status: "engagement_required" }, 400);
+  if (body.cgv !== true) return json({ status: "cgv_required" }, 400);
   const period: BillingPeriod = (BILLING_PERIODS as readonly string[]).includes(
     body.periodicite ?? "",
   )
@@ -85,11 +101,6 @@ Deno.serve(async (req) => {
       console.error(`billing-checkout : prix introuvable (${lookupKey})`);
       return json({ status: "unavailable" }, 503);
     }
-    // Premier prélèvement à la fin de l'essai : l'engagement à l'année commence ce jour-là.
-    const firstPayment = new Intl.DateTimeFormat("fr-FR", {
-      dateStyle: "long",
-      timeZone: "Europe/Paris",
-    }).format(firstPaymentDate());
     const euros = (cents: number) =>
       new Intl.NumberFormat("fr-FR", {
         style: "currency",
@@ -97,10 +108,28 @@ Deno.serve(async (req) => {
         maximumFractionDigits: 0,
       }).format(cents / 100);
     const notice = checkoutNotice(period, {
-      firstPayment,
       annualPrice: euros(annualPriceCents(plan.prix_mensuel_ht_centimes)),
       monthlyPrice: euros(plan.prix_mensuel_ht_centimes),
     });
+
+    // Preuve d'acceptation (date, heure, texte exact, version), puis les conditions de vente.
+    const { error: proofError } = await admin.from("subscription_term_acceptances").insert({
+      artisan_id: artisan.id,
+      user_id: user.id,
+      version: TERM_TEXT_VERSION,
+      texte: TERM_CHECKBOX_TEXT,
+      cgv_version: CGV_VERSION,
+      plan_code: plan.code,
+      periodicite: period,
+    });
+    if (proofError) throw proofError;
+    const { error: legalError } = await admin
+      .from("legal_acceptances")
+      .upsert(
+        { user_id: user.id, document: "cgv_artisan", version: CGV_VERSION },
+        { onConflict: "user_id,document,version", ignoreDuplicates: true },
+      );
+    if (legalError) throw legalError;
 
     const origin = returnOrigin(body.origin);
     const taxRate = env("STRIPE_TAX_RATE_ID");
@@ -110,8 +139,12 @@ Deno.serve(async (req) => {
       client_reference_id: artisan.id,
       line_items: [{ price: price.id, quantity: 1 }],
       subscription_data: {
-        trial_period_days: TRIAL_DAYS,
-        metadata: { artisan_id: artisan.id, periodicite: period },
+        trial_period_days: PROVISIONAL_TRIAL_DAYS,
+        metadata: {
+          artisan_id: artisan.id,
+          periodicite: period,
+          engagement_version: TERM_TEXT_VERSION,
+        },
         ...(taxRate ? { default_tax_rates: [taxRate] } : {}),
       },
       allowed_payment_method_types: ["card", "sepa_debit"],

@@ -99,6 +99,7 @@ export type CopilotViolation =
   | "remise"
   | "delai_dossier"
   | "engagement_annuel"
+  | "sans_engagement"
   | "adresse_web";
 
 const NUMBER = String.raw`(?:\d+|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|quinze|vingt|trente|cinquante|cent|des dizaines de|plusieurs dizaines de)`;
@@ -175,11 +176,13 @@ const RULES: readonly { code: CopilotViolation; pattern: RegExp }[] = [
     pattern:
       /\b(dossier|vérification|validation)\b[^.!?\n]{0,30}\b(en|sous|dans les?|d'ici)\s+(\d+|24|48|quelques|une|deux)\s*(h|heures?|jours?|minutes?)\b/iu,
   },
-  // Le guide : ne jamais pousser l'année (ni son engagement, ni sa garantie) de soi-même.
+  // Le guide : ne jamais pousser le paiement à l'année de soi-même.
   {
     code: "engagement_annuel",
-    pattern: /(?<![\p{L}\d])(à l'année|annuel(le)?s?|engagement de 12 mois)(?![\p{L}])/iu,
+    pattern: /(?<![\p{L}\d])(à l'année|annuel(le)?s?)(?![\p{L}])/iu,
   },
+  // Engagement d'un an pour tous (ADR 0383) : « sans engagement » serait faux.
+  { code: "sans_engagement", pattern: /\bsans\s+engagement\b/iu },
   // Le lien est ajouté par MENAO : aucune adresse recopiée ou inventée.
   { code: "adresse_web", pattern: /https?:\/\/|\bwww\.|\bmenao\.fr\/\S|\bwa\.me\b/iu },
 ];

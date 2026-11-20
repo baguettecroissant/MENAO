@@ -61,6 +61,7 @@ describe("copilote : promesses et formules interdites", () => {
     ["C'est gratuit à vie pour les premiers inscrits.", "remise"],
     ["Votre dossier est validé en 48 h.", "delai_dossier"],
     ["Et à l'année, c'est 2 mois offerts.", "engagement_annuel"],
+    ["Au mois, c'est sans engagement.", "sans_engagement"],
     ["Inscrivez-vous sur https://menao.fr/p/julien/pro", "adresse_web"],
     ["Rendez-vous sur www.menao.fr", "adresse_web"],
   ])("« %s » → %s", (text, code) => {
@@ -75,7 +76,7 @@ describe("copilote : promesses et formules interdites", () => {
     "On fait l'inscription ensemble en une dizaine de minutes.",
     "Personne ne peut promettre un nombre de demandes : pendant l'essai, vous arrêtez quand vous voulez.",
     "Tout est sur menao.fr, et je vous laisse le lien : [lien]",
-    "Au mois, c'est sans engagement.",
+    "Après 2 mois d'essai gratuits, l'abonnement dure un an, avec un prix fixe.",
   ])("texte conforme : « %s »", (text) => {
     expect(copilotViolations(text)).toEqual([]);
   });

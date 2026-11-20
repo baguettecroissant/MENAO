@@ -20,24 +20,25 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
   await signIn(page, "abonnement@example.test");
   await page.goto("/pro/onboarding/formule");
 
-  const base = page.getByRole("region", { name: "Base" });
-  await expect(base.getByText("150 €")).toBeVisible();
-  await expect(base.getByText("2 mois offerts", { exact: true })).toBeVisible();
-  // Trois formules ouvertes, Premium recommandée (ADR 0200).
-  await expect(page.getByRole("region", { name: "Premium" }).getByText("Recommandé")).toBeVisible();
-  await expect(
-    page.getByRole("region", { name: "Entreprise" }).getByRole("button", {
-      name: "Choisir Entreprise au mois",
-    }),
-  ).toBeVisible();
+  // Formule et carte (ADR 0383) : formule, mode de paiement, calendrier, puis deux cases.
+  const base = page.getByRole("radio", { name: /^Base/ });
+  await expect(page.getByText("150 € / mois")).toBeVisible();
+  await expect(page.getByText("Jusqu'à 25 demandes de chantier par mois")).toBeVisible();
+  // Premium mise en avant (encadré vert, badge), cochée par défaut (ADR 0200).
+  await expect(page.getByRole("radio", { name: /Premium/ })).toBeChecked();
+  await expect(page.getByText("Meilleur rapport qualité-prix")).toBeVisible();
+  await expect(page.getByText("2 mois, dès la mise en ligne de votre fiche")).toBeVisible();
+  await base.check();
+  await expect(page.getByText("150 € HT par mois pendant 12 mois")).toBeVisible();
 
   // Choix de la formule → redirection vers Stripe Checkout (page simulée)
   await page.route("https://checkout.stripe.com/**", (route) =>
     route.fulfill({ contentType: "text/html", body: "<h1>Stripe Checkout (simulé)</h1>" }),
   );
-  // Au mois ou à l'année (ADR 0200) : engagement et premier paiement annoncés avant de payer.
-  await expect(page.getByText(/^À l'année : 12 mois payés d'avance, 2 mois offerts/)).toBeVisible();
-  await base.getByRole("button", { name: "Choisir Base au mois" }).click();
+  // Case d'engagement, distincte des conditions de vente : toutes deux exigées.
+  await page.getByRole("checkbox", { name: /Je m'engage pour douze mois/ }).check();
+  await page.getByRole("checkbox", { name: /J'accepte les conditions générales de vente/ }).check();
+  await page.getByRole("button", { name: "Enregistrer ma carte" }).click();
   await expect(page).toHaveURL(/^https:\/\/checkout\.stripe\.com\//);
 
   // Stripe confirme l'abonnement en essai : webhook signé
@@ -58,7 +59,7 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
         status: "trialing",
         cancel_at_period_end: false,
         trial_end: trialEnd,
-        metadata: { artisan_id: ARTISAN_ID },
+        metadata: { artisan_id: ARTISAN_ID, engagement_version: "2026-11-20" },
         items: {
           object: "list",
           data: [
@@ -97,7 +98,9 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
   // L'artisan voit son abonnement et ouvre le portail
   await page.goto("/pro/onboarding/formule");
   await expect(page.getByRole("heading", { name: "Votre abonnement : Base" })).toBeVisible();
-  await expect(page.getByRole("status")).toContainText("Période d'essai jusqu'au");
+  // Engagé, fiche pas encore en ligne : l'essai attend la mise en ligne (ADR 0383).
+  await expect(page.getByRole("status")).toContainText("il démarre à la mise en ligne");
+  await expect(page.getByText("12 mois à partir du premier paiement")).toBeVisible();
 
   // Passage au prix annuel (portail ou nouvel abonnement) : périodicité enregistrée par le webhook.
   const yearly = {
@@ -131,9 +134,7 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
   expect(yearlyResponse.status()).toBe(200);
   await page.reload();
   await expect(page.getByRole("heading", { name: "Votre abonnement : Base" })).toBeVisible();
-  await expect(
-    page.getByText(/^Paiement à l'année : engagement de 12 mois à partir du/),
-  ).toBeVisible();
+  await expect(page.getByText(/^À l'année · /)).toBeVisible();
   await page.goto("/pro/onboarding");
   await expect(page.getByRole("link", { name: /Choisir votre formule.*Fait/ })).toBeVisible();
   await page.goto("/pro/onboarding/formule");
@@ -147,18 +148,29 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
       return route.fulfill({ contentType: "text/html", body: "<h1>Portail Stripe (simulé)</h1>" });
     },
   );
-  await page.getByRole("button", { name: "Gérer mon abonnement" }).click();
+  await page.getByRole("button", { name: "Moyen de paiement et factures" }).click();
   await expect
     // Vrai Stripe : billing.stripe.com ; stripe-mock : *.stripe.me.
     .poll(() => external.some((u) => /(^|\.)stripe\.(com|me)$/.test(new URL(u).hostname)))
     .toBe(true);
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+
+  // Arrêt dans MENAO (ADR 0383) : fiche pas encore en ligne, renoncer ne coûte rien.
+  await page.goto("/pro/onboarding/formule");
+  await page.getByRole("link", { name: "Arrêter mon abonnement" }).click();
+  await expect(page.getByText("Vous êtes en essai gratuit")).toBeVisible();
+  await expect(page.getByText("retirée tout de suite")).toBeVisible();
+  await page.getByText("Trop cher").click();
+  await page.getByRole("button", { name: "Renoncer sans frais" }).click();
+  await expect(page.getByText("Votre demande d'arrêt est enregistrée.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Arrêter mon abonnement" })).toHaveCount(0);
 });
 
 test("avant la validation, la formule se choisit et se paie déjà (ADR 0370)", async ({ page }) => {
   await signIn(page, "artisan@example.test");
   await page.goto("/pro/onboarding/formule");
-  await expect(page.getByText("Rien n'est prélevé aujourd'hui.")).toBeVisible();
+  await expect(page.getByText("Les 2 premiers mois, rien n'est prélevé.")).toBeVisible();
   // Paiement proposé sans attendre la validation ; l'ancien choix sans paiement a disparu.
-  await expect(page.getByRole("button", { name: "Choisir Premium au mois" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Enregistrer ma carte" })).toBeVisible();
   await expect(page.getByRole("button", { name: /^Choisir la formule/ })).toHaveCount(0);
 });

@@ -100,6 +100,9 @@ export const NOTIFICATION_TYPES = [
   "conseiller_semaine",
   // Bonne réception d'une candidature de commercial (ADR 0382).
   "recrutement_recue",
+  "essai_fin_proche",
+  "abonnement_reconduction",
+  "abonnement_arret",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -238,6 +241,15 @@ function dateDay(value: string | null): string | null {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const date = new Date(`${value}T12:00:00Z`);
   return Number.isNaN(date.getTime()) ? null : dayFormat.format(date);
+}
+
+const fullDayFormat = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "UTC" });
+
+/** Date AAAA-MM-JJ → « 15 mars 2028 » (échéances lointaines, l'année compte). */
+function dateFull(value: string | null): string | null {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const date = new Date(`${value}T12:00:00Z`);
+  return Number.isNaN(date.getTime()) ? null : fullDayFormat.format(date);
 }
 
 /** Échéance d'un document : « aujourd'hui », « demain », « le jeudi 29 octobre (dans 20 jours) ». */
@@ -1664,6 +1676,80 @@ export function notificationContent(
         ],
         quote: null,
         cta: { label: "Mettre à jour mon paiement", url: link("/pro/onboarding/formule") },
+      };
+    }
+    // Engagement d'un an (F-184, ADR 0383) : personne n'est surpris par un prélèvement. E-mail
+    // seulement, jamais en push (règle 10).
+    case "essai_fin_proche": {
+      const tomorrow = data.etape === 1;
+      const plan = text(data, "formule");
+      const price = amount(data, "montant_centimes");
+      const first = dateFull(text(data, "premier_paiement"));
+      const end = dateFull(text(data, "fin_engagement"));
+      const yearly = data.periodicite === "annuel";
+      return {
+        subject: tomorrow
+          ? "Votre essai gratuit MENAO se termine demain"
+          : "Votre essai gratuit MENAO se termine dans 7 jours",
+        preview: first ? `Premier prélèvement le ${first}.` : "Votre premier prélèvement approche.",
+        title: tomorrow ? "Votre essai se termine demain" : "Votre essai se termine dans 7 jours",
+        paragraphs: [
+          hello(ctx.firstName),
+          [
+            plan && price
+              ? `Formule ${plan}, ${price} HT ${yearly ? "pour l'année, payés d'avance" : "par mois"}.`
+              : null,
+            first ? `Premier prélèvement le ${first}.` : null,
+            end ? `Votre abonnement d'un an court ensuite jusqu'au ${end}.` : null,
+          ]
+            .filter(Boolean)
+            .join(" "),
+          "Vous pouvez encore renoncer sans frais, en ligne, jusqu'à la veille du premier prélèvement.",
+        ],
+        quote: null,
+        cta: { label: "Renoncer sans frais", url: link("/pro/onboarding/formule/arreter") },
+      };
+    }
+    case "abonnement_reconduction": {
+      const renewal = dateFull(text(data, "echeance"));
+      const limit = dateFull(text(data, "date_limite"));
+      return {
+        subject: renewal
+          ? `Votre abonnement MENAO se renouvelle le ${renewal}`
+          : "Votre abonnement MENAO va se renouveler",
+        preview: limit
+          ? `Pour l'arrêter, faites-le en ligne au plus tard le ${limit}.`
+          : "Il repart pour un an au même prix.",
+        title: "Votre abonnement se renouvelle",
+        paragraphs: [
+          hello(ctx.firstName),
+          `Sans action de votre part, votre abonnement repart pour un an${renewal ? `, le ${renewal},` : ""} au même prix.`,
+          limit
+            ? `Pour l'arrêter, faites-le en ligne depuis « Ma formule », ou par lettre recommandée, au plus tard le ${limit}.`
+            : "Pour l'arrêter, faites-le en ligne depuis « Ma formule », ou par lettre recommandée.",
+        ],
+        quote: null,
+        cta: { label: "Gérer mon abonnement", url: link("/pro/onboarding/formule") },
+      };
+    }
+    case "abonnement_arret": {
+      const end = dateFull(text(data, "fin"));
+      const trial = data.essai === true;
+      return {
+        subject: "Votre arrêt est enregistré",
+        preview: end
+          ? `Votre abonnement MENAO prend fin le ${end}.`
+          : "Votre demande d'arrêt est bien enregistrée.",
+        title: "Votre arrêt est enregistré",
+        paragraphs: [
+          hello(ctx.firstName),
+          trial
+            ? `Vous avez renoncé à votre essai gratuit${end ? `, qui s'arrête le ${end}` : ""} : rien ne vous sera prélevé.`
+            : `Votre abonnement prend fin${end ? ` le ${end}` : " à son échéance"}. Votre fiche reste en ligne jusqu'à cette date.`,
+          "Vos devis et factures restent accessibles depuis votre espace pro.",
+        ],
+        quote: null,
+        cta: { label: "Voir ma formule", url: link("/pro/onboarding/formule") },
       };
     }
     // Mois offert de démarrage (ADR 0160, ADR 0166) : e-mail et espace web seulement, jamais dans

@@ -2,12 +2,11 @@
 
 import {
   ANNUAL_FREE_MONTHS,
-  ENGAGEMENT_GUARANTEE,
   ENGAGEMENT_MONTHS,
   annualPriceCents,
   monthlyEquivalentCents,
 } from "@menao/core";
-import { CalendarCheck, CircleCheck, ShieldCheck, Sparkles, Wallet } from "lucide-react";
+import { CircleCheck, Inbox, Info, ShieldCheck, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { ButtonLink, StatusBadge } from "@/components/ui";
 import { fr } from "@/i18n/fr";
@@ -31,40 +30,25 @@ export type PricingPlan = {
   recommandee: boolean;
   /** Assistants IA inclus, en une ligne (droits `plans.limites.agents`, ADR 0265). */
   agents?: string | null;
+  /** Demandes de chantier par mois (plafond), en tête de la carte : la première raison de venir. */
+  requests?: number | "illimite" | null;
 };
 
 /**
- * Cartes des formules (F-15, ADR 0200, d'après la page tarifs de TrustUp Pro) : paiement au mois
- * sans engagement, ou à l'année payé d'avance avec 2 mois offerts (prix ramené au mois), puis
- * l'engagement et sa garantie. La formule recommandée est mise en avant ; chaque formule ouverte
- * propose de commencer l'essai.
+ * Cartes des formules (F-15, ADR 0200, d'après la page tarifs de TrustUp Pro) : paiement au mois,
+ * ou à l'année payé d'avance avec 2 mois offerts (prix ramené au mois), puis le fonctionnement de
+ * l'abonnement d'un an (F-184, ADR 0383). La formule recommandée est mise en avant ; chaque
+ * formule ouverte propose de commencer l'essai.
  */
 export function PricingPlans({
   plans,
   compact = false,
 }: {
   plans: PricingPlan[];
-  /** Aperçu de la page /pro (ADR 0265) : pas de choix mois/année, 3 points par formule, pas de garantie. */
+  /** Aperçu de la page /pro (ADR 0265) : pas de choix mois/année, 3 points par formule, pas d'étapes. */
   compact?: boolean;
 }) {
   const [yearly, setYearly] = useState(false);
-  const engagement = [
-    { Icon: CalendarCheck, ...t.engagement.monthly },
-    {
-      Icon: Wallet,
-      title: t.engagement.yearly.title,
-      text: t.engagement.yearly.text(ENGAGEMENT_MONTHS, ANNUAL_FREE_MONTHS),
-    },
-    {
-      Icon: ShieldCheck,
-      title: t.engagement.guarantee.title,
-      text: t.engagement.guarantee.text(
-        ENGAGEMENT_GUARANTEE.minRequests,
-        ENGAGEMENT_GUARANTEE.consecutiveMonths,
-      ),
-    },
-  ];
-
   return (
     <div className="flex flex-col gap-10">
       {!compact && (
@@ -123,6 +107,22 @@ export function PricingPlans({
                   </p>
                 )}
               </div>
+              {/* Les demandes de chantier d'abord (retour de l'utilisateur du 20/11/2026). */}
+              {plan.requests != null && (
+                <p
+                  className={`flex items-center gap-2.5 rounded-xl px-3.5 py-3 font-display text-[1.0625rem] leading-snug font-bold ${
+                    plan.recommandee ? "bg-white/12 text-white" : "bg-success-soft text-foreground"
+                  }`}
+                >
+                  <Inbox
+                    aria-hidden="true"
+                    className={`size-5 shrink-0 ${plan.recommandee ? "text-[#7ee2b0]" : "text-success"}`}
+                  />
+                  {plan.requests === "illimite"
+                    ? t.requests.unlimited
+                    : t.requests.limited(plan.requests)}
+                </p>
+              )}
               <div className="flex flex-col gap-1.5">
                 {/* À l'année : le prix ramené au mois, le montant facturé par an en dessous. */}
                 <p>
@@ -210,30 +210,42 @@ export function PricingPlans({
       </ul>
 
       {!compact && (
-        <section aria-label={t.engagement.title}>
-          {/* La garantie en avant (ADR 0265) : elle lève la peur de payer pour rien. */}
-          <ul className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)]">
-            {engagement.map(({ Icon, title, text }, i) => (
-              <li
-                key={title}
-                className={`flex gap-4 rounded-[1.375rem] bg-surface p-5 ${
-                  i === 2 ? "border-2 border-success lg:order-first" : "border border-border"
-                }`}
-              >
+        <section aria-labelledby="abonnement-titre" className="flex flex-col gap-4">
+          <h3 id="abonnement-titre" className="font-display text-xl font-bold tracking-tight">
+            {t.engagement.title}
+          </h3>
+          <ol className="grid gap-5 rounded-[1.375rem] border border-border bg-surface p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-4">
+            {t.engagement.steps.map((step, i) => (
+              <li key={step.title} className="flex flex-col gap-2">
                 <span
-                  className={`flex size-11 shrink-0 items-center justify-center rounded-[0.875rem] ${
-                    i === 2 ? "bg-success-soft text-success" : "bg-background text-primary"
+                  aria-hidden="true"
+                  className={`flex size-8 items-center justify-center rounded-full text-sm font-bold ${
+                    i === 1 ? "bg-success-soft text-success" : "bg-primary-soft text-primary-strong"
                   }`}
                 >
-                  <Icon aria-hidden="true" className="size-5" />
+                  {i + 1}
                 </span>
-                <div className="flex flex-col gap-1">
-                  <p className="font-display text-[1.0625rem] font-bold">{title}</p>
-                  <p className="text-sm text-label">{text}</p>
-                </div>
+                <p className="font-display text-[1.0625rem] font-bold">{step.title}</p>
+                <p className="text-sm text-label">{step.text}</p>
               </li>
             ))}
-          </ul>
+          </ol>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex gap-3 rounded-[1.375rem] bg-success-soft p-5">
+              <ShieldCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-success" />
+              <div className="flex flex-col gap-1">
+                <p className="font-bold">{t.engagement.stop.title}</p>
+                <p className="text-sm text-label">{t.engagement.stop.text}</p>
+              </div>
+            </div>
+            <div className="flex gap-3 rounded-[1.375rem] border border-border bg-surface p-5">
+              <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
+              <div className="flex flex-col gap-1">
+                <p className="font-bold">{t.engagement.year.title}</p>
+                <p className="text-sm text-label">{t.engagement.year.text}</p>
+              </div>
+            </div>
+          </div>
         </section>
       )}
     </div>

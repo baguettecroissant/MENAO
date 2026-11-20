@@ -343,8 +343,8 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.getByRole("button", { name: "Enregistrer et continuer" }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding\/formule$/);
   await expect(page.getByText("Étape 4 sur 6 · Formule")).toBeVisible();
-  await expect(page.getByText("Rien n'est prélevé aujourd'hui.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Choisir Premium au mois" })).toBeVisible();
+  await expect(page.getByText("Les 2 premiers mois, rien n'est prélevé.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Enregistrer ma carte" })).toBeVisible();
   // « Plus tard » ne bloque rien : les trois attestations sont déposées, viennent les paiements.
   await page.getByRole("link", { name: "Plus tard" }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding\/paiements$/);

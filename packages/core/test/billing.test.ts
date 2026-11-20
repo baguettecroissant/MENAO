@@ -72,9 +72,21 @@ describe("subscriptionFromStripe", () => {
       currentPeriodEnd: "2027-01-15T08:00:00.000Z",
       trialEnd: "2027-01-15T08:00:00.000Z",
       cancelAtPeriodEnd: false,
+      cancelAt: null,
+      engagementVersion: null,
       endedAt: null,
       period: null,
     });
+  });
+
+  it("engagement d'un an (ADR 0383) : fin programmée et version de la case acceptée", () => {
+    expect(
+      subscriptionFromStripe({
+        ...sub,
+        cancel_at: 1_800_000_000,
+        metadata: { ...sub.metadata, engagement_version: "2026-11-20" },
+      }),
+    ).toMatchObject({ cancelAt: "2027-01-15T08:00:00.000Z", engagementVersion: "2026-11-20" });
   });
 
   it("paiement au mois ou à l'année (ADR 0200) : périodicité du prix Stripe", () => {

@@ -103,13 +103,22 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   await expect(plans.getByText(/^150\s€$/)).toBeVisible();
   // Trois formules ouvertes, Premium mise en avant (ADR 0200).
   await expect(plans.getByText("Essai gratuit de 2 mois")).toHaveCount(3);
+  // Les demandes de chantier en tête de chaque formule (plafond lu en base).
+  await expect(plans.getByText("Jusqu'à 10 demandes de chantier par mois")).toBeVisible();
+  await expect(plans.getByText("Demandes de chantier illimitées")).toBeVisible();
   await expect(plans.getByText("Bientôt disponible")).toHaveCount(0);
   await expect(plans.getByText("Recommandé").first()).toBeVisible();
   // À l'année : prix ramené au mois (10 mois sur 12), montant annuel en dessous.
   await plans.getByRole("button", { name: /^À l'année/ }).click();
   await expect(plans.getByText(/^125\s€$/)).toBeVisible();
   await expect(plans.getByText(/^Soit 1\s500\s€ HT facturés par an/)).toBeVisible();
-  await expect(plans.getByText("Engagement 12 mois, payé d'avance").first()).toBeVisible();
+  await expect(plans.getByText("Payé d'avance pour 12 mois").first()).toBeVisible();
+  // Engagement d'un an (ADR 0383) : les 4 étapes, l'arrêt jusqu'à 3 mois avant, plus de garantie.
+  await expect(
+    plans.getByRole("heading", { name: "Comment marche votre abonnement" }),
+  ).toBeVisible();
+  await expect(plans.getByText("Arrêter, simplement")).toBeVisible();
+  await expect(page.getByText("Garantie de l'engagement")).toHaveCount(0);
   // Comparatif (ADR 0265) : sa propre section, avec la catégorie « Assistants IA ».
   const compare = page.getByRole("region", { name: "Comparez les fonctionnalités" });
   const comparison = compare.getByRole("table", {

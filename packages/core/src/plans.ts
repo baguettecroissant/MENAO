@@ -1,38 +1,46 @@
 /**
- * Formules d'abonnement : paiement à l'année, garantie de l'engagement et comparatif détaillé de
- * la page Espace Pro (F-15, ADR 0200). Contenu du comparatif paramétré en base (`plan_features`).
+ * Formules d'abonnement : paiement au mois ou à l'année, engagement d'un an (ADR 0383) et
+ * comparatif détaillé de la page Espace Pro (F-15, ADR 0200). Contenu du comparatif paramétré en base (`plan_features`).
  * Fichier autonome (aucun import) : il est aussi importé par l'Edge Function billing-checkout.
  */
 
-/** Engagement à l'année : 12 mois, payés d'avance, à partir du premier paiement (après l'essai). */
+/** Engagement d'un an pour tous (ADR 0383), à partir du premier paiement, après l'essai. */
 export const ENGAGEMENT_MONTHS = 12;
 /** 2 mois offerts sur l'année payée d'avance (décision de l'utilisateur du 27 octobre 2026). */
 export const ANNUAL_FREE_MONTHS = 2;
 
-/**
- * Garantie de l'engagement : moins de 4 demandes reçues 2 mois complets de suite, et l'artisan
- * part sans frais. Les demandes qu'il apporte lui-même (sa fiche, « Redemander un devis ») ne
- * comptent pas (ADR 0198).
- */
-export const ENGAGEMENT_GUARANTEE = { minRequests: 4, consecutiveMonths: 2 } as const;
-
-/** Paiement de l'abonnement : au mois sans engagement, ou à l'année payée d'avance. */
+/** Paiement de l'abonnement d'un an : chaque mois, ou à l'année payée d'avance. */
 export const BILLING_PERIODS = ["mensuel", "annuel"] as const;
 export type BillingPeriod = (typeof BILLING_PERIODS)[number];
 
 /**
- * Texte affiché sur la page de paiement Stripe, près du bouton (ADR 0200) : l'engagement et sa
- * date de début, ou l'absence d'engagement. Montants et date déjà formatés.
+ * Texte affiché sur la page de paiement Stripe, près du bouton (ADR 0200, ADR 0383) : l'engagement
+ * d'un an et son point de départ. La date du premier paiement n'est pas connue à ce moment : l'essai
+ * démarre à la mise en ligne de la fiche. Montants déjà formatés.
  */
 export function checkoutNotice(
   period: BillingPeriod,
-  values: { firstPayment: string; annualPrice: string; monthlyPrice: string },
+  values: { annualPrice: string; monthlyPrice: string },
 ): string {
+  const start =
+    "Engagement d'un an à partir du premier paiement, à la fin des 2 mois d'essai, qui démarrent à la mise en ligne de votre fiche";
+  const end = "Rien n'est prélevé avant, et vous pouvez renoncer sans frais pendant l'essai.";
   if (period === "mensuel") {
-    return `Sans engagement : aucun prélèvement avant le ${values.firstPayment}, puis ${values.monthlyPrice} HT par mois, résiliable à tout moment.`;
+    return `${start} : ${values.monthlyPrice} HT par mois pendant ${ENGAGEMENT_MONTHS} mois. ${end}`;
   }
-  const { minRequests, consecutiveMonths } = ENGAGEMENT_GUARANTEE;
-  return `Engagement de ${ENGAGEMENT_MONTHS} mois à partir du premier paiement, le ${values.firstPayment}, après les 2 mois d'essai : ${values.annualPrice} HT payés d'avance pour l'année (${ANNUAL_FREE_MONTHS} mois offerts). Garantie : moins de ${minRequests} demandes ${consecutiveMonths} mois de suite, ou activité cessée, et vous partez sans frais.`;
+  return `${start} : ${values.annualPrice} HT payés d'avance pour l'année (${ANNUAL_FREE_MONTHS} mois offerts). ${end}`;
+}
+
+/**
+ * Demandes de chantier par mois d'une formule (`plans.limites.demandes_mois`, ADR 0290) : un plafond,
+ * jamais une promesse. Nombre, « illimite » si la formule n'a pas de plafond, null sans limites lues.
+ */
+export function planMonthlyRequests(limites: unknown): number | "illimite" | null {
+  if (!limites || typeof limites !== "object" || Array.isArray(limites)) return null;
+  if (!("demandes_mois" in limites)) return null;
+  const value = (limites as Record<string, unknown>).demandes_mois;
+  if (value === null) return "illimite";
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
 }
 
 /** Prix de l'année payée d'avance : 10 mois sur 12. */
@@ -43,24 +51,6 @@ export function annualPriceCents(monthlyCents: number): number {
 /** Équivalent mensuel d'un prix annuel, arrondi au centime (affichage). */
 export function monthlyEquivalentCents(annualCents: number): number {
   return Math.round(annualCents / ENGAGEMENT_MONTHS);
-}
-
-/**
- * Sortie sans frais d'un engagement : activité cessée, ou les derniers mois complets (du plus
- * ancien au plus récent) sous le minimum de demandes, autant de fois de suite que la garantie.
- * Il suffit que la série se produise une fois pendant l'engagement.
- */
-export function engagementExitAllowed(input: {
-  monthlyRequests: readonly number[];
-  ceasedActivity: boolean;
-}): boolean {
-  if (input.ceasedActivity) return true;
-  let run = 0;
-  for (const count of input.monthlyRequests) {
-    run = count < ENGAGEMENT_GUARANTEE.minRequests ? run + 1 : 0;
-    if (run >= ENGAGEMENT_GUARANTEE.consecutiveMonths) return true;
-  }
-  return false;
 }
 
 /** Rentabilité d'une formule pour l'artisan (calculateur de /pro/formules, ADR 0265). */

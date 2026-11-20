@@ -7816,7 +7816,7 @@ export const fr = {
       faq: (trade: string) => [
         {
           q: `Combien coûte MENAO pour un artisan ${trade.toLowerCase()} ?`,
-          a: "Le même prix pour tous les métiers : un abonnement mensuel fixe, sans engagement de durée, et aucune commission ni marge sur vos chantiers. Les formules sont détaillées sur la page Espace Pro.",
+          a: "Le même prix pour tous les métiers : un abonnement mensuel fixe, engagé pour un an après 2 mois d'essai gratuits, et aucune commission ni marge sur vos chantiers. Les formules sont détaillées sur la page Espace Pro.",
         },
         {
           q: "Que faut-il pour m'inscrire ?",
@@ -7861,7 +7861,7 @@ export const fr = {
         proofs: [
           "0\u00a0% de commission",
           "Paiements versés sur votre compte",
-          "2 mois offerts, sans engagement",
+          "2 mois d'essai gratuits",
         ],
       },
       // Lot 19 (ADR 0265). TODO(legal) : faire relire la bande de preuves et les assistants.
@@ -8143,7 +8143,7 @@ export const fr = {
         priceFrom: "Dès",
         priceUnit: (plan: string) => `HT / mois · formule ${plan}`,
         priceOthers: (premium: string, entreprise: string) =>
-          `Premium ${premium} et Entreprise ${entreprise} HT / mois, avec Manon au téléphone. Au mois sans engagement, ou à l'année avec 2 mois offerts.`,
+          `Premium ${premium} et Entreprise ${entreprise} HT / mois, avec Manon au téléphone. Engagement d'un an, payé au mois ou à l'année avec 2 mois offerts.`,
       },
       // Fragments d'interface des cartes de l'outil (valeurs d'exemple, ADR 0265).
       featureVisuals: {
@@ -8371,7 +8371,7 @@ export const fr = {
       plansEyebrow: "Formules",
       plansTitle: "Un abonnement fixe, aucune commission.",
       plansSubtitle:
-        "Commencez par 2 mois d'essai gratuits. Ensuite, au mois sans engagement, ou à l'année avec 2 mois offerts.",
+        "Commencez par 2 mois d'essai gratuits. Ensuite, un abonnement d'un an, payé chaque mois ou d'avance.",
       perMonth: "HT / mois",
       trial: "Essai gratuit de 2 mois",
       soon: "Bientôt disponible",
@@ -8384,26 +8384,48 @@ export const fr = {
         monthly: "Au mois",
         yearly: "À l'année",
         yearlyBadge: (free: number) => `${free} mois offerts`,
-        monthlyHint: "Sans engagement",
+        monthlyHint: "12 prélèvements mensuels",
         yearlyHint: (annual: string, free: number) =>
           `Soit ${annual} HT facturés par an, ${free} mois offerts`,
-        yearlyEngagement: (months: number) => `Engagement ${months} mois, payé d'avance`,
+        yearlyEngagement: (months: number) => `Payé d'avance pour ${months} mois`,
       },
+      // Demandes de chantier par mois, en tête de chaque formule (plafond, jamais une promesse).
+      requests: {
+        limited: (n: number) => `Jusqu'à ${n} demandes de chantier par mois`,
+        unlimited: "Demandes de chantier illimitées",
+      },
+      // Engagement d'un an (F-184, ADR 0383, décisions du 20 novembre 2026).
       engagement: {
-        title: "Au mois ou à l'année",
-        monthly: {
-          title: "Au mois",
-          text: "Sans engagement : vous arrêtez quand vous voulez, depuis votre espace pro.",
+        title: "Comment marche votre abonnement",
+        steps: [
+          {
+            title: "Vous vous inscrivez",
+            text: "Vous choisissez votre formule et enregistrez votre carte. Rien n'est prélevé.",
+          },
+          {
+            title: "2 mois d'essai gratuits",
+            text: "L'essai démarre le jour où votre fiche est en ligne. Vous pouvez renoncer sans frais, en ligne.",
+          },
+          {
+            title: "Un an d'abonnement",
+            text: "Il commence à votre premier paiement, à la fin de l'essai. Votre prix ne bouge pas pendant 12 mois.",
+          },
+          {
+            title: "Chaque année",
+            text: "Un e-mail vous prévient avant l'échéance. Vous arrêtez en ligne ou par recommandé, jusqu'à 3 mois avant.",
+          },
+        ],
+        stop: {
+          title: "Arrêter, simplement",
+          text: "Depuis votre espace en ligne, ou par lettre recommandée, jusqu'à 3 mois avant l'échéance. Un e-mail vous le rappelle 4 mois avant.",
         },
-        yearly: {
-          title: "À l'année",
-          text: (months: number, free: number) =>
-            `${months} mois payés d'avance, ${free} mois offerts. L'engagement commence au premier paiement, après les 2 mois d'essai, et il est affiché clairement au moment de payer.`,
+        year: {
+          title: "Pendant l'année",
+          text: "L'abonnement va jusqu'à son échéance : pas d'arrêt en cours d'année. En échange, votre prix ne bouge pas pendant 12 mois.",
         },
-        guarantee: {
-          title: "Garantie de l'engagement",
-          text: (minRequests: number, months: number) =>
-            `Moins de ${minRequests} demandes ${months} mois de suite ? Vous partez sans frais. Même chose si vous cessez votre activité.`,
+        trial: {
+          title: "Essayez 2 mois, sans risque",
+          text: "L'essai démarre quand votre fiche est en ligne. Vous pouvez arrêter sans frais à tout moment pendant l'essai.",
         },
       },
       compare: {
@@ -8468,10 +8490,7 @@ export const fr = {
         planTabs: "Formule affichée",
         moreGroups: (n: number) => `Voir les ${n} autres rubriques`,
         footer:
-          "2 mois d'essai gratuits, puis au mois sans engagement. Aucune commission sur vos chantiers.",
-        guaranteeLabel: "Garantie de l'engagement :",
-        guarantee: (minRequests: number, months: number) =>
-          `à l'année, moins de ${minRequests} demandes ${months} mois de suite ? Vous partez sans frais.`,
+          "2 mois d'essai gratuits, puis un abonnement d'un an. Aucune commission sur vos chantiers.",
       },
       plansNote:
         "Prix hors taxes. Frais de paiement de Stripe à votre charge sur les sommes encaissées. Toute mise en avant dans les résultats est signalée par la mention « Mis en avant ».",
@@ -8480,7 +8499,7 @@ export const fr = {
       faq: [
         {
           q: "Combien coûte MENAO ?",
-          a: "Trois formules, après 2 mois d'essai gratuits : Base à 150 €, Premium à 500 € et Entreprise à 1 500 € HT par mois, sans engagement. À l'année, payée d'avance, vous avez 2 mois offerts : 125 €, 417 € ou 1 250 € HT par mois.",
+          a: "Trois formules, après 2 mois d'essai gratuits : Base à 150 €, Premium à 500 € et Entreprise à 1 500 € HT par mois, avec un engagement d'un an. Payée d'avance pour l'année, vous avez 2 mois offerts : 125 €, 417 € ou 1 250 € HT par mois.",
         },
         {
           q: "MENAO prend-il une commission sur mes chantiers ?",
@@ -8514,7 +8533,7 @@ export const fr = {
       finalTitle: "Votre prochain chantier vous attend.",
       finalText:
         "Créez votre profil en quelques minutes : l'équipe MENAO s'occupe de la vérification.",
-      finalReassurance: ["2 mois offerts", "Sans engagement", "Sans commission"],
+      finalReassurance: ["2 mois offerts", "Prix fixe", "Sans commission"],
     },
     /** Assistant des pages Pro (F-69, ADR 0218). */
     assistant: {
@@ -8588,7 +8607,7 @@ export const fr = {
         fairness: "Un réseau juste",
         plans: "Formules et prix",
         planPrice: (name: string, monthly: string, yearly: string) =>
-          `${name} : ${monthly} HT par mois au mois, sans engagement ; ${yearly} HT par mois à l'année.`,
+          `${name} : ${monthly} HT par mois payé au mois, ou ${yearly} HT par mois payé à l'année ; engagement d'un an.`,
         planSoon: "Formule bientôt disponible.",
         compare: "Comparatif des fonctionnalités par formule",
         included: "inclus",
@@ -8653,23 +8672,27 @@ export const fr = {
           items: [
             {
               q: "Dois-je payer avant d'être vérifié, et quand commence l'essai de 2 mois ?",
-              a: "Vous pouvez choisir votre formule et enregistrer votre carte dès l'inscription, sans attendre la vérification : rien n'est prélevé pendant l'essai de 2 mois. Si votre dossier n'est pas validé, MENAO annule votre abonnement avant tout prélèvement, et vous pouvez arrêter à tout moment pendant l'essai.",
+              a: "Vous pouvez choisir votre formule et enregistrer votre carte dès l'inscription, sans attendre la vérification : rien n'est prélevé. L'essai de 2 mois démarre le jour où votre fiche est mise en ligne, et vous pouvez y renoncer sans frais à tout moment pendant l'essai. Si votre dossier n'est pas validé, MENAO annule votre abonnement avant tout prélèvement.",
             },
             {
               q: "Quelle différence entre les formules Base, Premium et Entreprise ?",
               a: "Toutes donnent accès aux demandes de votre zone, sans commission, et aux outils de devis, de signature, de paiement, de suivi de chantier et de factures. Le détail de ce que chaque formule inclut figure dans le comparatif des formules de la page Espace Pro.",
             },
             {
+              q: "Comment fonctionne l'engagement d'un an ?",
+              a: "L'abonnement dure un an à partir du premier paiement, à la fin des 2 mois d'essai, puis il se renouvelle chaque année. Vous l'arrêtez depuis « Ma formule », dans votre espace pro, ou par lettre recommandée, au plus tard 3 mois avant l'échéance ; un e-mail vous le rappelle 4 mois avant. Il n'y a pas d'arrêt en cours d'année, et votre prix ne change pas pendant 12 mois.",
+            },
+            {
               q: "Comment fonctionne le paiement à l'année ?",
-              a: "Vous payez 12 mois d'avance et 2 mois vous sont offerts. L'engagement commence au premier paiement, à la fin des 2 mois d'essai, puis l'année se renouvelle pour un an, sauf résiliation depuis le portail d'abonnement avant l'échéance.",
+              a: "Vous payez votre année d'avance et 2 mois vous sont offerts. Sinon, vous payez chaque mois, pendant les 12 mois de votre abonnement.",
             },
             {
               q: "Puis-je changer de formule en cours de route ?",
-              a: "Oui, depuis « Gérer mon abonnement ». Passer à une formule supérieure prend effet tout de suite ; passer à une formule inférieure, ou de l'année au mois, prend effet à la fin de la période en cours.",
+              a: "Oui, depuis « Moyen de paiement et factures », dans « Ma formule ». Passer à une formule supérieure prend effet tout de suite ; passer à une formule inférieure, ou de l'année au mois, prend effet à la fin de la période en cours.",
             },
             {
               q: "Que se passe-t-il si un prélèvement de l'abonnement échoue ?",
-              a: "Stripe réessaie le paiement et MENAO vous prévient par e-mail : mettez à jour votre moyen de paiement depuis « Gérer mon abonnement ». Si l'impayé dure plus de 15 jours, votre profil n'apparaît plus dans les recherches, jusqu'à ce que l'abonnement soit régularisé.",
+              a: "Stripe réessaie le paiement et MENAO vous prévient par e-mail : mettez à jour votre moyen de paiement depuis « Moyen de paiement et factures », dans « Ma formule ». Si l'impayé dure plus de 15 jours, votre profil n'apparaît plus dans les recherches, jusqu'à ce que l'abonnement soit régularisé.",
             },
             {
               q: "Comment fonctionne le parrainage d'un confrère ?",
@@ -8928,7 +8951,7 @@ export const fr = {
       intro: {
         eyebrow: "Espace pro",
         title: "Recevez des demandes de chantier près de chez vous",
-        lead: "Aucune commission sur vos chantiers, sans engagement. Rien à payer avant que votre entreprise soit vérifiée.",
+        lead: "Aucune commission sur vos chantiers. Rien à payer avant que votre entreprise soit vérifiée.",
         phases: [
           {
             title: "Créez votre profil",
@@ -9915,40 +9938,111 @@ export const fr = {
           duration: (minutes: number, seconds: number) =>
             minutes ? `${minutes} min ${String(seconds).padStart(2, "0")}` : `${seconds} s`,
         },
-        intro: (date: string) =>
-          `Choisissez votre formule et votre mode de paiement. Les 2 premiers mois sont offerts : aucun prélèvement avant le ${date}, et vous pouvez arrêter à tout moment pendant l'essai.`,
+        intro:
+          "Choisissez votre formule et votre mode de paiement. Les 2 premiers mois sont offerts : ils démarrent à la mise en ligne de votre fiche, et vous pouvez arrêter sans frais pendant l'essai.",
         notValidated:
           "Le choix de la formule n'est pas disponible pour ce dossier. Une question ? Écrivez à l'équipe MENAO depuis l'aide.",
+        // « Ma formule » : les dates qui comptent (F-184, ADR 0383, maquette du lot 74).
+        term: {
+          awaitingStatus: "Essai gratuit : il démarre à la mise en ligne de votre fiche",
+          trialStatus: (date: string) => `Essai gratuit jusqu'au ${date}`,
+          engagementRow: "Engagement",
+          awaitingEngagement: "12 mois à partir du premier paiement",
+          firstPaymentRow: "Premier prélèvement",
+          fromTo: (from: string, to: string) => `du ${from} au ${to}`,
+          renounceRow: "Pour renoncer sans frais",
+          before: (date: string) => `avant le ${date}`,
+          until: (date: string) => `jusqu'au ${date}`,
+          renewalRow: "Renouvellement",
+          renewalOn: (date: string) => `le ${date}, pour un an`,
+          stopRow: "Pour arrêter à l'échéance",
+          stopBy: (date: string) => `au plus tard le ${date}`,
+          stoppingRow: "Fin de l'abonnement",
+          stoppingOn: (date: string) => `le ${date}, à votre demande`,
+          stopLink: "Arrêter mon abonnement",
+          stopped:
+            "Votre demande d'arrêt est enregistrée. Un e-mail de confirmation vous a été envoyé.",
+        },
+        // Arrêter mon abonnement (maquette du lot 74, écrans 4 et 5).
+        stop: {
+          back: "Ma formule",
+          title: "Arrêter mon abonnement",
+          trialTitle: "Vous êtes en essai gratuit",
+          trialText: (date: string) =>
+            `Jusqu'au ${date}. Renoncer ne vous coûte rien et votre engagement d'un an ne commence pas.`,
+          awaitingText:
+            "Votre fiche n'est pas encore en ligne : votre essai n'a pas commencé. Renoncer ne vous coûte rien.",
+          toPay: "À payer",
+          zero: "0 €",
+          profile: "Votre fiche",
+          profileUntil: (date: string) => `en ligne jusqu'au ${date}`,
+          profileNow: "retirée tout de suite",
+          documents: "Vos devis et factures",
+          documentsValue: "toujours accessibles",
+          renounce: "Renoncer sans frais",
+          keep: "Garder mon abonnement",
+          yearIntro: (date: string) => `Votre année d'abonnement court jusqu'au ${date}.`,
+          atRenewal: "Arrêter à l'échéance",
+          atNextRenewal: "Arrêter à l'échéance suivante",
+          noFee: "0 € de frais",
+          atRenewalText: (end: string, deadline: string) =>
+            `Votre abonnement continue jusqu'au ${end}, puis s'arrête. À demander au plus tard le ${deadline}.`,
+          lateText: (end: string) =>
+            `La date limite pour l'échéance de cette année est passée : votre abonnement est renouvelé une fois, jusqu'au ${end}, puis s'arrête.`,
+          noExitTitle: (date: string) => `Pas d'arrêt avant le ${date}`,
+          noExitText:
+            "Votre engagement d'un an court jusqu'à cette date : les mensualités restent dues jusque-là, comme prévu à votre inscription.",
+          periodEndText: (date: string) =>
+            `Votre abonnement s'arrête à la fin de la période déjà payée, le ${date}.`,
+          confirm: (date: string) => `Confirmer : arrêt le ${date}`,
+          reasonsLegend: "Pourquoi partez-vous ? (facultatif)",
+          reasons: {
+            demandes: "Pas assez de demandes",
+            prix: "Trop cher",
+            activite: "J'arrête mon activité",
+            autre: "Autre",
+          },
+          alreadyRequested: (date: string) =>
+            `Votre demande d'arrêt est enregistrée : votre abonnement prend fin le ${date}.`,
+        },
+        // Formule et carte, avec l'engagement d'un an (F-184, ADR 0383).
+        checkout: {
+          planLegend: "Votre formule",
+          periodLegend: "Mode de paiement",
+          monthly: "Payer chaque mois",
+          yearly: (free: number) => `D'avance, ${free} mois offerts`,
+          priceMonth: (euros: string) => `${euros} € / mois`,
+          priceYear: (euros: string) => `${euros} € / an`,
+          ht: "hors taxes",
+          calendarTitle: "Votre calendrier",
+          featured: "Meilleur rapport qualité-prix",
+          requestsLimited: (n: number) => `Jusqu'à ${n} demandes de chantier par mois`,
+          requestsUnlimited: "Demandes de chantier illimitées",
+          freeTitle: "Les 2 premiers mois, rien n'est prélevé.",
+          freeText: "Pendant ces 2 mois, vous pouvez vous désabonner sans frais, en ligne.",
+          trial: "Essai gratuit",
+          trialValue: "2 mois, dès la mise en ligne de votre fiche",
+          then: "Ensuite",
+          thenMonthly: (euros: string, months: number) =>
+            `${euros} € HT par mois pendant ${months} mois`,
+          thenYearly: (euros: string) => `${euros} € HT pour l'année, payés d'avance`,
+          cgvBefore: "J'accepte les ",
+          cgvLink: "conditions générales de vente artisans",
+          cgvAfter: ".",
+          refused: "Dossier refusé : MENAO annule votre abonnement, sans frais.",
+          submit: "Enregistrer ma carte",
+          secure: "Paiement sécurisé par Stripe",
+        },
         // Avant la validation (ADR 0353) : la formule se choisit sans rien payer.
         choice: {
           intro: "Choisissez votre formule maintenant, pendant que votre dossier avance.",
-          freeTitle: "Rien n'est prélevé aujourd'hui.",
-          free: (date: string) =>
-            `Vous enregistrez votre carte ou votre IBAN : le premier prélèvement a lieu à la fin des 2 mois d'essai, le ${date}. Si votre dossier n'est pas validé, MENAO annule votre abonnement avant tout prélèvement.`,
-          yours: "Votre choix",
         },
         perMonth: "HT / mois",
-        priceHt: (euros: string) => `${euros} €`,
-        trialBadge: "2 mois offerts",
-        choose: (nom: string) => `Choisir la formule ${nom}`,
-        // Au mois ou à l'année (ADR 0200).
-        yearlyAlt: (annual: string, monthly: string) =>
-          `ou ${annual} € HT par an, soit ${monthly} € par mois`,
-        chooseMonthly: (nom: string) => `Choisir ${nom} au mois`,
         recommended: "Recommandé",
-        chooseYearly: (nom: string, free: number) =>
-          `Choisir ${nom} à l'année, ${free} mois offerts`,
-        monthlyLabel: "Au mois",
-        yearlyLabel: (free: number) => `À l'année, ${free} mois offerts`,
-        monthlyNote: "Au mois : sans engagement, vous arrêtez quand vous voulez.",
-        yearlyNote: (months: number, free: number, date: string) =>
-          `À l'année : ${months} mois payés d'avance, ${free} mois offerts. L'engagement commence au premier paiement, le ${date}.`,
-        guaranteeNote: (minRequests: number, months: number) =>
-          `Garantie de l'engagement : moins de ${minRequests} demandes ${months} mois de suite, ou activité cessée, et vous partez sans frais.`,
         yearlyTrial: (date: string) =>
           `Paiement à l'année : engagement de 12 mois à partir du ${date}.`,
         yearlyActive: (date: string) =>
-          `Paiement à l'année : engagement jusqu'au ${date}, puis renouvellement pour un an, sauf résiliation depuis le portail avant cette date.`,
+          `Paiement à l'année : engagement jusqu'au ${date}, puis renouvellement pour un an, sauf arrêt demandé avant cette date.`,
         soon: "Bientôt disponible",
         current: "Votre abonnement",
         // Refonte « Nette » (lot 46, ADR 0315).
@@ -9964,9 +10058,8 @@ export const fr = {
         paymentRow: "Paiement",
         paymentMonthly: (euros: string) => `Mensuel · ${euros} € HT`,
         paymentYearly: (euros: string) => `À l'année · ${euros} € HT`,
-        manage: "Gérer mon abonnement",
-        manageHint:
-          "Changer de moyen de paiement, télécharger vos factures ou résilier (fin de période).",
+        manage: "Moyen de paiement et factures",
+        manageHint: "Carte ou IBAN, et vos factures, dans l'espace sécurisé de Stripe.",
         processing:
           "Merci ! Votre abonnement est en cours d'activation : cette page se met à jour dans quelques instants.",
         status: {
@@ -9989,6 +10082,10 @@ export const fr = {
           plan_unavailable: "Cette formule n'est pas encore disponible.",
           already_subscribed: "Vous avez déjà un abonnement : gérez-le depuis le portail.",
           no_customer: "Aucun abonnement à gérer pour le moment.",
+          engagement_required: "Cochez la case d'engagement pour continuer.",
+          already_requested: "Votre demande d'arrêt est déjà enregistrée.",
+          no_subscription: "Aucun abonnement à arrêter.",
+          cgv_required: "Acceptez les conditions générales de vente pour continuer.",
           rate_limited: "Trop de tentatives. Réessayez dans quelques minutes.",
           unavailable:
             "Le service de paiement est momentanément indisponible. Réessayez dans quelques minutes.",
@@ -10572,7 +10669,7 @@ export const fr = {
         missed: "Objectif manqué",
         zero: "Aucune demande",
         twoMonths: "2 mois de suite sous l'objectif",
-        twoMonthsHint: "Seuil de sortie sans frais de la garantie",
+        twoMonthsHint: "Signal d'alerte : l'artisan risque de partir à l'échéance",
         rate: "Taux d'atteinte",
         noSearch: "Sans recherche dans leur zone",
         noSearchHint: "Personne n'a cherché leur métier dans leur zone : il manque des clients",

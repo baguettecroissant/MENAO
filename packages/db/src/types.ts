@@ -5831,15 +5831,73 @@ export type Database = {
           },
         ];
       };
+      subscription_term_acceptances: {
+        Row: {
+          accepted_at: string;
+          artisan_id: string;
+          cgv_version: string;
+          id: string;
+          periodicite: string;
+          plan_code: string | null;
+          texte: string;
+          user_id: string;
+          version: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          accepted_at?: string;
+          artisan_id: string;
+          cgv_version: string;
+          id?: string;
+          periodicite: string;
+          plan_code?: string | null;
+          texte: string;
+          user_id: string;
+          version: string;
+        };
+        Update: {
+          accepted_at?: string;
+          artisan_id?: string;
+          cgv_version?: string;
+          id?: string;
+          periodicite?: string;
+          plan_code?: string | null;
+          texte?: string;
+          user_id?: string;
+          version?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subscription_term_acceptances_artisan_id_fkey";
+            columns: ["artisan_id"];
+            isOneToOne: false;
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subscription_term_acceptances_plan_code_fkey";
+            columns: ["plan_code"];
+            isOneToOne: false;
+            referencedRelation: "plans";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
       subscriptions: {
         Row: {
+          arret_demande_le: string | null;
+          arret_effet_le: string | null;
           artisan_id: string;
+          cancel_at: string | null;
           cancel_at_period_end: boolean;
           created_at: string;
           current_period_end: string | null;
           ended_at: string | null;
+          engagement_version: string | null;
+          essai_demarre_le: string | null;
           first_paid_at: string | null;
           id: string;
+          motif_arret: string | null;
           past_due_since: string | null;
           periodicite: string;
           plan_code: string | null;
@@ -5851,13 +5909,19 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          arret_demande_le?: string | null;
+          arret_effet_le?: string | null;
           artisan_id: string;
+          cancel_at?: string | null;
           cancel_at_period_end?: boolean;
           created_at?: string;
           current_period_end?: string | null;
           ended_at?: string | null;
+          engagement_version?: string | null;
+          essai_demarre_le?: string | null;
           first_paid_at?: string | null;
           id?: string;
+          motif_arret?: string | null;
           past_due_since?: string | null;
           periodicite?: string;
           plan_code?: string | null;
@@ -5868,13 +5932,19 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          arret_demande_le?: string | null;
+          arret_effet_le?: string | null;
           artisan_id?: string;
+          cancel_at?: string | null;
           cancel_at_period_end?: boolean;
           created_at?: string;
           current_period_end?: string | null;
           ended_at?: string | null;
+          engagement_version?: string | null;
+          essai_demarre_le?: string | null;
           first_paid_at?: string | null;
           id?: string;
+          motif_arret?: string | null;
           past_due_since?: string | null;
           periodicite?: string;
           plan_code?: string | null;
@@ -8734,6 +8804,14 @@ export type Database = {
         }[];
       };
       submit_artisan_onboarding: { Args: Record<PropertyKey, never>; Returns: undefined };
+      subscription_trial_start_candidates: {
+        Args: { p_limit?: number };
+        Returns: {
+          artisan_id: string;
+          stripe_subscription_id: string;
+          subscription_id: string;
+        }[];
+      };
       tender_document: { Args: { p_tender_id: string }; Returns: Json };
       transition_chantier: {
         Args: {
@@ -9017,7 +9095,10 @@ export type Database = {
         | "recrutement_reponse"
         | "recrutement_demo"
         | "conseiller_semaine"
-        | "recrutement_recue";
+        | "recrutement_recue"
+        | "essai_fin_proche"
+        | "abonnement_reconduction"
+        | "abonnement_arret";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -9370,6 +9451,9 @@ export const Constants = {
         "recrutement_demo",
         "conseiller_semaine",
         "recrutement_recue",
+        "essai_fin_proche",
+        "abonnement_reconduction",
+        "abonnement_arret",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],

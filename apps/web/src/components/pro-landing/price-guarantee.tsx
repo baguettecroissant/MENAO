@@ -1,4 +1,3 @@
-import { ENGAGEMENT_GUARANTEE } from "@menao/core";
 import { CircleCheck, ShieldCheck } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
@@ -12,7 +11,7 @@ const euros = new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 0,
 });
 
-/** Prix d'entrée et garantie de l'engagement (pages Pro par métier, ADR 0267). */
+/** Prix d'entrée et essai sans risque (pages Pro par métier, ADR 0267 ; garantie retirée, ADR 0383). */
 export function PriceGuarantee({ plan }: { plan: { nom: string; monthlyCents: number } }) {
   return (
     <section aria-label={t.plansTitle} className="bg-primary-soft px-4 py-14 sm:px-6 sm:py-16">
@@ -40,13 +39,8 @@ export function PriceGuarantee({ plan }: { plan: { nom: string; monthlyCents: nu
           <div className="flex gap-3.5 rounded-2xl bg-success-soft p-4">
             <ShieldCheck aria-hidden="true" className="size-6 shrink-0 text-success" />
             <div className="flex flex-col gap-0.5">
-              <p className="font-bold text-success">{t.engagement.guarantee.title}</p>
-              <p className="text-sm text-label">
-                {t.engagement.guarantee.text(
-                  ENGAGEMENT_GUARANTEE.minRequests,
-                  ENGAGEMENT_GUARANTEE.consecutiveMonths,
-                )}
-              </p>
+              <p className="font-bold text-success">{t.engagement.trial.title}</p>
+              <p className="text-sm text-label">{t.engagement.trial.text}</p>
             </div>
           </div>
           <ButtonLink href="/pro/inscription" size="lg">

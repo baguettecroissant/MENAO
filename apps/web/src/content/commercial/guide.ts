@@ -500,7 +500,7 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
           ],
           [
             "« Je ne veux pas m'engager »",
-            "Au mois, c'est sans engagement : vous arrêtez quand vous voulez, depuis votre espace pro.",
+            "Vous commencez par 2 mois d'essai gratuits, et vous pouvez arrêter sans frais pendant l'essai. Ensuite, l'abonnement dure un an, avec un prix fixe.",
             "Les [formules](/pro/formules) de la page Espace Pro",
           ],
           [
@@ -616,7 +616,7 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
             title: "Ce que vous payez",
             items: [
               "Base 150 € HT par mois, Premium 500 € HT, Entreprise 1 500 € HT.",
-              "Au mois sans engagement, ou à l'année avec 2 mois offerts.",
+              "Un abonnement d'un an, payé chaque mois, ou d'avance avec 2 mois offerts.",
               "Frais de paiement Stripe à votre charge sur les sommes encaissées.",
             ],
           },
@@ -725,7 +725,7 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
         type: "callout",
         tone: "warning",
         title: "Certaines règles attendent l'avocat",
-        text: "La prospection téléphonique des artisans (notamment des micro-entrepreneurs), les promesses chiffrées (72 h, nombre de demandes) et les conditions de l'engagement à l'année attendent l'avis de l'avocat. D'ici là, appliquez cette page telle qu'elle est écrite : c'est la version la plus prudente.",
+        text: "La prospection téléphonique des artisans (notamment des micro-entrepreneurs), les promesses chiffrées (72 h, nombre de demandes) et les conditions de l'engagement d'un an attendent l'avis de l'avocat. D'ici là, appliquez cette page telle qu'elle est écrite : c'est la version la plus prudente.",
       },
       { type: "h2", id: "regles-terrain", text: "Les règles du terrain" },
       // TODO(legal): prospection entre professionnels et « 4 demandes par mois » : à faire valider
@@ -733,7 +733,7 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
       {
         type: "list",
         items: [
-          "**Ne jamais promettre un nombre de chantiers ni de demandes**, même comme un objectif. Le seul nombre de demandes écrit est celui de la garantie de l'engagement à l'année, tel qu'il figure sur la page Espace Pro.",
+          "**Ne jamais promettre un nombre de chantiers ni de demandes**, même comme un objectif. MENAO ne garantit aucun nombre de demandes.",
           "**Aucune donnée réelle en démo** : l'espace d'exemples, toujours.",
           "**Respecter la prospection entre professionnels** : se présenter, respecter le refus, tenir à jour la liste « ne plus contacter » du suivi.",
           "**Une inscription = un code** : c'est ce qui vous rattache l'artisan. Vérifiez que votre code est saisi, ou que l'artisan est passé par votre QR code ou votre lien.",
@@ -813,14 +813,18 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
         head: ["Ce que vous dites", "Le détail"],
         rows: [
           ["Trois formules", "Base 150 € HT par mois, Premium 500 € HT, Entreprise 1 500 € HT."],
-          ["Au mois", "Sans engagement : l'artisan arrête quand il veut, depuis son espace pro."],
+          [
+            "Engagement",
+            "Un an à partir du premier paiement, à la fin de l'essai, renouvelé chaque année. L'artisan arrête depuis son espace pro ou par recommandé, au plus tard 3 mois avant l'échéance. Pas d'arrêt en cours d'année.",
+          ],
+          ["Au mois", "12 prélèvements mensuels pendant l'année."],
           [
             "À l'année",
-            "Payée d'avance, 2 mois offerts : 1 500 €, 5 000 € ou 15 000 € HT par an, soit 125 €, 417 € ou 1 250 € HT par mois. Engagement de 12 mois à partir du premier paiement, après l'essai.",
+            "Payée d'avance, 2 mois offerts : 1 500 €, 5 000 € ou 15 000 € HT par an, soit 125 €, 417 € ou 1 250 € HT par mois.",
           ],
           [
             "Essai gratuit",
-            "2 mois gratuits, qui commencent le jour où il choisit sa formule sur le site. Aucun prélèvement avant la fin de l'essai, et il peut arrêter à tout moment pendant l'essai, sans rien payer.",
+            "2 mois gratuits, qui commencent le jour où sa fiche est mise en ligne. Aucun prélèvement avant la fin de l'essai, et il peut arrêter à tout moment pendant l'essai, sans rien payer.",
           ],
           [
             "Aucune commission",
@@ -842,11 +846,11 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
         type: "p",
         text: "Le reste du détail est dans le [comparatif des formules](/pro/formules) : montrez-le plutôt que de le réciter. Certaines fonctions propres à Premium et Entreprise (comptes d'équipe, par exemple) sont encore en construction : ne les promettez pas. Dans l'application, rien ne s'achète : la formule se choisit et se paie sur le site, depuis l'espace pro.",
       },
-      // TODO(legal): CGV artisans (engagement à l'année, garantie des 4 demandes, résiliation) chez
-      // l'avocat ; la garantie figure déjà sur la page Espace Pro.
+      // TODO(legal): CGV artisans (engagement d'un an, préavis de 3 mois, aucune sortie anticipée)
+      // chez l'avocat (ADR 0383).
       {
         type: "p",
-        text: "**L'année et sa garantie** : moins de 4 demandes 2 mois de suite, ou activité cessée, et l'abonné à l'année part sans frais. Les demandes qu'il apporte lui-même (depuis sa fiche ou sa carte de visite) ne comptent pas. Ne poussez pas l'année pendant l'essai ni au bilan : répondez seulement si l'artisan pose la question.",
+        text: "**Votre rôle** : l'artisan s'inscrit lui-même, en ligne, avec votre lien. Vous ne saisissez jamais sa carte et ne lui faites rien signer. Montrez-lui la case d'engagement et la date limite pour arrêter : il doit savoir à quoi il s'engage. Une inscription faite en votre présence lui ouvre 14 jours de rétractation, en plus de l'essai.",
       },
       { type: "h2", id: "mise-en-relation", text: "La mise en relation" },
       {

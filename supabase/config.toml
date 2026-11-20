@@ -472,6 +472,12 @@ verify_jwt = true
 [functions.billing-portal]
 verify_jwt = true
 
+[functions.billing-cancel]
+verify_jwt = true
+
+[functions.billing-go-live]
+verify_jwt = false
+
 [functions.connect-onboarding]
 verify_jwt = true
 

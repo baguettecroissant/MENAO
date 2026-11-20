@@ -95,7 +95,7 @@ export const fr = {
     intro: {
       eyebrow: "Espace pro",
       title: "Recevez des demandes de chantier près de chez vous",
-      lead: "Aucune commission sur vos chantiers, sans engagement. Rien à payer avant que votre entreprise soit vérifiée.",
+      lead: "Aucune commission sur vos chantiers. Rien à payer avant que votre entreprise soit vérifiée.",
       phases: [
         {
           title: "Créez votre profil",

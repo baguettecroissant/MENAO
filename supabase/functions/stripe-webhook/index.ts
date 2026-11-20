@@ -244,8 +244,20 @@ async function saveSubscription(admin: SupabaseClient, s: SubscriptionSnapshot) 
       current_period_end: s.currentPeriodEnd,
       trial_end: s.trialEnd,
       cancel_at_period_end: s.cancelAtPeriodEnd,
+      cancel_at: s.cancelAt,
       ended_at: s.endedAt,
       periodicite: s.period ?? (annualPlan ? "annuel" : "mensuel"),
+      // Engagement d'un an (ADR 0383) : version de la case, posée en métadonnée au paiement.
+      engagement_version: s.engagementVersion,
+      // Nouvel abonnement (après un arrêt) : l'essai et la demande d'arrêt repartent de zéro.
+      ...(current && current.stripe_subscription_id !== s.stripeSubscriptionId
+        ? {
+            essai_demarre_le: null,
+            arret_demande_le: null,
+            arret_effet_le: null,
+            motif_arret: null,
+          }
+        : {}),
     },
     { onConflict: "artisan_id" },
   );

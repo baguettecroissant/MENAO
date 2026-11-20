@@ -1,16 +1,15 @@
 import { GuideStepBar } from "@/components/pro/guide-step-bar";
 import {
-  ANNUAL_FREE_MONTHS,
-  ENGAGEMENT_GUARANTEE,
-  ENGAGEMENT_MONTHS,
   annualPriceCents,
-  firstPaymentDate,
-  monthlyEquivalentCents,
+  parisDay,
   parseAiAgents,
   parseClientReminders,
   planChoiceOpen,
+  planMonthlyRequests,
+  subscriptionTermSummary,
 } from "@menao/core";
-import { CalendarDays, Check, Lock, Repeat, ShieldCheck } from "lucide-react";
+import type { Route } from "next";
+import Link from "next/link";
 import {
   AiAgentsCard,
   RecentCallsCard,
@@ -18,18 +17,21 @@ import {
   VoiceMinutesCard,
 } from "@/components/pro/ai-agents-card";
 import { ClientRemindersCard } from "@/components/pro/client-reminders-card";
-import { Alert, Card, StatusBadge } from "@/components/ui";
+import { Alert, Card, StatusBadge, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
-import { ChoosePlan, ManageSubscription } from "./plan-forms";
+import { ManageSubscription, PlanCheckout } from "./plan-forms";
 
 const t = fr.pro.onboarding.plans;
 const day = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" });
+/** Jour civil (AAAA-MM-JJ) écrit en toutes lettres. */
+const civil = (d: string) => day.format(new Date(`${d}T12:00:00Z`));
 const euros = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 
 /**
- * Étape 7 — formule et abonnement (Stripe Billing, web uniquement) : au mois sans engagement ou à
- * l'année payée d'avance (ADR 0200), engagement et date du premier paiement affichés avant de payer.
+ * Étape 7 — formule et abonnement (Stripe Billing, web uniquement) : abonnement d'un an payé chaque
+ * mois ou d'avance (ADR 0200, ADR 0383). Une fois souscrit, « Ma formule » montre les dates qui
+ * comptent et le lien pour arrêter, dans MENAO.
  */
 export default async function PlanStepPage(props: PageProps<"/pro/onboarding/formule">) {
   return (
@@ -46,7 +48,9 @@ async function PlanStepContent({ searchParams }: PageProps<"/pro/onboarding/form
   const { supabase, artisan, subscription, snapshot } = await getOnboardingContext();
   const { data: plans } = await supabase
     .from("plans")
-    .select("code, nom, prix_mensuel_ht_centimes, avantages, ouverte, recommandee")
+    .select(
+      "code, nom, accroche, prix_mensuel_ht_centimes, avantages, ouverte, recommandee, limites",
+    )
     .order("ordre");
 
   // Avant la validation : la formule se choisit et se paie déjà (ADR 0353, ADR 0370), rien n'est
@@ -85,18 +89,57 @@ async function PlanStepContent({ searchParams }: PageProps<"/pro/onboarding/form
         : { data: null };
     const remindersState = reminders ? parseClientReminders(reminders) : null;
     const status = subscription.status as keyof typeof t.status;
+    // Engagement d'un an (ADR 0383) : les dates qui comptent, calculées dans le cœur.
+    const term = subscriptionTermSummary({
+      engaged: Boolean(subscription.engagement_version),
+      status: subscription.status,
+      trialEnd: subscription.trial_end,
+      goLiveAt: subscription.essai_demarre_le,
+      stopLastDay: subscription.arret_effet_le,
+      today: parisDay(new Date()),
+    });
     const label =
-      status === "trialing"
-        ? t.status.trialing(
-            subscription.trial_end ? day.format(new Date(subscription.trial_end)) : "—",
-          )
-        : status === "active"
-          ? t.status.active(
-              subscription.current_period_end
-                ? day.format(new Date(subscription.current_period_end))
-                : "—",
-            )
-          : t.status[status];
+      term.phase === "awaitingGoLive"
+        ? t.term.awaitingStatus
+        : term.phase === "trial"
+          ? t.term.trialStatus(civil(term.trialLastDay))
+          : status === "trialing"
+            ? t.status.trialing(
+                subscription.trial_end ? day.format(new Date(subscription.trial_end)) : "—",
+              )
+            : status === "active"
+              ? t.status.active(
+                  subscription.current_period_end
+                    ? day.format(new Date(subscription.current_period_end))
+                    : "—",
+                )
+              : t.status[status];
+    const termRows: [string, string][] =
+      term.phase === "awaitingGoLive"
+        ? [[t.term.engagementRow, t.term.awaitingEngagement]]
+        : term.phase === "trial"
+          ? [
+              [t.term.firstPaymentRow, civil(term.firstPaymentDay)],
+              [
+                t.term.engagementRow,
+                t.term.fromTo(civil(term.firstPaymentDay), civil(term.termLastDay)),
+              ],
+              [t.term.renounceRow, t.term.before(civil(term.firstPaymentDay))],
+            ]
+          : term.phase === "engaged"
+            ? [
+                [t.term.engagementRow, t.term.until(civil(term.termLastDay))],
+                [t.term.renewalRow, t.term.renewalOn(civil(term.renewal))],
+                [t.term.stopRow, t.term.stopBy(civil(term.cancelDeadline))],
+              ]
+            : term.phase === "stopping"
+              ? [[t.term.stoppingRow, t.term.stoppingOn(civil(term.stopLastDay))]]
+              : [];
+    const canStop =
+      term.phase !== "stopping" &&
+      ["trialing", "active", "past_due"].includes(subscription.status) &&
+      !subscription.cancel_at_period_end &&
+      !subscription.cancel_at;
     const healthy = snapshot.subscriptionActive && status !== "past_due";
     const monthlyCents = plan?.prix_mensuel_ht_centimes ?? null;
     // Refonte « Nette » (lot 46, ADR 0315) : la formule et ses agents à gauche, les minutes de
@@ -104,6 +147,7 @@ async function PlanStepContent({ searchParams }: PageProps<"/pro/onboarding/form
     return (
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_23.75rem]">
         <div className="flex min-w-0 flex-col gap-4">
+          {params.arret === "ok" && <Alert tone="success">{t.term.stopped}</Alert>}
           <Card className="flex flex-col gap-3">
             <section aria-labelledby="abonnement" className="flex flex-col gap-3">
               <div className="flex items-start justify-between gap-3">
@@ -146,8 +190,18 @@ async function PlanStepContent({ searchParams }: PageProps<"/pro/onboarding/form
                     </dd>
                   </div>
                 )}
+                {termRows.map(([dt, dd]) => (
+                  <div
+                    key={dt}
+                    className="flex justify-between gap-3 border-t border-border py-2.5"
+                  >
+                    <dt className="text-muted-foreground">{dt}</dt>
+                    <dd className="text-right font-semibold">{dd}</dd>
+                  </div>
+                ))}
               </dl>
-              {subscription.periodicite === "annuel" &&
+              {term.phase === "legacy" &&
+                subscription.periodicite === "annuel" &&
                 (status === "trialing" && subscription.trial_end ? (
                   <p className="text-sm text-muted-foreground">
                     {t.yearlyTrial(day.format(new Date(subscription.trial_end)))}
@@ -159,17 +213,27 @@ async function PlanStepContent({ searchParams }: PageProps<"/pro/onboarding/form
                     {t.yearlyActive(day.format(new Date(subscription.current_period_end)))}
                   </p>
                 ) : null)}
-              {subscription.cancel_at_period_end && subscription.current_period_end && (
-                <p className="text-sm text-muted-foreground">
-                  {t.cancelAtPeriodEnd(day.format(new Date(subscription.current_period_end)))}
-                </p>
-              )}
+              {term.phase === "legacy" &&
+                subscription.cancel_at_period_end &&
+                subscription.current_period_end && (
+                  <p className="text-sm text-muted-foreground">
+                    {t.cancelAtPeriodEnd(day.format(new Date(subscription.current_period_end)))}
+                  </p>
+                )}
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <ManageSubscription />
                 <p className="min-w-0 flex-1 text-[0.8125rem] text-muted-foreground">
                   {t.manageHint}
                 </p>
               </div>
+              {canStop && (
+                <Link
+                  href={"/pro/onboarding/formule/arreter" as Route}
+                  className={`self-start rounded-sm text-sm font-semibold text-muted-foreground underline hover:text-foreground ${focusRing}`}
+                >
+                  {t.term.stopLink}
+                </Link>
+              )}
             </section>
           </Card>
           <AiAgentsCard
@@ -206,106 +270,26 @@ async function PlanStepContent({ searchParams }: PageProps<"/pro/onboarding/form
     );
   }
 
-  const firstPayment = day.format(firstPaymentDate());
-  const chosenCode = plans?.some((p) => p.code === artisan.plan_choisi && p.ouverte)
+  const openPlans = (plans ?? []).filter((p) => p.ouverte);
+  const chosenCode = openPlans.some((p) => p.code === artisan.plan_choisi)
     ? artisan.plan_choisi
-    : null;
+    : (openPlans.find((p) => p.recommandee)?.code ?? null);
   return (
     <div className="flex flex-col gap-6">
       {params.paiement === "ok" && <Alert tone="success">{t.processing}</Alert>}
-      {choosing ? (
-        <>
-          <p className="max-w-3xl text-label">{t.choice.intro}</p>
-          <p className="flex items-start gap-3 rounded-card bg-primary-softer px-4 py-3.5 text-[0.9375rem] text-primary-strong">
-            <Lock aria-hidden="true" className="mt-0.5 size-[1.125rem] shrink-0" />
-            <span>
-              <b>{t.choice.freeTitle}</b> {t.choice.free(firstPayment)}
-            </span>
-          </p>
-        </>
-      ) : (
-        <p className="max-w-3xl text-label">{t.intro(firstPayment)}</p>
-      )}
-      {/* Refonte « Nette » (ADR 0254) : cartes de formule, la recommandée bordée de bleu nuit. */}
-      <ul className="grid gap-5 pt-2 md:grid-cols-3">
-        {(plans ?? []).map((plan) => (
-          <li key={plan.code}>
-            <section
-              aria-labelledby={`plan-${plan.code}`}
-              className={`relative flex h-full flex-col gap-4 rounded-card bg-surface p-6 shadow-card ${
-                (chosenCode ? chosenCode === plan.code : plan.recommandee)
-                  ? "border-2 border-foreground"
-                  : "border border-border"
-              }`}
-            >
-              {/* Formule mise en avant (ADR 0200). */}
-              {plan.recommandee && (
-                <span className="absolute -top-3 left-5 rounded-chip bg-foreground px-2.5 py-1 text-xs font-bold text-white">
-                  {t.recommended}
-                </span>
-              )}
-              {/* Formule choisie plus tôt (ADR 0353), rappelée au moment de payer. */}
-              {chosenCode === plan.code && (
-                <span className="absolute -top-3 right-5 rounded-chip bg-success px-2.5 py-1 text-xs font-bold text-white">
-                  {t.choice.yours}
-                </span>
-              )}
-              <h2 id={`plan-${plan.code}`} className="text-[1.375rem]">
-                {plan.nom}
-              </h2>
-              <p className="flex flex-wrap items-baseline gap-x-1.5">
-                <span className="font-display text-[2.5rem] leading-none font-bold tracking-tight">
-                  {t.priceHt(euros.format(plan.prix_mensuel_ht_centimes / 100))}
-                </span>
-                <span className="text-sm text-muted-foreground">{t.perMonth}</span>
-              </p>
-              <p className="-mt-2 text-sm text-muted-foreground">
-                {t.yearlyAlt(
-                  euros.format(annualPriceCents(plan.prix_mensuel_ht_centimes) / 100),
-                  euros.format(
-                    monthlyEquivalentCents(annualPriceCents(plan.prix_mensuel_ht_centimes)) / 100,
-                  ),
-                )}
-              </p>
-              {plan.ouverte && (
-                <span className="self-start rounded-chip bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">
-                  {t.trialBadge}
-                </span>
-              )}
-              <ul className="flex grow flex-col gap-2.5 border-t border-border pt-4 text-sm text-label">
-                {(Array.isArray(plan.avantages) ? plan.avantages : []).map((a) => (
-                  <li key={String(a)} className="flex gap-2.5">
-                    <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-success" />
-                    {String(a)}
-                  </li>
-                ))}
-              </ul>
-              {plan.ouverte ? (
-                <ChoosePlan code={plan.code} nom={plan.nom} />
-              ) : (
-                <p className="text-center text-muted-foreground">{t.soon}</p>
-              )}
-            </section>
-          </li>
-        ))}
-      </ul>
-      <ul className="flex flex-col gap-2 text-sm text-label">
-        <li className="flex gap-2.5">
-          <CalendarDays aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-          {t.monthlyNote}
-        </li>
-        <li className="flex gap-2.5">
-          <Repeat aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-          {t.yearlyNote(ENGAGEMENT_MONTHS, ANNUAL_FREE_MONTHS, firstPayment)}
-        </li>
-        <li className="flex gap-2.5">
-          <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-          {t.guaranteeNote(
-            ENGAGEMENT_GUARANTEE.minRequests,
-            ENGAGEMENT_GUARANTEE.consecutiveMonths,
-          )}
-        </li>
-      </ul>
+      <p className="max-w-3xl text-label">{choosing ? t.choice.intro : t.intro}</p>
+      {/* Formule et carte, avec l'engagement d'un an (ADR 0383, maquette du lot 74). */}
+      <PlanCheckout
+        plans={openPlans.map((p) => ({
+          code: p.code,
+          nom: p.nom,
+          accroche: p.accroche,
+          monthlyCents: p.prix_mensuel_ht_centimes,
+          featured: p.recommandee,
+          requests: planMonthlyRequests(p.limites),
+        }))}
+        defaultCode={chosenCode}
+      />
       <p className="text-sm text-muted-foreground">{t.vatNote}</p>
     </div>
   );

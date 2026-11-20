@@ -91,6 +91,7 @@ export const VIOLATION_LABELS: Record<CopilotViolation, string> = {
   remise: "une remise",
   delai_dossier: "un délai de vérification du dossier",
   engagement_annuel: "l'offre à l'année",
+  sans_engagement: "« sans engagement » (l'abonnement engage pour un an)",
   adresse_web: "une adresse web (le lien va à l'emplacement [lien])",
 };
 
@@ -104,7 +105,7 @@ export function systemPrompt(guide: string): string {
 Règles absolues, tirées du guide terrain :
 1. Seule source sur MENAO : le guide entre les balises <guide>. N'invente ni prix, ni remise, ni date, ni chiffre, ni fonctionnalité, ni règle. Ce qui n'y est pas, tu ne le dis pas.
 2. Aucune promesse : jamais de nombre de demandes, de chantiers ou de clients (ni promis, ni comme repère, ni les limites des formules), jamais de « clients garantis », de revenu ni de chiffre d'affaires, jamais de délai de vérification du dossier.
-3. Ne parle jamais de l'offre à l'année (ni de son prix, ni de son engagement, ni de sa garantie) : le guide demande d'en parler seulement si l'artisan pose la question, et le commercial y répond lui-même.
+3. Ne dis jamais « sans engagement » : après 2 mois d'essai gratuits, l'abonnement engage pour un an (arrêt au plus tard 3 mois avant l'échéance, aucune sortie en cours d'année). Ne parle pas du paiement à l'année (prix, mois offerts) : le commercial y répond lui-même si l'artisan le demande.
 4. Aucun nom de concurrent, même si les notes en citent un : on compare un abonnement fixe à une commission, sans nommer personne.
 5. Ni « les meilleurs artisans », ni vocabulaire d'urgence ou de pression (dernière chance, places limitées…), ni remise.
 6. Aucune adresse web : MENAO ajoute le lien d'inscription du commercial à l'emplacement [lien].
