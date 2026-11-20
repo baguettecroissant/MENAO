@@ -109,7 +109,13 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
   await plans.getByRole("button", { name: /^À l'année/ }).click();
   await expect(plans.getByText(/^125\s€$/)).toBeVisible();
   await expect(plans.getByText(/^Soit 1\s500\s€ HT facturés par an/)).toBeVisible();
-  await expect(plans.getByText("Engagement 12 mois, payé d'avance").first()).toBeVisible();
+  await expect(plans.getByText("Payé d'avance pour 12 mois").first()).toBeVisible();
+  // Engagement d'un an (ADR 0383) : les 4 étapes, l'arrêt jusqu'à 3 mois avant, plus de garantie.
+  await expect(
+    plans.getByRole("heading", { name: "Comment marche votre abonnement" }),
+  ).toBeVisible();
+  await expect(plans.getByText("Arrêter, simplement")).toBeVisible();
+  await expect(page.getByText("Garantie de l'engagement")).toHaveCount(0);
   // Comparatif (ADR 0265) : sa propre section, avec la catégorie « Assistants IA ».
   const compare = page.getByRole("region", { name: "Comparez les fonctionnalités" });
   const comparison = compare.getByRole("table", {

@@ -12,9 +12,9 @@ insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values
   ('17801780-0000-4000-8000-000000000004', 'engag.sup@example.test', '{"role":"support"}', '{}'),
   ('17801780-0000-4000-8000-000000000005', 'engag.adm@example.test', '{"role":"admin"}', '{}');
 
-create function pg_temp.connecter(uid uuid, app_role text) returns void language sql as $$
+create function pg_temp.connecter(uid uuid, app_role text, aal text default 'aal1') returns void language sql as $$
   select set_config('request.jwt.claims', jsonb_build_object(
-    'sub', uid, 'role', 'authenticated', 'app_metadata', jsonb_build_object('role', app_role)
+    'sub', uid, 'role', 'authenticated', 'aal', aal, 'app_metadata', jsonb_build_object('role', app_role)
   )::text, true);
 $$;
 create function pg_temp.artisan(uid uuid) returns uuid language sql as $$
@@ -79,7 +79,7 @@ select results_eq(
   $$ select count(*)::int from public.subscription_term_acceptances $$, array[0],
   'le support ne voit pas les acceptations');
 
-select pg_temp.connecter('17801780-0000-4000-8000-000000000005', 'admin');
+select pg_temp.connecter('17801780-0000-4000-8000-000000000005', 'admin', 'aal2');
 select results_eq(
   $$ select count(*)::int from public.subscription_term_acceptances $$, array[2],
   'l''administration voit toutes les acceptations');
