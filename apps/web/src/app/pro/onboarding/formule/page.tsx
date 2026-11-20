@@ -282,6 +282,7 @@ async function PlanStepContent({ searchParams }: PageProps<"/pro/onboarding/form
           nom: p.nom,
           accroche: p.accroche,
           monthlyCents: p.prix_mensuel_ht_centimes,
+          featured: p.recommandee,
         }))}
         defaultCode={chosenCode}
       />

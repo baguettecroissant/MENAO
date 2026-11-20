@@ -6,7 +6,7 @@ import {
   ENGAGEMENT_MONTHS,
   annualPriceCents,
 } from "@menao/core";
-import { CalendarDays, CreditCard, Lock } from "lucide-react";
+import { CalendarDays, CreditCard, Lock, ShieldCheck } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useActionState, useState } from "react";
@@ -25,6 +25,8 @@ export type CheckoutPlan = {
   nom: string;
   accroche: string | null;
   monthlyCents: number;
+  /** Formule mise en avant (`plans.recommandee`) : encadré vert et badge. */
+  featured: boolean;
 };
 
 /**
@@ -50,17 +52,27 @@ export function PlanCheckout({
           {plans.map((p) => (
             <label
               key={p.code}
-              className={`flex cursor-pointer items-center gap-3 rounded-2xl bg-surface px-4 py-3.5 ${
-                code === p.code ? "border-2 border-primary" : "border border-border"
+              className={`relative flex cursor-pointer items-center gap-3 rounded-2xl px-4 py-3.5 ${
+                p.featured
+                  ? `mt-2.5 border-[2.5px] border-success bg-success-soft/50 pt-5 ${code === p.code ? "shadow-card" : ""}`
+                  : code === p.code
+                    ? "border-2 border-primary bg-surface"
+                    : "border border-border bg-surface"
               } has-focus-visible:ring-2 has-focus-visible:ring-primary`}
             >
+              {/* Formule mise en avant (retour de l'utilisateur du 20/11/2026). */}
+              {p.featured && (
+                <span className="absolute -top-3 left-4 rounded-chip bg-success px-2.5 py-1 text-xs font-bold text-white">
+                  {c.featured}
+                </span>
+              )}
               <input
                 type="radio"
                 name="plan"
                 value={p.code}
                 checked={code === p.code}
                 onChange={() => setCode(p.code)}
-                className="size-5 shrink-0 accent-primary"
+                className={`size-5 shrink-0 ${p.featured ? "accent-success" : "accent-primary"}`}
               />
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="text-[0.96875rem] font-bold">{p.nom}</span>
@@ -100,6 +112,12 @@ export function PlanCheckout({
         </fieldset>
       </div>
       <div className="flex flex-col gap-4">
+        <p className="flex gap-3 rounded-2xl bg-success-soft p-4 text-sm text-label">
+          <ShieldCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-success" />
+          <span>
+            <b className="text-foreground">{c.freeTitle}</b> {c.freeText}
+          </span>
+        </p>
         <section
           aria-labelledby="calendrier"
           className="flex flex-col rounded-2xl border border-border bg-surface px-4 py-1.5"
@@ -113,7 +131,6 @@ export function PlanCheckout({
           </h2>
           <dl className="flex flex-col text-sm">
             {[
-              [c.today, c.todayValue, "font-bold"],
               [c.trial, c.trialValue, "font-semibold"],
               [
                 c.then,

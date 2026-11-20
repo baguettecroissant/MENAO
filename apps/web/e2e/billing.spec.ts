@@ -23,8 +23,9 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
   // Formule et carte (ADR 0383) : formule, mode de paiement, calendrier, puis deux cases.
   const base = page.getByRole("radio", { name: /^Base/ });
   await expect(page.getByText("150 € / mois")).toBeVisible();
-  // Premium recommandée, cochée par défaut (ADR 0200).
-  await expect(page.getByRole("radio", { name: /^Premium/ })).toBeChecked();
+  // Premium mise en avant (encadré vert, badge), cochée par défaut (ADR 0200).
+  await expect(page.getByRole("radio", { name: /Premium/ })).toBeChecked();
+  await expect(page.getByText("Meilleur rapport qualité-prix")).toBeVisible();
   await expect(page.getByText("2 mois, dès la mise en ligne de votre fiche")).toBeVisible();
   await base.check();
   await expect(page.getByText("150 € HT par mois pendant 12 mois")).toBeVisible();
@@ -167,7 +168,7 @@ test("abonnement : Checkout, webhook signé et idempotent, portail", async ({ pa
 test("avant la validation, la formule se choisit et se paie déjà (ADR 0370)", async ({ page }) => {
   await signIn(page, "artisan@example.test");
   await page.goto("/pro/onboarding/formule");
-  await expect(page.getByText("0 €, rien n'est prélevé")).toBeVisible();
+  await expect(page.getByText("Les 2 premiers mois, rien n'est prélevé.")).toBeVisible();
   // Paiement proposé sans attendre la validation ; l'ancien choix sans paiement a disparu.
   await expect(page.getByRole("button", { name: "Enregistrer ma carte" })).toBeVisible();
   await expect(page.getByRole("button", { name: /^Choisir la formule/ })).toHaveCount(0);
