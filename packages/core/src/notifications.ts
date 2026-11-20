@@ -30,6 +30,8 @@ export const OPTIONAL_NOTIFICATIONS = {
     // Relances de l'inscription : validé pas encore visible, compte non finalisé (ADR 0219).
     "activation_relance",
     "finalisation_relance",
+    // E-mail du lundi aux conseillers : leur semaine (ADR 0381).
+    "conseiller_semaine",
   ],
 } as const;
 export type EmailPreferenceKey = keyof typeof OPTIONAL_NOTIFICATIONS;

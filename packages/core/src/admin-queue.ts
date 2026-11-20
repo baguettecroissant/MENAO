@@ -7,7 +7,7 @@
  *   12 h, notifications Stripe ou DocuSeal en échec.
  * - Important : demandes de suppression de compte (délai d'un mois), assurances qui expirent sous
  *   7 jours, paiements échoués, abonnements impayés, nouveaux artisans à accompagner (ADR 0160),
- *   artisans en manque de demandes (ADR 0282).
+ *   artisans en manque de demandes (ADR 0282), conseillers en « point à prévoir » (ADR 0381).
  * - À faire : dossiers à vérifier, contrôles aléatoires du mois, documents renouvelés.
  */
 
@@ -22,6 +22,7 @@ export const ADMIN_QUEUE_KINDS = [
   "impayes",
   "accompagnements",
   "objectifs",
+  "conseillers",
   "dossiers",
   "controles",
   "renouvellements",
@@ -48,6 +49,9 @@ const RULES: Record<AdminQueueKind, { severity: AdminQueueSeverity; pole: AdminP
   // Nouveaux artisans et objectifs de demandes : pôle « Artisans » (ADR 0283).
   accompagnements: { severity: "important", pole: "verification" },
   objectifs: { severity: "important", pole: "verification" },
+  // Conseillers deux semaines sous la moitié de leur objectif : pôle « Clients et chantiers »
+  // (croissance), avec le lancement.
+  conseillers: { severity: "important", pole: "activite" },
   dossiers: { severity: "a_faire", pole: "verification" },
   controles: { severity: "a_faire", pole: "verification" },
   renouvellements: { severity: "a_faire", pole: "verification" },

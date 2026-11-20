@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import {
   acquisitionCodeFormSchema,
+  commercialPaceFormSchema,
   launchMemberFormSchema,
   launchPlanFileSchema,
   launchSettingsFormSchema,
   launchTaskFormSchema,
+  paceSettingsFormSchema,
   parseMyLaunchPlan,
 } from "../src/launch-plan";
 import { messages } from "../src/messages";
@@ -700,5 +702,57 @@ describe("formulaire des réglages des chiffres (F-66, lot 2)", () => {
     expect(errors({ ...settingsForm, seuil_couverture: "21" })).toEqual({
       seuil_couverture: [messages.launchCoverageThresholdInvalid],
     });
+  });
+});
+
+describe("réglages du rythme des conseillers (ADR 0381)", () => {
+  const base = {
+    objectif_valides: "500",
+    debut_recrutement: "2027-01-11",
+    fin_recrutement: "2027-03-31",
+    rythme_semaine: "7",
+    rythme_demarrage: "3",
+    semaines_demarrage: "2",
+    repere_visites_jour: "8",
+    email_lundi: "on",
+    classement_visible: "on",
+  };
+  it("lit le formulaire : nombres, dates et cases", () => {
+    const parsed = paceSettingsFormSchema.parse(base);
+    expect(parsed).toEqual({
+      objectif_valides: 500,
+      debut_recrutement: "2027-01-11",
+      fin_recrutement: "2027-03-31",
+      rythme_semaine: 7,
+      rythme_demarrage: 3,
+      semaines_demarrage: 2,
+      repere_visites_jour: 8,
+      email_lundi: true,
+      classement_visible: true,
+      alerte_retard: false,
+    });
+  });
+  it("garde un objectif commun vide, mais exige le rythme", () => {
+    expect(paceSettingsFormSchema.parse({ ...base, objectif_valides: "" }).objectif_valides).toBeNull();
+    expect(paceSettingsFormSchema.safeParse({ ...base, rythme_semaine: "" }).success).toBe(false);
+    expect(paceSettingsFormSchema.safeParse({ ...base, rythme_semaine: "0" }).success).toBe(false);
+    expect(paceSettingsFormSchema.safeParse({ ...base, semaines_demarrage: "13" }).success).toBe(false);
+  });
+  it("refuse une fin avant le début", () => {
+    expect(
+      paceSettingsFormSchema.safeParse({ ...base, fin_recrutement: "2027-01-01" }).success,
+    ).toBe(false);
+  });
+  it("lit l'objectif propre d'un conseiller", () => {
+    const id = "6f1d2c1e-8b1a-4c55-9d3e-2b7a1f0c9e11";
+    expect(
+      commercialPaceFormSchema.parse({ commercial_id: id, rythme_semaine: "4", rythme_raison: " Temps partiel " }),
+    ).toEqual({ commercial_id: id, rythme_semaine: 4, rythme_raison: "Temps partiel" });
+    expect(commercialPaceFormSchema.parse({ commercial_id: id, rythme_semaine: "" })).toEqual({
+      commercial_id: id,
+      rythme_semaine: null,
+      rythme_raison: null,
+    });
+    expect(commercialPaceFormSchema.safeParse({ commercial_id: "", rythme_semaine: "4" }).success).toBe(false);
   });
 });

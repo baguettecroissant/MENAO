@@ -1453,3 +1453,45 @@ describe("recrutement des conseillers (ADR 0380)", () => {
     expect(email.html).not.toContain("/notifications");
   });
 });
+
+describe("e-mail du lundi aux conseillers (ADR 0381)", () => {
+  const ctx = { siteUrl: "https://menao.fr", firstName: "Sarah" };
+  const data = {
+    semaine: "2027-02-08",
+    valides: 5,
+    objectif: 7,
+    nouvel_objectif: 7,
+    equipe: 189,
+    cible: 500,
+    date_cible: "2027-03-31",
+  };
+
+  it("donne la semaine passée, l'objectif de la nouvelle et le total de l'équipe", () => {
+    const content = notificationContent("conseiller_semaine", data, ctx);
+    expect(content.subject).toBe("Votre semaine : 5\u00a0artisans validés");
+    expect(content.paragraphs).toEqual([
+      "Bonjour Sarah,",
+      "Semaine du lundi 8 février : 5\u00a0artisans validés sur 7. Il en manquait 2 pour atteindre l'objectif.",
+      "Objectif de cette semaine : 7\u00a0artisans validés.",
+      "L'équipe en est à 189 sur 500 d'ici le mercredi 31 mars. Chaque artisan validé compte.",
+    ]);
+    expect(content.cta.url).toBe("https://menao.fr/commercial/resultats");
+  });
+
+  it("salue l'objectif atteint, et se passe de ce qui manque", () => {
+    const content = notificationContent(
+      "conseiller_semaine",
+      { semaine: "2027-02-08", valides: 1, objectif: 1 },
+      ctx,
+    );
+    expect(content.subject).toBe("Votre semaine : 1\u00a0artisan validé");
+    expect(content.paragraphs).toEqual([
+      "Bonjour Sarah,",
+      "Semaine du lundi 8 février : 1\u00a0artisan validé sur 1. Objectif atteint : bravo !",
+    ]);
+  });
+
+  it("garde le pied de page des comptes MENAO", () => {
+    expect(renderNotification("conseiller_semaine", data, ctx).text).toContain("compte MENAO");
+  });
+});

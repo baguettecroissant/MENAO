@@ -6,10 +6,12 @@ import {
 } from "@menao/core";
 import type { Metadata } from "next";
 import { z } from "zod";
+import { PacePanel } from "@/components/commercial/pace-panel";
 import { EmptyState } from "@/components/empty-state";
 import { ListPanel, ListRow, type ListTone } from "@/components/list-kit";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { getCommercialPace } from "@/lib/commercial/pace";
 import { getCommercialSpace } from "@/lib/commercial/space";
 import { formatDay } from "@/lib/format";
 
@@ -74,18 +76,20 @@ function Tile({ label, value, hint }: { label: string; value: string; hint?: str
 }
 
 /**
- * « Mes résultats » des commerciaux (F-65, lot 3, ADR 0207) : inscrits, validés et abonnés (mois
+ * « Mes résultats » des commerciaux (F-65, lot 3, ADR 0207 ; ma semaine en tête, ADR 0381) : inscrits, validés et abonnés (mois
  * en cours et total), objectif du mois s'il est fixé, prospects suivis, les six derniers mois, puis
  * les primes (montants fixés par l'équipe, en attente, à payer, payées) et leur règle.
  */
 export default async function CommercialResultsPage() {
   const space = await getCommercialSpace();
-  const [results, bonusList] = space.active
+  const [results, bonusList, pace] = space.active
     ? await Promise.all([
         space.supabase.rpc("commercial_results"),
         space.supabase.rpc("commercial_bonuses_list"),
+        // Ma semaine, objectif commun et classement (ADR 0381).
+        getCommercialPace(space.supabase),
       ])
-    : [null, null];
+    : [null, null, null];
   const parsed = results?.error ? null : resultsSchema.safeParse(results?.data);
   const data = parsed?.success ? parsed.data : null;
   const bonuses = bonusList?.data ?? [];
@@ -114,6 +118,7 @@ export default async function CommercialResultsPage() {
           <Alert tone="error">{fr.commercialProspects.errors.unavailable}</Alert>
         ) : (
           <>
+            {pace ? <PacePanel pace={pace} /> : <Alert tone="error">{t.pace.unavailable}</Alert>}
             <dl className="grid gap-px overflow-hidden rounded-card border border-border bg-border shadow-card sm:grid-cols-3">
               <Tile
                 label={t.figures.signups}

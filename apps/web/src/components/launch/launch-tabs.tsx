@@ -9,12 +9,14 @@ const t = fr.admin.launch.tabs;
 const TABS = [
   { key: "planning", href: "/admin/lancement", label: t.planning },
   { key: "chiffres", href: "/admin/lancement/chiffres", label: t.figures },
+  // Rythme des conseillers vers l'objectif commun (ADR 0381).
+  { key: "rythme", href: "/admin/lancement/rythme", label: t.pace },
   { key: "codes", href: "/admin/lancement/codes", label: t.codes },
 ] as const;
 export type LaunchTab = (typeof TABS)[number]["key"];
 
 /**
- * Onglets en pilule en tête des pages Lancement : planning, chiffres, codes de suivi. Le menu du
+ * Onglets en pilule en tête des pages Lancement : planning, chiffres, rythme, codes de suivi. Le menu du
  * back-office garde une seule entrée « Lancement ». Onglet courant passé par la page (pas lu dans
  * l'adresse : rendu serveur, sans script).
  */

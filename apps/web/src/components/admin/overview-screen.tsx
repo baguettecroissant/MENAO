@@ -14,6 +14,7 @@ import {
   ClipboardCheck,
   CreditCard,
   FileClock,
+  Gauge,
   HeartHandshake,
   Hourglass,
   MessagesSquare,
@@ -68,6 +69,7 @@ function entry(
   now: Date,
   newArtisans: NewArtisans | null,
   leadAlerts = 0,
+  paceAlerts = 0,
 ): Entry {
   switch (kind) {
     case "dossiers":
@@ -196,6 +198,13 @@ function entry(
         hint: todoT.leadsHint,
         action: { href: "/admin/objectifs?statut=alertes", label: todoT.leadsAction },
       };
+    case "conseillers":
+      return {
+        icon: Gauge,
+        title: todoT.pace(paceAlerts),
+        hint: todoT.paceHint,
+        action: { href: "/admin/lancement/rythme", label: todoT.paceAction },
+      };
     case "notifications":
       return {
         icon: TriangleAlert,
@@ -227,6 +236,7 @@ export function OverviewScreen({
   todo,
   newArtisans = null,
   leadAlerts = 0,
+  paceAlerts = 0,
   now,
   pole = null,
   basePath = "/admin",
@@ -238,6 +248,8 @@ export function OverviewScreen({
   newArtisans?: NewArtisans | null;
   /** Artisans en manque de demandes (ADR 0282). */
   leadAlerts?: number;
+  /** Conseillers en « point à prévoir » (ADR 0381). */
+  paceAlerts?: number;
   now: Date;
   /** Pôle choisi dans les filtres (`?pole=`), ou tous. */
   pole?: AdminPole | null;
@@ -256,6 +268,7 @@ export function OverviewScreen({
       impayes: o.abonnements.impayes,
       accompagnements: newArtisans?.a_accompagner ?? 0,
       objectifs: leadAlerts,
+      conseillers: paceAlerts,
       dossiers: o.artisans.en_verification,
       controles: todo.spotChecks,
       renouvellements: o.documents.renouvellements,
@@ -369,7 +382,7 @@ export function OverviewScreen({
                 shown
                   .filter((item) => item.severity === severity)
                   .map((item) => {
-                    const e = entry(item.kind, o, todo, now, newArtisans, leadAlerts);
+                    const e = entry(item.kind, o, todo, now, newArtisans, leadAlerts, paceAlerts);
                     const deadline = deadlineText(item, now);
                     return (
                       <li key={item.kind}>

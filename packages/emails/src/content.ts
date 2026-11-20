@@ -96,6 +96,8 @@ export const NOTIFICATION_TYPES = [
   "recrutement_annulation",
   "recrutement_reponse",
   "recrutement_demo",
+  // E-mail du lundi aux conseillers (ADR 0381).
+  "conseiller_semaine",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -2192,6 +2194,41 @@ export function notificationContent(
             cle && /^[a-f0-9]{32}$/.test(cle) ? `/commercial/demo/${cle}` : "/devenir-conseiller",
           ),
         },
+      };
+    }
+    case "conseiller_semaine": {
+      // E-mail du lundi aux conseillers (ADR 0381) : leur semaine passée, l'objectif de la nouvelle.
+      const week = dateDay(text(data, "semaine"));
+      const done = integer(data, "valides") ?? 0;
+      const goal = integer(data, "objectif");
+      const next = integer(data, "nouvel_objectif");
+      const team = integer(data, "equipe");
+      const target = integer(data, "cible");
+      const targetDay = dateDay(text(data, "date_cible"));
+      const validated = (n: number) => `${n}\u00a0artisan${n > 1 ? "s" : ""} validé${n > 1 ? "s" : ""}`;
+      const result =
+        goal === null || goal === 0
+          ? null
+          : done >= goal
+            ? "Objectif atteint : bravo !"
+            : `Il en manquait ${goal - done} pour atteindre l'objectif.`;
+      return {
+        subject: `Votre semaine : ${validated(done)}`,
+        preview:
+          next === null ? "Votre semaine passée chez MENAO." : `Objectif de cette semaine : ${next}.`,
+        title: "Votre semaine",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${week ? `Semaine du ${week}` : "La semaine dernière"} : ${validated(done)}${goal ? ` sur ${goal}` : ""}.${result ? ` ${result}` : ""}`,
+          ...(next === null ? [] : [`Objectif de cette semaine : ${validated(next)}.`]),
+          ...(team === null || target === null
+            ? []
+            : [
+                `L'équipe en est à ${team} sur ${target}${targetDay ? ` d'ici le ${targetDay}` : ""}. Chaque artisan validé compte.`,
+              ]),
+        ],
+        quote: null,
+        cta: { label: "Voir mes résultats", url: link("/commercial/resultats") },
       };
     }
   }
