@@ -17,6 +17,7 @@ import { formatDay } from "@/lib/format";
 import { ConnectOverviewPanel } from "./connect-overview";
 import { ConnectStatusPanel } from "./connect-status";
 import { PaymentHow } from "./payment-how";
+import { StripeExplainerCard, StripeExplainerLink } from "@/components/pro/stripe-explainer";
 import { StripeChecklist } from "./stripe-checklist";
 
 const t = fr.pro.onboarding.connect;
@@ -104,6 +105,8 @@ async function PaymentsStepContent({ searchParams }: PageProps<"/pro/onboarding/
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
       <div className="flex flex-col gap-4">
+        {/* Stripe expliqué aux artisans (ADR 0384) : en tête tant que les paiements ne sont pas actifs. */}
+        {status !== "actif" && <StripeExplainerCard />}
         <Card>
           <section aria-labelledby="paiements" className="flex flex-col gap-4">
             <h2 id="paiements" className="text-lg">
@@ -148,6 +151,7 @@ async function PaymentsStepContent({ searchParams }: PageProps<"/pro/onboarding/
         {/* Avant le formulaire Stripe (ADR 0347) : ce qu'il demande, à garder sous la main. */}
         {status === "a_demarrer" && <StripeChecklist withoutIdentity={pieceShared} />}
         <PaymentHow />
+        {status === "actif" && <StripeExplainerLink />}
       </div>
     </div>
   );

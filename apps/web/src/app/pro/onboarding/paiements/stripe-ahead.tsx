@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { StripeExplainerLink } from "@/components/pro/stripe-explainer";
 import { fr } from "@/i18n/fr";
 
 const t = fr.pro.onboarding.connect.ahead;
@@ -64,7 +65,11 @@ export function StripeAhead({ sent }: { sent: StripeAheadSent }) {
                 {index + 1}
               </span>
               <span className="flex flex-col">
-                <span className="text-[0.90625rem] font-semibold">{item.title}</span>
+                <span className="flex items-center gap-2 text-[0.90625rem] font-semibold">
+                  {item.title}
+                  {/* Le code par SMS surprend : le mémo s'ouvre sur cette question (ADR 0384). */}
+                  {index === 0 && <StripeExplainerLink focus="sms" asIcon />}
+                </span>
                 <span className="text-[0.8125rem] text-muted-foreground">{item.hint}</span>
               </span>
             </li>

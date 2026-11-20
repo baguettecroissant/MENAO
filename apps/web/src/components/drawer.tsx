@@ -13,6 +13,7 @@ export function Drawer({
   title,
   backLabel,
   children,
+  side = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -20,6 +21,8 @@ export function Drawer({
   /** Lien « Retour » des maquettes, en haut à droite. */
   backLabel: string;
   children: ReactNode;
+  /** Sur ordinateur, panneau collé à droite sur toute la hauteur (mémo, ADR 0384). */
+  side?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -40,7 +43,11 @@ export function Drawer({
         // Clic sur le fond assombri (en dehors du contenu).
         if (event.target === event.currentTarget) onClose();
       }}
-      className="m-0 mt-auto max-h-[90dvh] w-full max-w-none overflow-y-auto rounded-t-[1.625rem] bg-surface p-0 text-foreground shadow-raised backdrop:bg-[#0b1230]/50 sm:m-auto sm:max-w-xl sm:rounded-[1.375rem]"
+      className={`m-0 mt-auto max-h-[90dvh] w-full max-w-none overflow-y-auto rounded-t-[1.625rem] bg-surface p-0 text-foreground shadow-raised backdrop:bg-[#0b1230]/50 ${
+        side
+          ? "sm:my-0 sm:mr-0 sm:ml-auto sm:h-dvh sm:max-h-dvh sm:max-w-[30rem] sm:rounded-none sm:rounded-l-[1.375rem]"
+          : "sm:m-auto sm:max-w-xl sm:rounded-[1.375rem]"
+      }`}
     >
       {/* Refonte « Nette » (ADR 0255) : poignée sur téléphone, grand titre, fermeture ronde. */}
       <span

@@ -9599,6 +9599,66 @@ export const fr = {
           ],
         },
         start: "Configurer mes paiements avec Stripe",
+        // Stripe expliqué aux artisans (F-185, ADR 0384, maquette du lot 80). Faits relus sur les
+        // pages de Stripe le 20/11/2026 : agrément de la Banque centrale d'Irlande, fonds
+        // disponibles environ 3 jours ouvrés après un paiement, premier virement sous 7 à 14 jours.
+        explainer: {
+          cardTitle: "Stripe, c'est quoi ?",
+          cardText:
+            "Le service qui encaisse les paiements de vos clients, comme le terminal de carte d'un magasin. L'argent arrive chez vous ; MENAO n'y touche jamais.",
+          open: "Comprendre en 1 minute",
+          link: "Stripe, c'est quoi ?",
+          infoLabel: "En savoir plus",
+          title: "Stripe en 1 minute",
+          lead: "Les réponses aux questions que se posent tous les artisans.",
+          items: [
+            {
+              id: "qui",
+              icon: "bank",
+              q: "Qui est Stripe ?",
+              a: "Une entreprise de paiement en ligne, agréée et contrôlée en Europe par la Banque centrale d'Irlande. Des millions d'entreprises dans le monde encaissent leurs clients avec elle.",
+            },
+            {
+              id: "usage",
+              icon: "card",
+              q: "À quoi ça vous sert ?",
+              a: "Vos clients paient l'acompte et le solde par carte, en ligne. Stripe reçoit l'argent et le vire sur votre compte bancaire, comme le terminal de carte d'un magasin.",
+            },
+            {
+              id: "argent",
+              icon: "shield",
+              q: "MENAO touche-t-il à votre argent ?",
+              a: "Jamais. Il va de votre client à votre compte Stripe, puis à votre banque. MENAO ne prend aucune commission sur vos chantiers.",
+            },
+            {
+              id: "identite",
+              icon: "id",
+              q: "Pourquoi votre pièce d'identité ?",
+              a: "La loi oblige tout service de paiement à vérifier qui reçoit l'argent, contre la fraude. Votre banque fait la même chose à l'ouverture d'un compte.",
+            },
+            {
+              id: "sms",
+              icon: "phone",
+              q: "Pourquoi un code par SMS ?",
+              a: "Il protège votre compte, comme votre banque en ligne : personne d'autre que vous ne peut changer le compte où arrive votre argent.",
+            },
+            {
+              id: "frais",
+              icon: "euro",
+              q: "Combien ça coûte ?",
+              a: "Des frais de Stripe sur chaque paiement reçu, déduits automatiquement, au tarif public de Stripe. Pas d'abonnement Stripe, rien à payer si vous n'encaissez rien.",
+            },
+            {
+              id: "delai",
+              icon: "clock",
+              q: "Quand l'argent arrive-t-il ?",
+              a: "Stripe le vire automatiquement sur votre compte bancaire, environ 3 jours ouvrés après chaque paiement (le tout premier virement prend 7 à 14 jours). Vous suivez tout dans votre espace Stripe.",
+            },
+          ],
+          pricing: "Voir les tarifs de Stripe",
+          done: "J'ai compris, je continue",
+          close: "Fermer",
+        },
         // Compléments saisis dans MENAO, transmis directement à Stripe (ADR 0215).
         // Avant Stripe (F-181, ADR 0378, maquette du lot 75) : ce que MENAO transmet pour
         // l'artisan, et ce que Stripe va lui demander.

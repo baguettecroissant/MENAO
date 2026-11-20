@@ -349,6 +349,12 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.getByRole("link", { name: "Plus tard" }).click();
   await expect(page).toHaveURL(/\/pro\/onboarding\/paiements$/);
   await expect(page.getByText("ne touche jamais l'argent de vos chantiers")).toBeVisible();
+  // Stripe expliqué (ADR 0384) : l'encart ouvre le mémo des 7 questions.
+  await page.getByRole("button", { name: "Comprendre en 1 minute" }).click();
+  const memo = page.getByRole("dialog", { name: "Stripe en 1 minute" });
+  await expect(memo.getByText("Pourquoi un code par SMS ?")).toBeVisible();
+  await memo.getByRole("button", { name: "J'ai compris, je continue" }).click();
+  await expect(memo).toBeHidden();
   await expect(
     page.getByRole("button", { name: "Configurer mes paiements avec Stripe" }),
   ).toBeVisible();
