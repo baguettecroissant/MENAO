@@ -27,8 +27,8 @@ export const TERM_CHECKBOX = {
   detail: "Je peux renoncer sans frais à tout moment pendant l'essai.",
 } as const;
 export const TERM_CHECKBOX_TEXT = `${TERM_CHECKBOX.lead} ${TERM_CHECKBOX.detail}`;
-/** Version des conditions de vente acceptées : projet en attente de l'avocat (TODO(legal)). */
-export const CGV_VERSION = "projet-2026-11-20";
+/** Version des conditions de vente acceptées : version provisoire publiée, en attente de l'avocat (TODO(legal)). */
+export const CGV_VERSION = "2026-11-22-provisoire";
 
 const DAY_MS = 86_400_000;
 

@@ -3992,9 +3992,6 @@ export const fr = {
     eyebrow: "Informations légales",
     navTitle: "Informations légales",
     draftBadge: "Version provisoire",
-    draftTitle: "Document en cours de rédaction",
-    draftBody:
-      "Ce document est en cours de validation juridique. Sa version définitive sera publiée avant l'ouverture du service.",
     terms: "Conditions générales d'utilisation",
     privacy: "Politique de confidentialité",
     cgv: "Conditions générales de vente artisans",

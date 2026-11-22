@@ -5,7 +5,8 @@
 export const LEGAL_DOCUMENT_VERSIONS = {
   cgu: "2026-10-09-brouillon",
   confidentialite: "2026-10-09-brouillon",
-  cgv_artisan: "2026-10-09-brouillon",
+  // Version provisoire publiée sur /cgv-artisans (même valeur que `CGV_VERSION`).
+  cgv_artisan: "2026-11-22-provisoire",
 } as const;
 
 export type LegalDocument = keyof typeof LEGAL_DOCUMENT_VERSIONS;
