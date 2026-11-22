@@ -128,7 +128,7 @@ export type BonusSettingsRow = {
 
 /**
  * Barème réglé dans le back-office (`commercial_bonus_settings`), comme le calcule la base : une
- * prime Premium ou Entreprise vide reprend celle de Base. Barème annoncé si rien n'est réglé.
+ * prime Premium ou Ultimate vide reprend celle de Base. Barème annoncé si rien n'est réglé.
  */
 export function recruitmentRates(row: BonusSettingsRow | null | undefined): RecruitmentRates {
   if (row?.prime_validation_centimes == null || row.prime_abonnement_centimes == null) {

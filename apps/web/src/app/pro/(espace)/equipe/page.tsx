@@ -22,7 +22,7 @@ const TONES = {
 /**
  * « Mon équipe » du patron (F-89, ADR 0240), depuis « Mon profil » : places de la formule (patron
  * compris), membres et leur état, invitation par e-mail. Formule Base : « Avec Premium et
- * Entreprise ».
+ * Ultimate ».
  */
 export default async function TeamPage() {
   const space = await requireProSpace();

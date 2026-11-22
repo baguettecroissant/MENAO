@@ -174,7 +174,7 @@ async function runExport(
 
     invoices = job.includeInvoices ? await loadInvoices(admin, job) : null;
     expenses = job.includeExpenses ? await loadExpenses(admin, job) : null;
-    // Agent comptable avancé (Premium et Entreprise, ADR 0237) : synthèse ajoutée à l'archive.
+    // Agent comptable avancé (Premium et Ultimate, ADR 0237) : synthèse ajoutée à l'archive.
     const { data: agents } = await admin.rpc("voice_artisan_agents", {
       p_artisan_id: job.artisanId,
     });

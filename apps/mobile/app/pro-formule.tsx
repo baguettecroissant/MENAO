@@ -140,7 +140,7 @@ function Plan({ plan }: { plan: MyPlan }) {
           icon={GROUP_ICONS[group.title] ?? LayoutGrid}
           title={group.title}
           count={group.features.length}
-          // Premium et Entreprise : les deux premières rubriques ouvertes, pour voir « En plus ».
+          // Premium et Ultimate : les deux premières rubriques ouvertes, pour voir « En plus ».
           initiallyOpen={plan.added > 0 && index < 2}
         >
           {group.features.map((feature) => (

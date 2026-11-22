@@ -83,7 +83,7 @@ function ReminderTrail({ sent }: { sent: number }) {
 
 /**
  * « Suivi » de la rubrique Argent (F-87, ADR 0237 ; maquette du lot 37), agent comptable avancé
- * (Premium et Entreprise) : le mois en bref comparé au précédent, ce qui reste à encaisser avec
+ * (Premium et Ultimate) : le mois en bref comparé au précédent, ce qui reste à encaisser avec
  * son ancienneté et ses relances, le réglage des relances automatiques et ce qui cloche. Des
  * chiffres seulement, aucun conseil.
  */

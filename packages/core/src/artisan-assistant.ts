@@ -181,7 +181,7 @@ const SUBSCRIPTION: Record<string, string> = {
 const PLANS: Record<string, string> = {
   base: "Base",
   premium: "Premium",
-  entreprise: "Entreprise",
+  entreprise: "Ultimate",
 };
 
 const CHANTIER: Record<string, string> = {

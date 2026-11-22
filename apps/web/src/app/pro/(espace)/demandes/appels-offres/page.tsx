@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
 
 /**
  * Appels d'offres (F-136, ADR 0287) : onglet de Demandes pour le patron et le chef d'équipe.
- * Formule Entreprise : dépôt du DPGF et liste ; sinon, ce que la formule apporte.
+ * Formule Ultimate : dépôt du DPGF et liste ; sinon, ce que la formule apporte.
  */
 export default async function TendersPage() {
   const { supabase, artisanId, teamPosition } = await requireTeamPermission("money");

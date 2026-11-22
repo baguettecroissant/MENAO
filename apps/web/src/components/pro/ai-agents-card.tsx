@@ -85,7 +85,7 @@ export function VoiceMinutesCard({
   topUpDone = false,
 }: {
   state: AiAgentsState;
-  /** Recharge proposée (Premium et Entreprise) et prochaine échéance des minutes rechargées. */
+  /** Recharge proposée (Premium et Ultimate) et prochaine échéance des minutes rechargées. */
   topUp?: TopUp;
   topUpDone?: boolean;
 }) {

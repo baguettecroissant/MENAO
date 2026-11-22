@@ -375,7 +375,7 @@ function QuoteEditor({ chantierId, draft }: { chantierId: string; draft: QuoteDr
                 onClose={() => setCalling(false)}
               />
             ) : (
-              // Comprise dans les formules Premium et Entreprise : pastille d'information seule.
+              // Comprise dans les formules Premium et Ultimate : pastille d'information seule.
               <QuickCard
                 icon={Headset}
                 title={t.conversation.open}

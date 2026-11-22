@@ -615,7 +615,7 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
           {
             title: "Ce que vous payez",
             items: [
-              "Base 150 € HT par mois, Premium 500 € HT, Entreprise 1 500 € HT.",
+              "Base 150 € HT par mois, Premium 500 € HT, Ultimate 1 500 € HT.",
               "Un abonnement d'un an, payé chaque mois, ou d'avance avec 2 mois offerts.",
               "Frais de paiement Stripe à votre charge sur les sommes encaissées.",
             ],
@@ -812,7 +812,7 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
         caption: "Les formules MENAO et leurs conditions",
         head: ["Ce que vous dites", "Le détail"],
         rows: [
-          ["Trois formules", "Base 150 € HT par mois, Premium 500 € HT, Entreprise 1 500 € HT."],
+          ["Trois formules", "Base 150 € HT par mois, Premium 500 € HT, Ultimate 1 500 € HT."],
           [
             "Engagement",
             "Un an à partir du premier paiement, à la fin de l'essai, renouvelé chaque année. L'artisan arrête depuis son espace pro ou par recommandé, au plus tard 3 mois avant l'échéance. Pas d'arrêt en cours d'année.",
@@ -839,12 +839,12 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
         rows: [
           ["Base", "Jusqu'à 10", "2"],
           ["Premium", "Jusqu'à 25", "Illimités"],
-          ["Entreprise", "Illimitées", "Illimités"],
+          ["Ultimate", "Illimitées", "Illimités"],
         ],
       },
       {
         type: "p",
-        text: "Le reste du détail est dans le [comparatif des formules](/pro/formules) : montrez-le plutôt que de le réciter. Certaines fonctions propres à Premium et Entreprise (comptes d'équipe, par exemple) sont encore en construction : ne les promettez pas. Dans l'application, rien ne s'achète : la formule se choisit et se paie sur le site, depuis l'espace pro.",
+        text: "Le reste du détail est dans le [comparatif des formules](/pro/formules) : montrez-le plutôt que de le réciter. Certaines fonctions propres à Premium et Ultimate (comptes d'équipe, par exemple) sont encore en construction : ne les promettez pas. Dans l'application, rien ne s'achète : la formule se choisit et se paie sur le site, depuis l'espace pro.",
       },
       // TODO(legal): CGV artisans (engagement d'un an, préavis de 3 mois, aucune sortie anticipée)
       // chez l'avocat (ADR 0383).

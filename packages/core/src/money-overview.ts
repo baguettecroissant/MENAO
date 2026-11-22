@@ -40,7 +40,7 @@ export type MoneyPaidItem = {
 };
 
 export type MoneyOverview = {
-  /** La formule comprend l'agent comptable avancé (Premium et Entreprise). */
+  /** La formule comprend l'agent comptable avancé (Premium et Ultimate). */
   included: boolean;
   /** Relances automatiques à J+7, J+15 et J+30 (désactivées par défaut, ADR 0238). */
   autoReminders: boolean;

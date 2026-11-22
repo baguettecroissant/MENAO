@@ -1,6 +1,6 @@
 // Edge Function billing-topup (F-84, ADR 0233) : ouvre une session Stripe Checkout de paiement
 // unique pour recharger des minutes de voix, pour l'artisan connecté dont la formule le permet
-// (Premium et Entreprise). Web uniquement (CLAUDE.md règle 10). Les minutes sont créditées par
+// (Premium et Ultimate). Web uniquement (CLAUDE.md règle 10). Les minutes sont créditées par
 // stripe-webhook, une seule fois par session. Aucune donnée personnelle journalisée.
 import { parseAiAgents } from "../../../packages/core/src/ai-agents.ts";
 import { adminClient, currentArtisan, json } from "../_shared/artisan.ts";

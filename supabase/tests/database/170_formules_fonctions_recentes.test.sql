@@ -29,11 +29,11 @@ $$;
 select is(
   (select jsonb_object_agg(code, limites -> 'agents' -> 'import_catalogue') from public.plans
    where code in ('base', 'premium', 'entreprise')),
-  '{"base": false, "premium": true, "entreprise": true}'::jsonb, 'import de catalogue : Premium et Entreprise');
+  '{"base": false, "premium": true, "entreprise": true}'::jsonb, 'import de catalogue : Premium et Ultimate');
 select is(
   (select jsonb_object_agg(code, limites -> 'agents' -> 'prix_a_jour') from public.plans
    where code in ('base', 'premium', 'entreprise')),
-  '{"base": false, "premium": true, "entreprise": true}'::jsonb, 'prix à jour : Premium et Entreprise');
+  '{"base": false, "premium": true, "entreprise": true}'::jsonb, 'prix à jour : Premium et Ultimate');
 
 -- ---------- Formule Base : refusé ----------
 select pg_temp.connecter('f7000000-0000-4000-8000-000000000001');
@@ -78,7 +78,7 @@ select is(
   7, 'les sept lignes des fonctions récentes sont au comparatif');
 select is(
   (select valeurs from public.plan_features where libelle = 'Import de votre catalogue'),
-  '{"base": false, "premium": true, "entreprise": true}'::jsonb, 'import de catalogue : Premium et Entreprise');
+  '{"base": false, "premium": true, "entreprise": true}'::jsonb, 'import de catalogue : Premium et Ultimate');
 
 select * from finish();
 rollback;

@@ -24,11 +24,11 @@ export type AiAgentsRights = {
   reminders: AiReminderMode;
   lines: number;
   topUps: boolean;
-  /** Appels d'offres et DPGF (ADR 0287) : formule Entreprise. */
+  /** Appels d'offres et DPGF (ADR 0287) : formule Ultimate. */
   tenders: boolean;
-  /** Import de catalogue dans la bibliothèque (ADR 0363) : Premium et Entreprise. */
+  /** Import de catalogue dans la bibliothèque (ADR 0363) : Premium et Ultimate. */
   catalogImport: boolean;
-  /** Prix à jour d'après les factures et hausse des prix (ADR 0363) : Premium et Entreprise. */
+  /** Prix à jour d'après les factures et hausse des prix (ADR 0363) : Premium et Ultimate. */
   priceUpdates: boolean;
 };
 

@@ -1,4 +1,4 @@
--- DPGF depuis les plans, lot 1 (F-140, ADR 0291) : formule Entreprise seulement, plans et métiers
+-- DPGF depuis les plans, lot 1 (F-140, ADR 0291) : formule Ultimate seulement, plans et métiers
 -- vérifiés, relevé importé (pièces, éléments comptés, échelle), corrections de l'artisan
 -- (« saisi »), isolement entre entreprises, suppression avec tous les fichiers.
 -- Données fictives (identifiants e139…).
@@ -41,7 +41,7 @@ set local role authenticated;
 -- ---------- Formule ----------
 select pg_temp.connecter('e1390000-0000-4000-8000-000000000002');
 select throws_ok($$ select public.artisan_create_plan_tender('Maison fictive', '[]'::jsonb, array['peintre']) $$, '42501',
-  'Les appels d''offres sont inclus dans la formule Entreprise.', 'Premium : création refusée');
+  'Les appels d''offres sont inclus dans la formule Ultimate.', 'Premium : création refusée');
 
 -- ---------- Création ----------
 select pg_temp.connecter('e1390000-0000-4000-8000-000000000001');

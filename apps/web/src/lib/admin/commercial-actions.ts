@@ -130,6 +130,7 @@ export async function saveCommercialBonusSettings(
   const values = Object.fromEntries(
     [
       "validation",
+      "validationPub",
       "subscription",
       "subscriptionPremium",
       "subscriptionEnterprise",
@@ -140,6 +141,11 @@ export async function saveCommercialBonusSettings(
   const validation = optionalCents(formData, "validation");
   const subscription = optionalCents(formData, "subscription");
   if ("invalid" in validation) return { fieldErrors: { validation: [tr.errors.amount] }, values };
+  // Artisan venu de nos publicités, confié au commercial (ADR 0385) : vide, non réglé.
+  const validationPub = optionalCents(formData, "validationPub");
+  if ("invalid" in validationPub) {
+    return { fieldErrors: { validationPub: [tr.errors.amount] }, values };
+  }
   if ("invalid" in subscription) {
     return { fieldErrors: { subscription: [tr.errors.amount] }, values };
   }
@@ -172,6 +178,7 @@ export async function saveCommercialBonusSettings(
     p_objectif_valides_mois: objective,
     p_prime_abonnement_premium_centimes: premium.cents,
     p_prime_abonnement_entreprise_centimes: enterprise.cents,
+    p_prime_validation_pub_centimes: validationPub.cents,
   });
   if (error) return { error: dbError(error), values };
   revalidatePath(PATH);

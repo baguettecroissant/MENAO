@@ -19,7 +19,7 @@ export const metadata: Metadata = { title: `${t.title} — MENAO` };
  */
 export default async function InvoicePricesPage() {
   const { supabase } = await requireTeamPermission("money");
-  // Prix à jour d'après les factures : Premium et Entreprise (ADR 0363).
+  // Prix à jour d'après les factures : Premium et Ultimate (ADR 0363).
   if (!(await planRights(supabase)).priceUpdates) {
     return (
       <LockedPage title={t.title}>

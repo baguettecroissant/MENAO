@@ -41,7 +41,7 @@ export function SectionTabs({
 }: {
   section: keyof typeof SECTIONS;
   base?: string;
-  /** Onglets absents de la formule (« Suivi » hors Premium et Entreprise, ADR 0237). */
+  /** Onglets absents de la formule (« Suivi » hors Premium et Ultimate, ADR 0237). */
   hidden?: readonly string[];
 }) {
   const pathname = usePathname();

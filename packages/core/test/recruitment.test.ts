@@ -40,7 +40,7 @@ describe("barème", () => {
       }),
     ).toEqual(RECRUITMENT_PUBLISHED_RATES);
   });
-  it("lit le back-office, Premium et Entreprise vides reprenant Base", () => {
+  it("lit le back-office, Premium et Ultimate vides reprenant Base", () => {
     const rates = recruitmentRates({
       prime_validation_centimes: 12_000,
       prime_abonnement_centimes: 4_000,

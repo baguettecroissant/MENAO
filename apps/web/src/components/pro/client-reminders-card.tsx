@@ -10,7 +10,7 @@ import { initialFormState } from "@/lib/auth/form";
 const t = fr.pro.onboarding.plans.clientReminders;
 
 /**
- * « Rappels à vos clients » (F-88, ADR 0239), dans « Ma formule » (Premium et Entreprise) :
+ * « Rappels à vos clients » (F-88, ADR 0239), dans « Ma formule » (Premium et Ultimate) :
  * quels rappels partent aussi par SMS, au nom de l'artisan, et les SMS du mois.
  */
 export function ClientRemindersCard({ state }: { state: ClientRemindersState }) {

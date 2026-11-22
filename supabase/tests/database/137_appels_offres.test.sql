@@ -1,4 +1,4 @@
--- Appels d'offres, lot 1 (F-136, ADR 0287) : formule Entreprise seulement, import des lignes du
+-- Appels d'offres, lot 1 (F-136, ADR 0287) : formule Ultimate seulement, import des lignes du
 -- DPGF, quantités et prix de l'artisan, TVA, suivi, prix des anciens devis, document du PDF,
 -- isolement entre entreprises, suppression. Données fictives (identifiants e137…).
 begin;
@@ -51,7 +51,7 @@ select ok(not has_function_privilege('anon', 'public.artisan_create_tender(text,
 set local role authenticated;
 select pg_temp.connecter('e1370000-0000-4000-8000-000000000002');
 select throws_ok($$ select public.artisan_create_tender('Maison fictive') $$, '42501',
-  'Les appels d''offres sont inclus dans la formule Entreprise.', 'Premium : création refusée');
+  'Les appels d''offres sont inclus dans la formule Ultimate.', 'Premium : création refusée');
 
 -- ---------- Entreprise ----------
 select pg_temp.connecter('e1370000-0000-4000-8000-000000000001');

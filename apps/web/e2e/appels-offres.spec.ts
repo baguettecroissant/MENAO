@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { files } from "./fixtures";
 
 // Appels d'offres (F-136, ADR 0287) : la carreleuse du seed passe le temps du test en formule
-// Entreprise (clé serveur de l'instance locale de la CI), dépose un DPGF Excel fictif, le chiffre,
+// Ultimate (clé serveur de l'instance locale de la CI), dépose un DPGF Excel fictif, le chiffre,
 // puis télécharge le fichier au format de l'architecte et le PDF ; puis un DPGF en PDF (ADR 0288).
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
@@ -38,7 +38,7 @@ test.afterAll(async () => {
   await setPlan("base");
 });
 
-test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et en PDF", async ({
+test("appels d'offres : formule Ultimate, DPGF lu, chiffré, rendu en Excel et en PDF", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -48,7 +48,7 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
   const offices = `Bureaux fictifs E2E ${run}`;
   await signIn(page);
 
-  // Formule Base : l'onglet présente la formule Entreprise, sans dépôt possible.
+  // Formule Base : l'onglet présente la formule Ultimate, sans dépôt possible.
   await page.goto("/pro/demandes");
   await page
     .getByRole("navigation", { name: "Sections des demandes" })
@@ -56,7 +56,7 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
     .click();
   await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres$/);
   await expect(
-    page.getByRole("heading", { name: "Inclus dans la formule Entreprise" }),
+    page.getByRole("heading", { name: "Inclus dans la formule Ultimate" }),
   ).toBeVisible();
   await expect(page.getByLabel("DPGF de l'architecte", { exact: true })).toHaveCount(0);
 
