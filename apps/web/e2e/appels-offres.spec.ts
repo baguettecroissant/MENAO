@@ -38,7 +38,7 @@ test.afterAll(async () => {
   await setPlan("base");
 });
 
-test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et en PDF", async ({
+test("appels d'offres : formule Ultimate, DPGF lu, chiffré, rendu en Excel et en PDF", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -48,7 +48,7 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
   const offices = `Bureaux fictifs E2E ${run}`;
   await signIn(page);
 
-  // Formule Base : l'onglet présente la formule Entreprise, sans dépôt possible.
+  // Formule Base : l'onglet présente la formule Ultimate, sans dépôt possible.
   await page.goto("/pro/demandes");
   await page
     .getByRole("navigation", { name: "Sections des demandes" })
@@ -56,7 +56,7 @@ test("appels d'offres : formule Entreprise, DPGF lu, chiffré, rendu en Excel et
     .click();
   await expect(page).toHaveURL(/\/pro\/demandes\/appels-offres$/);
   await expect(
-    page.getByRole("heading", { name: "Inclus dans la formule Entreprise" }),
+    page.getByRole("heading", { name: "Inclus dans la formule Ultimate" }),
   ).toBeVisible();
   await expect(page.getByLabel("DPGF de l'architecte", { exact: true })).toHaveCount(0);
 

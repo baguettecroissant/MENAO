@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { SEED_ARTISANS, setArtisanPlan } from "./plan";
 
-// Hausse des prix : fonction des formules Premium et Entreprise (ADR 0363). L'artisan du seed, en
+// Hausse des prix : fonction des formules Premium et Ultimate (ADR 0363). L'artisan du seed, en
 // formule Base, passe en Premium le temps du test.
 test.beforeAll(() => setArtisanPlan(SEED_ARTISANS.plombierNice, "premium"));
 test.afterAll(() => setArtisanPlan(SEED_ARTISANS.plombierNice, "base"));

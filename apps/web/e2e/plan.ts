@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
 // Formule d'un artisan du seed, le temps d'un test (clé serveur de l'instance locale de la CI) :
-// certaines fonctions sont réservées à Premium ou à Entreprise (ADR 0287, 0363).
+// certaines fonctions sont réservées à Premium ou à Ultimate (ADR 0287, 0363).
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
