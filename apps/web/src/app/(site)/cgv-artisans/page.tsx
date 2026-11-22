@@ -1,23 +1,20 @@
 import type { Metadata } from "next";
-import { ContentSection, LegalPage } from "@/components/site/content-page";
-import { fr } from "@/i18n/fr";
+import { LegalPage } from "@/components/site/content-page";
+import { LegalBody } from "@/components/site/legal-body";
+import { cgvArtisans } from "@/content/legal";
 
 export const metadata: Metadata = {
-  title: `${fr.legal.cgv} — MENAO`,
+  title: `${cgvArtisans.title} — MENAO`,
   alternates: { canonical: "/cgv-artisans" },
 };
 
-// TODO(legal) : publier la version validée par l'avocat avant le pilote (projet du 20/11/2026,
-// ADR 0383) : essai de 2 mois à partir de la mise en ligne, engagement ferme d'un an à compter du
-// premier paiement, reconduction tacite d'un an, arrêt au plus tard 3 mois avant l'échéance (en
-// ligne ou par recommandé), aucune sortie anticipée, pénalités de retard, aucune garantie de
-// demandes, rétractation de 14 jours pour une inscription faite en présence d'un commercial.
+// TODO(legal) : version provisoire publiée le 22 novembre 2026 à la demande des dirigeants, à faire
+// valider par l'avocat (ADR 0383) ; les points tranchés pour publier sont listés dans
+// `content/legal/cgv-artisans.ts`.
 export default function Page() {
   return (
-    <LegalPage path="/cgv-artisans" title={fr.legal.cgv}>
-      <ContentSection title={fr.legal.draftTitle}>
-        <p>{fr.legal.draftBody}</p>
-      </ContentSection>
+    <LegalPage path="/cgv-artisans" title={cgvArtisans.title} intro={cgvArtisans.intro}>
+      <LegalBody document={cgvArtisans} />
     </LegalPage>
   );
 }

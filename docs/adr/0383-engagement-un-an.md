@@ -59,3 +59,12 @@ reconduction, Entreprise comme les autres, commercial par lien (inscription en l
   ni moyen de paiement, ni changement de formule dans l'application (règle 10).
 - Hors de ce lot : prélèvement SEPA à part entière, mention de rétractation pour les inscriptions
   faites avec un commercial (à rédiger avec l'avocat).
+
+## Complément du 22 novembre 2026 : CGV publiées en version provisoire
+
+À la demande des dirigeants, les CGV artisans sont publiées sur `/cgv-artisans` avant la relecture de
+l'avocat, avec la mention « Version provisoire » comme les autres textes légaux (ADR 0377). Les points
+laissés entre crochets dans le projet sont tranchés selon les décisions du 20 novembre et le
+fonctionnement réel du produit (liste dans `apps/web/src/content/legal/cgv-artisans.ts`, TODO(legal)).
+La version acceptée est enregistrée sous `2026-11-22-provisoire` (`CGV_VERSION` et
+`LEGAL_DOCUMENT_VERSIONS.cgv_artisan`) ; la version validée par l'avocat devra être réacceptée.
