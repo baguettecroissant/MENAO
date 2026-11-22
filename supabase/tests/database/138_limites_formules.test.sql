@@ -102,7 +102,7 @@ select results_eq(
 reset role;
 select is(
   (select valeurs ->> 'entreprise' from public.plan_features where libelle like 'Appels d''offres%'),
-  'true', 'comparatif : appels d''offres en Entreprise');
+  'true', 'comparatif : appels d''offres en Ultimate');
 select is(
   (select valeurs ->> 'premium' from public.plan_features where libelle like 'Appels d''offres%'),
   'false', 'comparatif : pas en Premium');

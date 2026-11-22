@@ -51,7 +51,7 @@ export const cgvArtisans: LegalDocument = {
     { type: "h2", id: "formules-prix", text: "Article 4. Formules et prix" },
     {
       type: "p",
-      text: "MENAO propose trois formules, Base, Premium et Entreprise, dont le contenu et les limites sont décrits sur la [page des formules](/pro/formules) à la date de la souscription. L'Artisan choisit sa formule à l'inscription.",
+      text: "MENAO propose trois formules, Base, Premium et Ultimate, dont le contenu et les limites sont décrits sur la [page des formules](/pro/formules) à la date de la souscription. L'Artisan choisit sa formule à l'inscription.",
     },
     {
       type: "p",

@@ -1,5 +1,5 @@
 -- Primes des commerciaux selon la formule (F-174, ADR 0366) : réglages à six montants (admins
--- seulement), prime d'abonnement de Base, Premium ou Entreprise selon l'abonnement actif, repli sur
+-- seulement), prime d'abonnement de Base, Premium ou Ultimate selon l'abonnement actif, repli sur
 -- Base quand le montant de la formule est vide, montants dans « Mes résultats ». Données fictives
 -- (SIRET 00000171…, identifiants c171…).
 begin;
@@ -57,7 +57,7 @@ insert into public.subscriptions (artisan_id, plan_code, stripe_customer_id, str
 set local role service_role;
 select ok(public.record_subscription_payment('sub_c171_1'), 'premier paiement (Base)');
 select ok(public.record_subscription_payment('sub_c171_2'), 'premier paiement (Premium)');
-select ok(public.record_subscription_payment('sub_c171_3'), 'premier paiement (Entreprise)');
+select ok(public.record_subscription_payment('sub_c171_3'), 'premier paiement (Ultimate)');
 reset role;
 
 update public.commercial_bonuses set validate_after = now() - interval '1 day'

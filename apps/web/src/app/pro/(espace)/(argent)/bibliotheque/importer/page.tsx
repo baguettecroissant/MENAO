@@ -19,7 +19,7 @@ export default async function ImportPage({
 }: PageProps<"/pro/bibliotheque/importer">) {
   const { type } = await searchParams;
   const { supabase, artisanId } = await requireTeamPermission("money");
-  // Import de catalogue : Premium et Entreprise (ADR 0363).
+  // Import de catalogue : Premium et Ultimate (ADR 0363).
   const included = (await planRights(supabase)).catalogImport;
   return (
     <main className="flex-1">

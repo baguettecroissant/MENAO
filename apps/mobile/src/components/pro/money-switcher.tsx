@@ -16,7 +16,7 @@ export function MoneySwitcher({
 }: {
   value: MoneyView;
   onChange: (value: MoneyView) => void;
-  /** Onglet « Suivi » : agent comptable avancé (Premium et Entreprise, ADR 0237). */
+  /** Onglet « Suivi » : agent comptable avancé (Premium et Ultimate, ADR 0237). */
   overview?: boolean;
 }) {
   const options: { value: MoneyView; label: string }[] = [

@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
   const supabase = createClient(env("SUPABASE_URL"), env("SUPABASE_ANON_KEY"), {
     global: { headers: { Authorization: authorization } },
   });
-  // Import de catalogue : Premium et Entreprise (ADR 0363), vérifié avant toute lecture du fichier
+  // Import de catalogue : Premium et Ultimate (ADR 0363), vérifié avant toute lecture du fichier
   // (et avant tout appel à l'IA). La base le refuse aussi à l'import.
   const { data: agents } = await supabase.rpc("my_ai_agents");
   const rights = (agents as { agents?: { import_catalogue?: unknown } } | null)?.agents;

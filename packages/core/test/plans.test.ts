@@ -122,7 +122,7 @@ describe("subscriptionPayback (calculateur des formules, ADR 0265)", () => {
     });
   });
   it("marge inférieure au prix : N chantiers par mois (arrondi vers le haut)", () => {
-    // 2 000 € à 20 % = 400 € ; Entreprise 1 500 € / mois → 4 chantiers par mois.
+    // 2 000 € à 20 % = 400 € ; Ultimate 1 500 € / mois → 4 chantiers par mois.
     expect(subscriptionPayback(150000, 200000, 20)).toEqual({
       marginCents: 40000,
       kind: "perMonth",
@@ -205,7 +205,7 @@ describe("comparatif « ce qui change » (ADR 0368)", () => {
   it("compte ce qu'une formule ajoute à une autre", () => {
     // Premium ajoute à Base : demandes, métiers, Manon.
     expect(planAddedFeatures(comparison, 0, 1)).toBe(3);
-    // Entreprise ajoute à Premium : demandes, DPGF (métiers identiques).
+    // Ultimate ajoute à Premium : demandes, DPGF (métiers identiques).
     expect(planAddedFeatures(comparison, 1, 2)).toBe(2);
     expect(planAddedFeatures(comparison, 1, 1)).toBe(0);
     expect(planAddedFeatures(comparison, 0, 9)).toBe(0);

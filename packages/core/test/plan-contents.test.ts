@@ -69,7 +69,7 @@ describe("cartes « ce que votre formule fait pour vous » (lot 71, ADR 0369)", 
     expect(planHighlights("base")).toEqual(["requests", "quotes", "payments"]);
   });
 
-  it("Premium et Entreprise commencent par Manon et les demandes", () => {
+  it("Premium et Ultimate commencent par Manon et les demandes", () => {
     expect(planHighlights("premium").slice(0, 2)).toEqual(["secretary", "requests"]);
     expect(planHighlights("entreprise").slice(0, 2)).toEqual(["secretary", "requests"]);
     expect(planHighlights("entreprise")).toContain("tenders");

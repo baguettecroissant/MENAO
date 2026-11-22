@@ -122,6 +122,7 @@ export function CommercialBonusSettingsForm({
 }: {
   settings: {
     prime_validation_centimes: number | null;
+    prime_validation_pub_centimes?: number | null;
     prime_abonnement_centimes: number | null;
     prime_abonnement_premium_centimes: number | null;
     prime_abonnement_entreprise_centimes: number | null;
@@ -145,6 +146,15 @@ export function CommercialBonusSettingsForm({
           inputMode="decimal"
           defaultValue={v?.validation ?? eurosInput(settings.prime_validation_centimes)}
           errors={errors.validation}
+        />
+        <Field
+          id="primes-validation-pub"
+          label={s.validationPub}
+          name="validationPub"
+          inputMode="decimal"
+          hint={s.validationPubHint}
+          defaultValue={v?.validationPub ?? eurosInput(settings.prime_validation_pub_centimes)}
+          errors={errors.validationPub}
         />
         <Field
           id="primes-abonnement"

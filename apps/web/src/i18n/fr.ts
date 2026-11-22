@@ -4375,7 +4375,7 @@ export const fr = {
         subscriptionActive: "Active",
         subscriptionToChoose: "À choisir",
         team: (used: number, seats: number) => `${used} sur ${seats}`,
-        teamNotIncluded: "Premium et Entreprise",
+        teamNotIncluded: "Premium et Ultimate",
       },
     },
     dashboard: {
@@ -5393,7 +5393,7 @@ export const fr = {
         draftAdd: "Ajouter au devis",
         draftDiscard: "Écarter",
         errors: {
-          non_inclus: "Le devis avec Manon est inclus dans les formules Premium et Entreprise.",
+          non_inclus: "Le devis avec Manon est inclus dans les formules Premium et Ultimate.",
           minutes_epuisees:
             "Vos minutes de voix du mois sont épuisées : vous pouvez en recharger dans « Ma formule ».",
           invalid: "Ce chantier n'attend plus de devis.",
@@ -5583,7 +5583,7 @@ export const fr = {
     /** Rubrique « Secrétaire » (ADR 0244) : appels à traiter, historique, essai, réglages. */
     // Fonction comprise dans une formule supérieure (ADR 0363).
     planLocked: {
-      included: "Comprise dans les formules Premium et Entreprise.",
+      included: "Comprise dans les formules Premium et Ultimate.",
       cta: "Voir les formules",
       importTitle: "Reprenez votre catalogue dans MENAO",
       importText:
@@ -5642,11 +5642,11 @@ export const fr = {
       toCallBack: "Message à rappeler",
       notIncluded: {
         title: "Une secrétaire qui répond pour vous",
-        text: "Elle décroche quand vous êtes sur un chantier, prend un rendez-vous dans votre agenda ou un message, et vous le transmet tout de suite. Incluse dans les formules Premium et Entreprise.",
+        text: "Elle décroche quand vous êtes sur un chantier, prend un rendez-vous dans votre agenda ou un message, et vous le transmet tout de suite. Incluse dans les formules Premium et Ultimate.",
         cta: "Voir les formules",
         askPatron: "Votre patron peut l'activer depuis sa formule.",
         // Refonte « Nette » (lot 46, ADR 0315).
-        badge: "Premium et Entreprise",
+        badge: "Premium et Ultimate",
         lead: "Elle décroche quand vous êtes sur un chantier, prend un rendez-vous dans votre agenda ou un message, et vous le transmet tout de suite.",
         points: [
           [
@@ -5659,7 +5659,7 @@ export const fr = {
             "Le message arrive tout de suite, avec le numéro à rappeler.",
           ],
         ] as [string, string][],
-        included: "Incluse dans les formules Premium et Entreprise.",
+        included: "Incluse dans les formules Premium et Ultimate.",
         example: {
           label: "Exemple d'appel",
           incoming: "Appel entrant · 10:42",
@@ -5705,8 +5705,8 @@ export const fr = {
       workerNote:
         "Un ouvrier ne voit que les chantiers qui lui sont attribués : journal, photos, messages et rendez-vous, sans aucun montant.",
       notIncluded: {
-        title: "Avec Premium et Entreprise",
-        text: "Donnez un accès à vos chefs d'équipe et à vos ouvriers : 3 comptes en Premium, 10 en Entreprise, vous compris.",
+        title: "Avec Premium et Ultimate",
+        text: "Donnez un accès à vos chefs d'équipe et à vos ouvriers : 3 comptes en Premium, 10 en Ultimate, vous compris.",
         cta: "Voir les formules",
       },
       full: "Toutes les places de votre formule sont prises : retirez ou suspendez un membre pour en inviter un autre.",
@@ -6528,10 +6528,7 @@ export const fr = {
     // « Recommander un partenaire » (ADR 0174) : réseau de parrainage, le client décide.
     // Limites des formules (F-139, ADR 0290) : prévenir sans bloquer.
     planLimits: {
-      plans: { base: "Base", premium: "Premium", entreprise: "Entreprise" } as Record<
-        string,
-        string
-      >,
+      plans: { base: "Base", premium: "Premium", entreprise: "Ultimate" } as Record<string, string>,
       proche: (received: number, limit: number, plan: string, next: string) =>
         `${received} demandes reçues sur ${limit} ce mois-ci avec la formule ${plan}. Passez à ${next} pour en recevoir davantage.`,
       atteinte: (limit: number, plan: string, next: string) =>
@@ -6540,7 +6537,7 @@ export const fr = {
         `${received} demandes reçues ce mois-ci, au-delà des ${limit} prévues par la formule ${plan}. Passez à ${next} pour en recevoir davantage.`,
       cta: "Voir les formules",
     },
-    // Appels d'offres et DPGF (F-136, ADR 0287) : formule Entreprise.
+    // Appels d'offres et DPGF (F-136, ADR 0287) : formule Ultimate.
     tenders: {
       tabsLabel: "Sections des demandes",
       tabRequests: "Demandes",
@@ -6602,7 +6599,7 @@ export const fr = {
         },
       },
       locked: {
-        title: "Inclus dans la formule Entreprise",
+        title: "Inclus dans la formule Ultimate",
         body: "Déposez le DPGF de l'architecte : MENAO le lit, propose vos prix habituels pour chaque poste, et le remplit au format de l'architecte, avec un PDF prêt à joindre à votre offre.",
         cta: "Voir les formules",
       },
@@ -6680,7 +6677,7 @@ export const fr = {
           unavailable:
             "La lecture des plans est momentanément indisponible. Réessayez dans quelques minutes.",
           rate_limited: "Trop de lectures en peu de temps. Réessayez dans une heure.",
-          forbidden: "Les appels d'offres sont inclus dans la formule Entreprise.",
+          forbidden: "Les appels d'offres sont inclus dans la formule Ultimate.",
           error: "Les plans n'ont pas pu être lus. Réessayez.",
         } as Record<string, string>,
         warnings: {
@@ -7278,12 +7275,12 @@ export const fr = {
             timeout:
               "La réponse a pris trop de temps. Posez une question plus précise ou réessayez.",
             unavailable: "Le chat est momentanément indisponible. Réessayez plus tard.",
-            forbidden: "Le chat est inclus dans la formule Entreprise.",
+            forbidden: "Le chat est inclus dans la formule Ultimate.",
             error: "MENAO n'a pas pu répondre. Réessayez.",
           } as Record<string, string | ((limit: number) => string)>,
         },
         withoutDpgf: "sans DPGF",
-        planBadge: "Formule Entreprise",
+        planBadge: "Formule Ultimate",
         invalid:
           "Vérifiez les mesures : un nom pour chaque pièce, des nombres positifs (hauteur entre 1,5 et 10 m).",
         responsibility:
@@ -7462,7 +7459,7 @@ export const fr = {
         file: "Choisissez le DPGF de l'architecte, en Excel (.xlsx) ou en PDF.",
         tooLarge: "Le fichier dépasse 15 Mo.",
         upload: "Le fichier n'a pas pu être envoyé. Réessayez.",
-        forbidden: "Les appels d'offres sont inclus dans la formule Entreprise.",
+        forbidden: "Les appels d'offres sont inclus dans la formule Ultimate.",
         generic: "Une erreur est survenue. Réessayez.",
       } as Record<string, string>,
       importOk: (posts: number, priced: number) =>
@@ -7480,7 +7477,7 @@ export const fr = {
         unavailable:
           "La lecture du PDF est momentanément indisponible. Réessayez dans quelques minutes.",
         rate_limited: "Trop de lectures en peu de temps. Réessayez dans une heure.",
-        forbidden: "Les appels d'offres sont inclus dans la formule Entreprise.",
+        forbidden: "Les appels d'offres sont inclus dans la formule Ultimate.",
         error: "Le DPGF n'a pas pu être lu. Réessayez.",
       } as Record<string, string>,
       warnings: {
@@ -7975,7 +7972,7 @@ export const fr = {
               "Quand vous êtes sur le chantier, Manon répond à vos clients avec votre nom, vos horaires et votre agenda : rendez-vous pris dans vos créneaux, ou message transmis tout de suite.",
             title: "Manon répond à vos clients quand vous êtes sur le chantier.",
             lead: "Votre secrétaire dédiée, avec votre nom, vos horaires et votre agenda : rendez-vous pris dans vos créneaux, ou message transmis tout de suite.",
-            availability: "Avec Premium et Entreprise",
+            availability: "Avec Premium et Ultimate",
             stepsTitle: "Votre secrétaire, réglée en quelques minutes.",
             steps: [
               {
@@ -8002,14 +7999,14 @@ export const fr = {
               },
               {
                 title: "Des minutes incluses",
-                text: "300 minutes par mois avec Premium, 1 000 avec Entreprise, et des recharges si vous en voulez plus.",
+                text: "300 minutes par mois avec Premium, 1 000 avec Ultimate, et des recharges si vous en voulez plus.",
               },
               {
                 title: "Vos clients rappelés",
-                text: "Rappels de rendez-vous par SMS avec Premium, par appel et SMS avec Entreprise.",
+                text: "Rappels de rendez-vous par SMS avec Premium, par appel et SMS avec Ultimate.",
               },
             ],
-            includedTitle: "Avec Premium et Entreprise.",
+            includedTitle: "Avec Premium et Ultimate.",
             faqTitle: "Vos questions sur la secrétaire.",
           },
           "acompte-en-ligne": {
@@ -8046,7 +8043,7 @@ export const fr = {
               },
               {
                 title: "Les gros chantiers en tranches",
-                text: "Avec Premium et Entreprise, un échéancier en plusieurs tranches pour les situations de travaux.",
+                text: "Avec Premium et Ultimate, un échéancier en plusieurs tranches pour les situations de travaux.",
               },
               {
                 title: "Les factures suivent",
@@ -8094,7 +8091,7 @@ export const fr = {
               },
               {
                 title: "Votre marge réelle",
-                text: "Avec Premium et Entreprise, les dépenses comparées au montant facturé, chantier par chantier.",
+                text: "Avec Premium et Ultimate, les dépenses comparées au montant facturé, chantier par chantier.",
               },
             ],
             includedTitle: "Inclus dès la formule Base.",
@@ -8140,7 +8137,7 @@ export const fr = {
         priceFrom: "Dès",
         priceUnit: (plan: string) => `HT / mois · formule ${plan}`,
         priceOthers: (premium: string, entreprise: string) =>
-          `Premium ${premium} et Entreprise ${entreprise} HT / mois, avec Manon au téléphone. Engagement d'un an, payé au mois ou à l'année avec 2 mois offerts.`,
+          `Premium ${premium} et Ultimate ${entreprise} HT / mois, avec Manon au téléphone. Engagement d'un an, payé au mois ou à l'année avec 2 mois offerts.`,
       },
       // Fragments d'interface des cartes de l'outil (valeurs d'exemple, ADR 0265).
       featureVisuals: {
@@ -8172,7 +8169,7 @@ export const fr = {
       plansPage: {
         metaTitle: "Formules et prix pour les artisans",
         metaDescription:
-          "Base, Premium ou Entreprise : un abonnement fixe, aucune commission, 2 mois d'essai gratuits. Comparez les formules, les assistants IA et calculez votre rentabilité.",
+          "Base, Premium ou Ultimate : un abonnement fixe, aucune commission, 2 mois d'essai gratuits. Comparez les formules, les assistants IA et calculez votre rentabilité.",
         breadcrumb: "Formules",
         faqTitle: "Vos questions avant de vous lancer.",
         agentsWritten: "Assistants écrits : devis dicté, tickets lus, aide",
@@ -8498,7 +8495,7 @@ export const fr = {
       faq: [
         {
           q: "Combien coûte MENAO ?",
-          a: "Trois formules, après 2 mois d'essai gratuits : Base à 150 €, Premium à 500 € et Entreprise à 1 500 € HT par mois, avec un engagement d'un an. Payée d'avance pour l'année, vous avez 2 mois offerts : 125 €, 417 € ou 1 250 € HT par mois.",
+          a: "Trois formules, après 2 mois d'essai gratuits : Base à 150 €, Premium à 500 € et Ultimate à 1 500 € HT par mois, avec un engagement d'un an. Payée d'avance pour l'année, vous avez 2 mois offerts : 125 €, 417 € ou 1 250 € HT par mois.",
         },
         {
           q: "MENAO prend-il une commission sur mes chantiers ?",
@@ -8674,7 +8671,7 @@ export const fr = {
               a: "Vous pouvez choisir votre formule et enregistrer votre carte dès l'inscription, sans attendre la vérification : rien n'est prélevé. L'essai de 2 mois démarre le jour où votre fiche est mise en ligne, et vous pouvez y renoncer sans frais à tout moment pendant l'essai. Si votre dossier n'est pas validé, MENAO annule votre abonnement avant tout prélèvement.",
             },
             {
-              q: "Quelle différence entre les formules Base, Premium et Entreprise ?",
+              q: "Quelle différence entre les formules Base, Premium et Ultimate ?",
               a: "Toutes donnent accès aux demandes de votre zone, sans commission, et aux outils de devis, de signature, de paiement, de suivi de chantier et de factures. Le détail de ce que chaque formule inclut figure dans le comparatif des formules de la page Espace Pro.",
             },
             {
@@ -9918,7 +9915,7 @@ export const fr = {
           live: "En ligne avec votre secrétaire",
           speaking: "Votre secrétaire parle…",
           errors: {
-            non_inclus: "La secrétaire est incluse dans les formules Premium et Entreprise.",
+            non_inclus: "La secrétaire est incluse dans les formules Premium et Ultimate.",
             generic: "L'appel n'a pas pu être préparé. Réessayez dans un instant.",
           } as Record<string, string>,
           // Essai dans l'application (ADR 0362) : aucun achat évoqué (règle 10).
@@ -9967,7 +9964,7 @@ export const fr = {
           },
           included: "Inclus",
           soon: "Inclus, bientôt disponible",
-          upgrade: "Avec Premium et Entreprise",
+          upgrade: "Avec Premium et Ultimate",
           reminderModes: {
             sms: "Inclus par SMS et e-mail",
             appel: "Inclus par SMS et e-mail, appel bientôt disponible",
@@ -10151,7 +10148,7 @@ export const fr = {
             "Le service de paiement est momentanément indisponible. Réessayez dans quelques minutes.",
           forbidden: "Cette action est réservée aux comptes professionnels.",
           non_inclus:
-            "Les recharges de minutes sont incluses dans les formules Premium et Entreprise.",
+            "Les recharges de minutes sont incluses dans les formules Premium et Ultimate.",
         },
       },
       upload: {
@@ -11653,6 +11650,10 @@ export const fr = {
         title: "Primes des commerciaux",
         lead: "Montants décidés par les associés. Vides : aucune prime n'est calculée. Une prime est vérifiée après le délai (dossier toujours validé, abonnement toujours actif) avant d'être à payer.",
         validation: "Prime par artisan validé (€)",
+        // Artisan venu de nos publicités, confié au commercial (F-186, ADR 0385).
+        validationPub: "Artisan validé venu de nos publicités (€)",
+        validationPubHint:
+          "À la place de la prime par artisan validé, pour un artisan confié depuis nos publicités. Primes d'abonnement inchangées.",
         subscription: "Prime d'abonnement, offre 150 € (€)",
         subscriptionPremium: "Prime d'abonnement, offre 500 € (€)",
         subscriptionEnterprise: "Prime d'abonnement, offre 1 500 € (€)",

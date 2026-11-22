@@ -1,7 +1,7 @@
 // Edge Function plan-chat (F-160, ADR 0346) : « Demander à MENAO », le chat sur les plans d'un
 // appel d'offres déjà lu. L'artisan pose une question ; le modèle part du relevé (pièces, ouvrages
 // écrits, éléments comptés, symboles), appelle les calculs de packages/core, cherche les prix dans
-// sa bibliothèque, puis répond ou demande une précision. Formule Entreprise et nombre de questions
+// sa bibliothèque, puis répond ou demande une précision. Formule Ultimate et nombre de questions
 // par mois vérifiés par la base (jeton de l'utilisateur). Journal : métriques seules (ai_runs).
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";

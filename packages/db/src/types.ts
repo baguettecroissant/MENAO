@@ -2522,6 +2522,7 @@ export type Database = {
           prime_abonnement_entreprise_centimes: number | null;
           prime_abonnement_premium_centimes: number | null;
           prime_validation_centimes: number | null;
+          prime_validation_pub_centimes: number | null;
           updated_at: string;
           updated_by: string | null;
         };
@@ -2534,6 +2535,7 @@ export type Database = {
           prime_abonnement_entreprise_centimes?: number | null;
           prime_abonnement_premium_centimes?: number | null;
           prime_validation_centimes?: number | null;
+          prime_validation_pub_centimes?: number | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -2545,6 +2547,7 @@ export type Database = {
           prime_abonnement_entreprise_centimes?: number | null;
           prime_abonnement_premium_centimes?: number | null;
           prime_validation_centimes?: number | null;
+          prime_validation_pub_centimes?: number | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -7320,6 +7323,7 @@ export type Database = {
           p_prime_abonnement_entreprise_centimes?: number;
           p_prime_abonnement_premium_centimes?: number;
           p_prime_validation_centimes?: number;
+          p_prime_validation_pub_centimes?: number;
         };
         Returns: undefined;
       };

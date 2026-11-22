@@ -1,4 +1,4 @@
--- Relance des impayés (F-87, ADR 0238) : relance d'un toucher (Premium et Entreprise, une tous les
+-- Relance des impayés (F-87, ADR 0238) : relance d'un toucher (Premium et Ultimate, une tous les
 -- 3 jours, paiement encore dû), rappel au client sans coordonnées de l'artisan, relances
 -- automatiques à J+7, J+15 et J+30 si l'artisan les active, journal lu par l'artisan seul.
 -- Données fictives (c127…).

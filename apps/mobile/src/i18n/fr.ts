@@ -4708,7 +4708,7 @@ export const fr = {
   proPlan: {
     title: "Ma formule",
     yourPlan: "VOTRE FORMULE",
-    names: { base: "Base", premium: "Premium", entreprise: "Entreprise", none: "Aucune formule" },
+    names: { base: "Base", premium: "Premium", entreprise: "Ultimate", none: "Aucune formule" },
     states: {
       none: "Les fonctions de la formule Base s'appliquent.",
       trial: (date: string) => `Essai gratuit jusqu'au ${date}`,

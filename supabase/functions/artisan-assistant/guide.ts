@@ -24,7 +24,7 @@ LES CHANTIERS
 
 LES DEVIS
 - On crée le devis depuis la fiche du chantier (« Envoyer un devis ») une fois le rendez-vous passé. Les devis se retrouvent aussi dans Argent, onglet Devis.
-- Lignes : saisie à la main (type main d'œuvre, matériel ou autre, quantité, unité, prix hors taxes, TVA), « Rechercher l'article » pour reprendre une ligne d'un ancien devis, « Dictée intelligente » pour dicter le devis (incluse dans toutes les formules), et « Dicter avec Manon » pour le préparer en conversation (Premium et Entreprise, compté dans les minutes de voix). Les lignes proposées par l'IA sont marquées « À vérifier ».
+- Lignes : saisie à la main (type main d'œuvre, matériel ou autre, quantité, unité, prix hors taxes, TVA), « Rechercher l'article » pour reprendre une ligne d'un ancien devis, « Dictée intelligente » pour dicter le devis (incluse dans toutes les formules), et « Dicter avec Manon » pour le préparer en conversation (Premium et Ultimate, compté dans les minutes de voix). Les lignes proposées par l'IA sont marquées « À vérifier ».
 - « Enregistrer » garde le brouillon. « Générer le devis » montre l'aperçu, puis l'envoi : échéancier, date de début et durée estimée. Le client signe en ligne.
 - Échéancier de paiement : acompte à la signature (30 % par défaut, 0 % possible : devis sans acompte), paiement facultatif au démarrage des travaux, et solde calculé à la réception (exemple : 30 / 40 / 30). L'échéancier par défaut se règle dans Argent, bouton « Mes paiements » ; il reste modifiable devis par devis à l'envoi (« Échéancier personnalisé »). Sans acompte, la date des travaux se fixe dès la signature. Le paiement au démarrage est demandé au client le jour où le chantier commence ; il a sa facture d'acompte et se relance depuis « À encaisser ».
 - Le client peut demander une modification : le devis passe « à modifier », l'artisan le corrige et le renvoie.
@@ -48,12 +48,12 @@ MA VITRINE
 - Mon grade : le niveau de l'artisan selon son activité et ses avis.
 
 FORMULE ET AGENTS IA
-- Trois formules : Base, Premium, Entreprise. La formule se choisit et se gère sur le site, dans « Mon profil », « Ma formule » (jamais dans l'application).
+- Trois formules : Base, Premium, Ultimate. La formule se choisit et se gère sur le site, dans « Mon profil », « Ma formule » (jamais dans l'application).
 - « Ma formule » montre aussi « Vos agents IA » : ce que la formule comprend et les minutes de voix du mois. Les agents écrits (dictée du devis, lecture des dépenses, cet assistant) sont inclus partout.
-- Premium et Entreprise : secrétaire dédiée (elle répond aux clients au nom de l'entreprise, prend un rendez-vous dans l'agenda ou un message ; à essayer et régler dans « Ma formule », rubrique « Votre secrétaire »), devis en conversation avec Manon, minutes de voix incluses chaque mois. Des recharges de minutes s'achètent sur le site, dans « Ma formule ».
+- Premium et Ultimate : secrétaire dédiée (elle répond aux clients au nom de l'entreprise, prend un rendez-vous dans l'agenda ou un message ; à essayer et régler dans « Ma formule », rubrique « Votre secrétaire »), devis en conversation avec Manon, minutes de voix incluses chaque mois. Des recharges de minutes s'achètent sur le site, dans « Ma formule ».
 
 ÉQUIPE (COMPTES DES SALARIÉS)
-- Premium et Entreprise comprennent des comptes pour les salariés : 3 en Premium, 10 en Entreprise, patron compris. Le patron les invite par e-mail dans « Mon profil », « Mon équipe », avec un rôle : chef d'équipe ou ouvrier. Chacun a son propre accès, sur le site et dans l'application.
+- Premium et Ultimate comprennent des comptes pour les salariés : 3 en Premium, 10 en Ultimate, patron compris. Le patron les invite par e-mail dans « Mon profil », « Mon équipe », avec un rôle : chef d'équipe ou ouvrier. Chacun a son propre accès, sur le site et dans l'application.
 - Le chef d'équipe s'occupe des demandes, de tous les chantiers, des devis, factures, paiements, dépenses, de l'agenda et de la secrétaire ; pas de la formule, des paiements en ligne, de la vitrine, du dossier, de l'envoi au comptable ni de l'équipe.
 - L'ouvrier ne voit que les chantiers qui lui sont attribués (journal, photos, messages avec le client, rendez-vous), sans aucun montant ni demande. Le patron ou le chef d'équipe choisit qui travaille sur un chantier dans la fiche du chantier, « Équipe sur ce chantier ».
 - Formule réduite ou impayé prolongé : les derniers invités sont suspendus, jamais supprimés, et reviennent quand une place se libère. Le patron peut aussi suspendre, réactiver, changer le rôle ou retirer un membre dans « Mon équipe ».

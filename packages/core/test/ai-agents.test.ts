@@ -34,9 +34,9 @@ describe("agents IA des formules (ADR 0231)", () => {
       reminders: "sms",
       lines: 1,
       topUps: true,
-      // Appels d'offres : formule Entreprise seulement (ADR 0287).
+      // Appels d'offres : formule Ultimate seulement (ADR 0287).
       tenders: false,
-      // Import de catalogue et prix à jour : Premium et Entreprise (ADR 0363).
+      // Import de catalogue et prix à jour : Premium et Ultimate (ADR 0363).
       catalogImport: true,
       priceUpdates: true,
     });

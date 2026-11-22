@@ -1,7 +1,7 @@
 /**
  * Comptes d'équipe (F-89, ADR 0240) : le patron (titulaire de la fiche artisan) invite ses
  * salariés, chefs d'équipe ou ouvriers, dans la limite des comptes de sa formule (patron compris :
- * 1 en Base, 3 en Premium, 10 en Entreprise, `plans.limites.comptes`). Formule réduite : les
+ * 1 en Base, 3 en Premium, 10 en Ultimate, `plans.limites.comptes`). Formule réduite : les
  * derniers invités sont suspendus (jamais supprimés) jusqu'au choix du patron.
  */
 
@@ -35,7 +35,7 @@ export function teamSeatsLeft(team: { seats: number; used: number }): number {
   return Math.max(0, team.seats - team.used);
 }
 
-/** Comptes d'équipe inclus dans la formule : plus d'une place (Premium et Entreprise). */
+/** Comptes d'équipe inclus dans la formule : plus d'une place (Premium et Ultimate). */
 export function teamIncluded(team: { seats: number }): boolean {
   return team.seats > 1;
 }

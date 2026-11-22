@@ -336,7 +336,7 @@ select is((select count(*)::int from public.commercial_prospects('c108', 'zone')
 reset role;
 
 -- ---------- « Mes résultats » ----------
--- Primes Premium et Entreprise non réglées : celle de Base (ADR 0366).
+-- Primes Premium et Ultimate non réglées : celle de Base (ADR 0366).
 select pg_temp.connecter('c1080000-0000-4000-8000-000000000002', 'commercial');
 set local role authenticated;
 select is(
