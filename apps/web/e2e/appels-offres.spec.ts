@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { files } from "./fixtures";
 
 // Appels d'offres (F-136, ADR 0287) : la carreleuse du seed passe le temps du test en formule
-// Entreprise (clé serveur de l'instance locale de la CI), dépose un DPGF Excel fictif, le chiffre,
+// Ultimate (clé serveur de l'instance locale de la CI), dépose un DPGF Excel fictif, le chiffre,
 // puis télécharge le fichier au format de l'architecte et le PDF ; puis un DPGF en PDF (ADR 0288).
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
