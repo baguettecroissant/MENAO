@@ -45,6 +45,9 @@ const VOICE_CONNECT_ORIGINS = [
   "wss://*.pluot.blue",
 ];
 
+// Mesure d'audience Umami Cloud (F-189, ADR 0388) : script et envoi des visites, sans cookie.
+const UMAMI_ORIGINS = ["https://cloud.umami.is", "https://api-gateway.umami.dev"];
+
 // Composants Connect de Stripe (formulaire d'inscription intégré, ADR 0215).
 const STRIPE_CONNECT_ORIGINS = ["https://connect-js.stripe.com", "https://js.stripe.com"];
 
@@ -97,6 +100,7 @@ export function contentSecurityPolicy({
       ...(dev ? ["'unsafe-eval'"] : []),
       ...stripe,
       ...(voiceCalls ? VOICE_SCRIPT_ORIGINS : []),
+      ...UMAMI_ORIGINS,
       ...live,
     ],
     ["style-src", "'self'", "'unsafe-inline'", ...live],
@@ -128,6 +132,7 @@ export function contentSecurityPolicy({
       "https://*.ingest.de.sentry.io",
       "https://*.ingest.sentry.io",
       ...(voiceCalls ? VOICE_CONNECT_ORIGINS : []),
+      ...UMAMI_ORIGINS,
       ...(preview ? [...live, "wss://ws-us3.pusher.com"] : []),
     ],
     ["worker-src", "'self'", "blob:"],
