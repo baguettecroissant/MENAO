@@ -31,8 +31,8 @@ export type ApplicationState = FormState & {
 
 /**
  * Candidature « Devenir commercial MENAO » (F-183, ADR 0380 et 0382) : contrôlée ici, puis en base
- * (`apply_as_commercial`, limites d'envoi), avec le CV déjà rangé par process-upload dans le
- * dossier de la session anonyme du navigateur. Plus de réservation de réunion juste après l'envoi
+ * (`apply_as_commercial`, limites d'envoi), avec le CV, s'il y en a un (facultatif, ADR 0386), déjà
+ * rangé par process-upload dans le dossier de la session anonyme du navigateur. Plus de réservation de réunion juste après l'envoi
  * (lot 79) : le candidat voit la confirmation, l'équipe lit son CV.
  */
 export async function applyAsCommercial(
@@ -61,7 +61,7 @@ export async function applyAsCommercial(
     p_source: d.source,
     p_motivation: d.motivation ?? "",
     p_consent: true,
-    p_cv_path: d.cv_path,
+    p_cv_path: d.cv_path ?? "",
     p_linkedin_url: d.linkedin_url ?? undefined,
   });
   if (error || !token) {

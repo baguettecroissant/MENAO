@@ -57,12 +57,12 @@ describe("candidature d'un conseiller", () => {
 });
 
 describe("CV, LinkedIn et étapes (ADR 0382)", () => {
-  it("exige un CV rangé, au bon format", () => {
-    const missing = commercialApplicationSchema.safeParse({ ...valid, cv_path: "" });
-    expect(missing.error?.flatten().fieldErrors.cv_path).toEqual([messages.candidateCv]);
-    expect(commercialApplicationSchema.safeParse({ ...valid, cv_path: "../cv.pdf" }).success).toBe(
-      false,
-    );
+  it("accepte une candidature sans CV, mais contrôle un CV joint (ADR 0386)", () => {
+    expect(commercialApplicationSchema.parse({ ...valid, cv_path: "" }).cv_path).toBeNull();
+    expect(commercialApplicationSchema.parse({ ...valid, cv_path: "  " }).cv_path).toBeNull();
+    expect(commercialApplicationSchema.parse(valid).cv_path).toBe(valid.cv_path);
+    const wrong = commercialApplicationSchema.safeParse({ ...valid, cv_path: "../cv.pdf" });
+    expect(wrong.error?.flatten().fieldErrors.cv_path).toEqual([messages.candidateCv]);
   });
   it("complète et contrôle le lien LinkedIn, facultatif", () => {
     expect(commercialApplicationSchema.parse(valid).linkedin_url).toBeNull();

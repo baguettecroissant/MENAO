@@ -1,4 +1,4 @@
--- Candidature des commerciaux avec CV (F-183, lot 79, ADR 0382) : CV obligatoire rangé dans le
+-- Candidature des commerciaux avec CV (F-183, lot 79, ADR 0382 ; facultatif depuis F-187, ADR 0386) : CV rangé dans le
 -- dossier du compte qui candidate, une seule fois ; LinkedIn facultatif et contrôlé ; e-mail de
 -- bonne réception ; CV lisibles par les administrateurs seulement ; CV d'une candidature supprimée
 -- mis en file, vidée par un administrateur. Données fictives (example.test, 06 fictifs).
@@ -34,14 +34,12 @@ grant execute on function pg_temp.candidater(text, text, text, text) to authenti
 -- Session anonyme du premier candidat.
 select pg_temp.connecter('e1770000-0000-4000-8000-0000000000a1', '', 'aal1', true);
 set local role authenticated;
-select throws_ok($$ select pg_temp.candidater('julie177@example.test', '+33600001771', null) $$,
-  '22023', 'Ajoutez votre CV en PDF.', 'sans CV : refusé');
 select throws_ok($$ select pg_temp.candidater('julie177@example.test', '+33600001771',
   'e1770000-0000-4000-8000-0000000000a2/e1771000-0000-4000-8000-000000000002.pdf') $$,
-  '22023', 'Ajoutez votre CV en PDF.', 'CV du dossier d''un autre compte : refusé');
+  '22023', 'Votre CV n''a pas pu être joint : choisissez-le à nouveau, en PDF.', 'CV du dossier d''un autre compte : refusé');
 select throws_ok($$ select pg_temp.candidater('julie177@example.test', '+33600001771',
   'e1770000-0000-4000-8000-0000000000a1/e1771000-0000-4000-8000-0000000000ff.pdf') $$,
-  '22023', 'Ajoutez votre CV en PDF.', 'CV absent du stockage : refusé');
+  '22023', 'Votre CV n''a pas pu être joint : choisissez-le à nouveau, en PDF.', 'CV absent du stockage : refusé');
 select throws_ok($$ select pg_temp.candidater('julie177@example.test', '+33600001771',
   'e1770000-0000-4000-8000-0000000000a1/e1771000-0000-4000-8000-000000000001.pdf',
   'https://exemple.test/julie') $$,
@@ -51,10 +49,18 @@ select isnt(pg_temp.candidater('julie177@example.test', '+33600001771',
   ' https://www.linkedin.com/in/julie-exemple '), null, 'CV et LinkedIn : candidature reçue');
 select throws_ok($$ select pg_temp.candidater('karim177@example.test', '+33600001772',
   'e1770000-0000-4000-8000-0000000000a1/e1771000-0000-4000-8000-000000000001.pdf') $$,
-  '22023', 'Ajoutez votre CV en PDF.', 'un CV ne sert qu''une fois');
+  '22023', 'Votre CV n''a pas pu être joint : choisissez-le à nouveau, en PDF.', 'un CV ne sert qu''une fois');
+-- CV facultatif (F-187, ADR 0386) : sans CV, la candidature est reçue.
+select isnt(pg_temp.candidater('sans177@example.test', '+33600001773', null), null,
+  'sans CV : candidature reçue');
+select isnt(pg_temp.candidater('vide177@example.test', '+33600001774', '  '), null,
+  'CV vide : candidature reçue');
 select is((select count(*)::int from storage.objects where bucket_id = 'candidate-cvs'), 0,
   'candidat : ne lit aucun CV');
 reset role;
+select is((select count(*)::int from public.commercial_candidates
+  where email in ('sans177@example.test', 'vide177@example.test') and cv_path is null), 2,
+  'sans CV : aucun chemin enregistré');
 
 select is((select cv_path || ' ' || linkedin_url from public.commercial_candidates where email = 'julie177@example.test'),
   'e1770000-0000-4000-8000-0000000000a1/e1771000-0000-4000-8000-000000000001.pdf https://www.linkedin.com/in/julie-exemple',

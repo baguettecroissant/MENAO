@@ -17,7 +17,7 @@ export const messages = {
   candidateChoice: "Choisissez une réponse.",
   candidateConsent: "Cochez la case pour que nous puissions traiter votre candidature.",
   // CV et LinkedIn de la candidature (ADR 0382).
-  candidateCv: "Ajoutez votre CV en PDF.",
+  candidateCv: "Votre CV n'a pas pu être joint : choisissez-le à nouveau, en PDF.",
   candidateCvType: "Votre CV doit être un fichier PDF.",
   candidateCvTooLarge: "Votre CV dépasse 5 Mo : enregistrez-le en PDF plus léger.",
   candidateLinkedin: "Lien LinkedIn invalide : copiez l'adresse de votre profil.",
