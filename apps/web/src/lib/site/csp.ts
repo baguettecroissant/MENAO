@@ -46,7 +46,11 @@ const VOICE_CONNECT_ORIGINS = [
 ];
 
 // Mesure d'audience Umami Cloud (F-189, ADR 0388) : script et envoi des visites, sans cookie.
-const UMAMI_ORIGINS = ["https://cloud.umami.is", "https://api-gateway.umami.dev"];
+const UMAMI_ORIGINS = [
+  "https://cloud.umami.is",
+  "https://gateway.umami.is",
+  "https://api-gateway.umami.dev",
+];
 
 // Composants Connect de Stripe (formulaire d'inscription intégré, ADR 0215).
 const STRIPE_CONNECT_ORIGINS = ["https://connect-js.stripe.com", "https://js.stripe.com"];

@@ -20,8 +20,8 @@ quelles pages sont vues, d'où viennent les visiteurs et ce qu'ils font, avec l'
   (`data-do-not-track`), paramètres et ancres d'adresse retirés (`data-exclude-search`,
   `data-exclude-hash`), adresses à jeton personnel jamais envoyées (`data-before-send` :
   demande préparée, espace partenaire).
-- Politique de sécurité : `cloud.umami.is` et `api-gateway.umami.dev` autorisés (scripts et
-  connexions).
+- Politique de sécurité : `cloud.umami.is`, `gateway.umami.is` (envoi des visites) et
+  `api-gateway.umami.dev` autorisés (scripts et connexions).
 - L'identifiant du site est écrit dans le code (`lib/site/analytics.ts`) : il n'est pas secret et le
   compte Vercel n'est pas accessible depuis le poste de développement.
 - Umami ajouté aux prestataires de la politique de confidentialité et à la page cookies.
