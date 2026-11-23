@@ -11,6 +11,7 @@ import { appReturnUrl, type AppReturn } from "../../../packages/core/src/app-ret
 import { adminClient, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
 import { logStripeError, returnOrigin, stripeClient } from "../_shared/stripe.ts";
+import { paymentsClosed, paymentsOpen } from "../_shared/launch.ts";
 
 const LABELS = { acompte: "Acompte", demarrage: "Paiement au démarrage", solde: "Solde" } as const;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -27,6 +28,8 @@ type Started = {
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response(null, { status: 405 });
+  // Paiements fermés jusqu'au lancement (ADR 0387).
+  if (!paymentsOpen) return paymentsClosed();
   const authorization = req.headers.get("Authorization") ?? "";
   if (!/^Bearer\s+\S+$/i.test(authorization)) return json({ status: "forbidden" }, 401);
 

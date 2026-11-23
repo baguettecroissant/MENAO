@@ -7,6 +7,7 @@ import {
 } from "@menao/core";
 import { router, type Href } from "expo-router";
 import { loadDossier, type Dossier } from "./artisan-dossier";
+import { PAYMENTS_OPEN } from "@menao/core";
 
 /** Parcours guidé du dossier (ADR 0373, 0374), comme sur le site : mêmes étapes, même ordre. */
 export type DossierGuide = {
@@ -21,7 +22,12 @@ export function dossierGuide(dossier: Dossier): DossierGuide {
     (doc) => doc.type === "kbis" && doc.source === "registre" && doc.status === "valide",
   );
   // Pas d'étape « formule » dans l'application : aucun achat d'abonnement (règle 10).
-  const steps = guideSteps(dossier.snapshot, { kbisFromRegistry, withPlan: false });
+  const steps = guideSteps(dossier.snapshot, {
+    kbisFromRegistry,
+    withPlan: false,
+    // Paiements fermés jusqu'au lancement (ADR 0387).
+    withPayments: PAYMENTS_OPEN,
+  });
   return {
     // Jusqu'à la validation (ADR 0376) : les attestations et les paiements suivent l'envoi.
     active:

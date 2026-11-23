@@ -3,9 +3,11 @@ import type { Metadata, Route } from "next";
 import { notFound, redirect } from "next/navigation";
 import { AccountStep } from "@/app/recherche/[id]/envoyer/account-step";
 import { Alert, ButtonLink, Card, CardTitle, PageShell } from "@/components/ui";
+import { RequestsSoon } from "@/components/site/launch-notice";
 import { fr } from "@/i18n/fr";
 import { appTheme } from "@/lib/fonts";
 import { oauthProviders } from "@/lib/auth/oauth";
+import { requestsOpen } from "@/lib/launch";
 import { matchArtisans } from "@/lib/project/artisans";
 import { preparedRequestPath, sendPagePath } from "@/lib/project/paths";
 import {
@@ -79,6 +81,14 @@ export default async function PreparedRequestPage({
 }: PageProps<"/demande-preparee/[jeton]">) {
   const { jeton } = await params;
   if (!TOKEN.test(jeton)) notFound();
+  // Demandes fermées jusqu'au lancement (ADR 0387).
+  if (!requestsOpen) {
+    return (
+      <main>
+        <RequestsSoon />
+      </main>
+    );
+  }
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getClaims();
 

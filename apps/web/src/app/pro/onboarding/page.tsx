@@ -39,6 +39,7 @@ import { getOnboardingContext } from "@/lib/artisan/context";
 import { HelpVideo } from "@/components/pro/help-video";
 import { InscriptionPath } from "./inscription-path";
 import { SubmitOnboarding } from "./submit-onboarding";
+import { paymentsOpen } from "@/lib/launch";
 
 const t = fr.pro.onboarding;
 const d = t.dossier;
@@ -395,8 +396,10 @@ export default async function OnboardingIndexPage() {
                   // Ouvert dès le début du dossier (ADR 0353).
                   parallel && !progress.paiements ? d.paiementsHintNow : d.paiementsHint
                 }
-                tone={progress.paiements ? "done" : "todo"}
-                status={progress.paiements ? d.states.done : d.states.todo}
+                tone={progress.paiements ? "done" : paymentsOpen ? "todo" : "pending"}
+                status={
+                  progress.paiements ? d.states.done : paymentsOpen ? d.states.todo : fr.launch.soon
+                }
               />
               <Row
                 href="/pro/onboarding/formule"
@@ -409,13 +412,21 @@ export default async function OnboardingIndexPage() {
                       ? d.formuleHintChosen(chosenPlan)
                       : d.formuleHintChoice
                 }
-                tone={progress.formule ? "done" : parallel && chosenPlan ? "pending" : "todo"}
+                tone={
+                  progress.formule
+                    ? "done"
+                    : !paymentsOpen || (parallel && chosenPlan)
+                      ? "pending"
+                      : "todo"
+                }
                 status={
                   progress.formule
                     ? d.states.done
-                    : parallel && chosenPlan
-                      ? d.states.chosen
-                      : d.states.todo
+                    : !paymentsOpen
+                      ? fr.launch.soon
+                      : parallel && chosenPlan
+                        ? d.states.chosen
+                        : d.states.todo
                 }
               />
             </ul>

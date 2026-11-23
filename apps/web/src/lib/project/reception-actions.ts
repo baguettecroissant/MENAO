@@ -98,7 +98,9 @@ export async function payBalance(chantierId: string): Promise<FormState> {
       error instanceof FunctionsHttpError && error.context.status === 409
         ? ((await error.context.json().catch(() => null)) as { message?: string } | null)
         : null;
-    return { error: body?.message ?? fr.balance.unavailable };
+    // Paiements fermés jusqu'au lancement (ADR 0387).
+    const closed = error instanceof FunctionsHttpError && error.context.status === 503;
+    return { error: body?.message ?? (closed ? fr.launch.paymentsClosed : fr.balance.unavailable) };
   }
   redirect(data.url as Route);
 }

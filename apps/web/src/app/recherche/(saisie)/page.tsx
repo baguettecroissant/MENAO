@@ -3,8 +3,10 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { NeedForm } from "@/components/project/need-form";
 import { NeedFormFromQuery } from "@/components/project/need-form-from-query";
+import { RequestsSoon } from "@/components/site/launch-notice";
 import { TrustSection } from "@/components/site/trust-section";
 import { fr } from "@/i18n/fr";
+import { requestsOpen } from "@/lib/launch";
 import { seoCatalog } from "@/lib/site/catalog";
 
 const t = fr.search;
@@ -27,6 +29,14 @@ export const revalidate = 3600;
 
 /** Saisie du besoin (F-05), maquettes « Page de recherche – Saisie et dictée ». */
 export default async function SearchPage() {
+  // Demandes fermées jusqu'au lancement (ADR 0387).
+  if (!requestsOpen) {
+    return (
+      <main>
+        <RequestsSoon />
+      </main>
+    );
+  }
   const { trades } = await seoCatalog();
   // Refonte « Nette » (ADR 0257) : grand titre centré, saisie large, quatre cartes de confiance.
   return (

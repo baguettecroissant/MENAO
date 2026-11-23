@@ -422,6 +422,8 @@ STRIPE_PORTAL_CONFIGURATION_ID = "env(STRIPE_PORTAL_CONFIGURATION_ID)"
 STRIPE_PUBLISHABLE_KEY = "env(STRIPE_PUBLISHABLE_KEY)"
 # Origines autorisées pour le retour depuis Stripe (séparées par des virgules).
 SITE_URLS = "env(SITE_URLS)"
+# CI uniquement : rouvre les paiements fermés jusqu'au lancement (ADR 0387) pour les tests.
+MENAO_FULL_ACCESS = "env(MENAO_FULL_ACCESS)"
 # CI uniquement : stripe-mock.
 STRIPE_API_HOST = "env(STRIPE_API_HOST)"
 STRIPE_API_PORT = "env(STRIPE_API_PORT)"

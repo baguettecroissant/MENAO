@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { RequestsSoon } from "@/components/site/launch-notice";
 import { PartnerWidget } from "@/components/widget/partner-widget";
 import { fr } from "@/i18n/fr";
+import { requestsOpen } from "@/lib/launch";
 import { seoCatalog } from "@/lib/site/catalog";
 
 export const metadata: Metadata = {
@@ -23,9 +25,14 @@ export default async function WidgetPage() {
     <main className="bg-transparent">
       {/* Fond transparent : le widget se fond dans la page du partenaire. */}
       <style>{"html,body{background:transparent}"}</style>
-      <Suspense fallback={null}>
-        <PartnerWidget trades={options} />
-      </Suspense>
+      {requestsOpen ? (
+        <Suspense fallback={null}>
+          <PartnerWidget trades={options} />
+        </Suspense>
+      ) : (
+        // Demandes fermées jusqu'au lancement (ADR 0387).
+        <RequestsSoon compact />
+      )}
     </main>
   );
 }

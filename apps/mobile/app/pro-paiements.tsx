@@ -1,4 +1,5 @@
 import {
+  PAYMENTS_OPEN,
   completeConnectPrefill,
   parisToday,
   type ConnectDetails,
@@ -30,6 +31,7 @@ import { useFocusData } from "@/lib/use-focus-data";
 import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
 import { withTeamPermission } from "@/components/team-gate";
+import { PaymentsSoonCard } from "@/components/launch-notice";
 
 const t = fr.proPayments;
 
@@ -132,6 +134,12 @@ function PaymentsScreen() {
           <FicheCard padding={4.5}>
             <Text style={styles.body}>{t.notValidated}</Text>
           </FicheCard>
+        ) : !PAYMENTS_OPEN && data.status !== "actif" ? (
+          // Paiements fermés jusqu'au lancement (ADR 0387).
+          <>
+            <PaymentsSoonCard />
+            <StripeExplainerCard />
+          </>
         ) : (
           <>
             {/* « Stripe, c'est quoi ? » (lot 80, ADR 0384) : tant que le compte n'est pas actif. */}

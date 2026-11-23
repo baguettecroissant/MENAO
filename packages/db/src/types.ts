@@ -1727,6 +1727,7 @@ export type Database = {
           indexable: boolean;
           is_dirigeant: boolean | null;
           logo_path: string | null;
+          masque_public: boolean;
           nom_commercial: string | null;
           paused: boolean;
           plan_choisi: string | null;
@@ -1796,6 +1797,7 @@ export type Database = {
           indexable?: boolean;
           is_dirigeant?: boolean | null;
           logo_path?: string | null;
+          masque_public?: boolean;
           nom_commercial?: string | null;
           paused?: boolean;
           plan_choisi?: string | null;
@@ -1864,6 +1866,7 @@ export type Database = {
           indexable?: boolean;
           is_dirigeant?: boolean | null;
           logo_path?: string | null;
+          masque_public?: boolean;
           nom_commercial?: string | null;
           paused?: boolean;
           plan_choisi?: string | null;

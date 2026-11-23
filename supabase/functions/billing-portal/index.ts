@@ -3,9 +3,12 @@
 import { adminClient, currentArtisan, json } from "../_shared/artisan.ts";
 import { env } from "../_shared/env.ts";
 import { logStripeError, returnOrigin, stripeClient } from "../_shared/stripe.ts";
+import { paymentsClosed, paymentsOpen } from "../_shared/launch.ts";
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response(null, { status: 405 });
+  // Paiements fermés jusqu'au lancement (ADR 0387).
+  if (!paymentsOpen) return paymentsClosed();
   const admin = adminClient();
   const ctx = await currentArtisan(req, admin);
   if (!ctx) return json({ status: "forbidden" }, 403);

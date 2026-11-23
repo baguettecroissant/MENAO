@@ -70,6 +70,11 @@ export type GuideOptions = {
   paymentsStarted?: boolean;
   /** `false` dans l'application : pas d'achat d'abonnement (règle 10), l'étape « formule » saute. */
   withPlan?: boolean;
+  /**
+   * `false` tant que les paiements sont fermés (`PAYMENTS_OPEN`, ADR 0387) : les étapes « formule »
+   * et « paiements » sortent du parcours ; elles s'ouvriront au lancement.
+   */
+  withPayments?: boolean;
 };
 
 /**
@@ -98,7 +103,7 @@ export function guideSteps(
       }),
     ),
     { key: "profil" as const, done: p.profil, seconds: GUIDE_SECONDS.profil },
-    ...(options.withPlan === false
+    ...(options.withPlan === false || options.withPayments === false
       ? []
       : [{ key: "formule" as const, done: p.formule, seconds: GUIDE_SECONDS.formule }]),
     {
@@ -106,11 +111,15 @@ export function guideSteps(
       done: attestations.done === attestations.total,
       seconds: GUIDE_SECONDS.attestation * (attestations.total - attestations.done || 1),
     },
-    {
-      key: "paiements" as const,
-      done: p.paiements || options.paymentsStarted === true,
-      seconds: GUIDE_SECONDS.paiements,
-    },
+    ...(options.withPayments === false
+      ? []
+      : [
+          {
+            key: "paiements" as const,
+            done: p.paiements || options.paymentsStarted === true,
+            seconds: GUIDE_SECONDS.paiements,
+          },
+        ]),
   ];
 }
 

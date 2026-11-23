@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+// Chemin relatif : ce fichier est lu par next.config, hors de la compilation de l'application.
+import { SITE_OPEN } from "../../../../../packages/core/src/launch";
 import { COMMERCIAL_DEMO_COOKIE } from "../commercial/demo-cookie";
 
 /**
@@ -6,6 +8,7 @@ import { COMMERCIAL_DEMO_COOKIE } from "../commercial/demo-cookie";
  * du site affiche la page d'attente, sauf pour qui a saisi le code (cookie de 30 jours). Le filtre
  * est une réécriture de next.config : aucune fonction n'est déclenchée pour les visiteurs, et les
  * pages restent statiques (spec §4.4). Le mode se retire en supprimant la variable, puis en redéployant.
+ * Depuis l'ouverture de la vitrine (ADR 0387), `SITE_OPEN` le désactive même si la variable reste.
  */
 export const PRELAUNCH_COOKIE = "menao_acces";
 export const PRELAUNCH_PAGE = "/bientot";
@@ -58,7 +61,7 @@ const DEMO_PAGES = ["commercial", "pro/decouvrir"];
 
 /** Réécritures « beforeFiles » de next.config : aucune si le mode est désactivé. */
 export function prelaunchRewrites(code: string | undefined) {
-  if (!code) return [];
+  if (!code || SITE_OPEN) return [];
   const access = { type: "cookie" as const, key: PRELAUNCH_COOKIE, value: prelaunchToken(code) };
   const missing = [access];
   const demo = { type: "cookie" as const, key: COMMERCIAL_DEMO_COOKIE };

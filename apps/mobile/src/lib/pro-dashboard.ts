@@ -26,6 +26,7 @@ import { countReviewsToAnswer } from "./pro-reviews";
 import { supabase } from "./supabase";
 import { myArtisanKey } from "./team";
 import { loadWelcomeGift } from "./welcome-gift";
+import { PAYMENTS_OPEN } from "@menao/core";
 
 export type Dashboard = {
   firstName: string | null;
@@ -185,7 +186,8 @@ export async function loadDashboard(): Promise<Dashboard | null> {
         })),
       documentsToRenew: renew,
       urssafMissing,
-      paymentsMissing: visibility?.missing.includes("paiements") ?? false,
+      // Paiements fermés jusqu'au lancement (ADR 0387) : rien à activer pour l'instant.
+      paymentsMissing: PAYMENTS_OPEN && (visibility?.missing.includes("paiements") ?? false),
       reviewsToAnswer,
       welcomeGiftToChoose: welcomeGift?.status === "a_choisir",
     },

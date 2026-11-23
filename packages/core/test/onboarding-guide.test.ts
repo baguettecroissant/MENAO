@@ -75,6 +75,15 @@ describe("parcours guidé de l'inscription (ADR 0376)", () => {
     expect(keys(steps)).toEqual(["charte", "identite", "profil", "attestations", "paiements"]);
   });
 
+  it("paiements fermés (ADR 0387) : ni formule ni paiements dans le parcours", () => {
+    const keys = guideSteps(inscrit, { kbisFromRegistry: true, withPayments: false }, today).map(
+      (step) => step.key,
+    );
+    expect(keys).not.toContain("formule");
+    expect(keys).not.toContain("paiements");
+    expect(keys).toContain("attestations");
+  });
+
   it("entreprise, métiers et zone n'y figurent que s'ils restent à terminer", () => {
     const steps = guideSteps({ ...inscrit, assujettiTva: null, tradeCount: 0 }, registre, today);
     expect(keys(steps).slice(0, 3)).toEqual(["entreprise", "metiers", "charte"]);

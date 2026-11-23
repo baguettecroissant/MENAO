@@ -110,6 +110,8 @@ jobs:
           DOCUSEAL_API_URL: http://host.docker.internal:18397
           DOCUSEAL_API_KEY: cle-factice-ci
           DOCUSEAL_WEBHOOK_SECRET: whsec_menao_ci
+          # Paiements fermés jusqu'au lancement (ADR 0387) : rouverts pour les tests.
+          MENAO_FULL_ACCESS: "true"
         run: pnpm exec supabase start -x studio,imgproxy,logflare,vector,supavisor,realtime,postgres-meta
       - name: Variables d'environnement de l'application
         run: |
@@ -125,6 +127,8 @@ jobs:
             echo "STRIPE_CONNECT_WEBHOOK_SECRET=whsec_menao_connect_ci"
             # Boutons Google et Apple affichés ; la redirection vers le fournisseur est interceptée.
             echo "NEXT_PUBLIC_OAUTH_PROVIDERS=google,apple"
+            # Demandes et paiements fermés jusqu'au lancement (ADR 0387) : rouverts pour les tests.
+            echo "NEXT_PUBLIC_MENAO_FULL_ACCESS=true"
           } >> "$GITHUB_ENV"
       # Sans les paquets d'Ubuntu (--with-deps) : l'image GitHub a déjà Chrome et ses
       # bibliothèques, et une panne des miroirs Ubuntu (11/11/2026) bloquait tous les tests.

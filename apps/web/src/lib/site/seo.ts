@@ -1,18 +1,26 @@
+import { SITE_OPEN } from "@menao/core";
 import { env } from "@/env";
 
 export const SITE_URL = env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
 
+/** Adresses du site de production, seules indexables sans ALLOW_INDEXING. */
+const PRODUCTION_SITE_URLS = ["https://menao.fr", "https://www.menao.fr"];
+
 /**
  * Indexation par les moteurs de recherche : fermée par défaut (staging, aperçus Vercel), ouverte
- * seulement en production avec ALLOW_INDEXING=true (lu au build).
+ * en production avec ALLOW_INDEXING=true (lu au build), ou depuis l'ouverture de la vitrine
+ * (`SITE_OPEN`, ADR 0387) sur le déploiement de production de menao.fr.
  */
-export const indexingAllowed = process.env.ALLOW_INDEXING === "true";
+export const indexingAllowed =
+  process.env.ALLOW_INDEXING === "true" ||
+  (SITE_OPEN && process.env.VERCEL_ENV === "production" && PRODUCTION_SITE_URLS.includes(SITE_URL));
 
 /**
  * Pré-lancement en production (ADR 0101) : seule la page d'attente est indexable, pour que Google
  * connaisse la marque MENAO avant l'ouverture (ADR 0134). Jamais sur les aperçus ni sur staging.
  */
 export const prelaunchIndexing =
+  !SITE_OPEN &&
   !indexingAllowed &&
   Boolean(process.env.PRELAUNCH_ACCESS_CODE) &&
   process.env.VERCEL_ENV === "production";
