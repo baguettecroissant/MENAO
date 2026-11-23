@@ -1,3 +1,4 @@
+import { PAYMENTS_OPEN } from "@menao/core";
 import { router } from "expo-router";
 import { Check, Wallet } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
@@ -21,10 +22,12 @@ export default function DossierSentScreen() {
   const [dossier] = useFocusData(loadDossier);
   if (dossier === undefined) return <FicheSkeleton />;
   const paid = dossier?.progress.paiements === true;
+  // Paiements fermés jusqu'au lancement (ADR 0387) : pas d'invitation à les activer.
+  const closed = !paid && !PAYMENTS_OPEN;
   return (
     <FicheScreen
       footer={
-        paid ? (
+        paid || closed ? (
           <FicheButton label={t.back} tall onPress={() => router.back()} />
         ) : (
           <>
@@ -43,8 +46,8 @@ export default function DossierSentScreen() {
           icon={Wallet}
           title={t.payTitle}
           hint={t.payText}
-          tone={paid ? "done" : "todo"}
-          status={paid ? t.done : t.toDo}
+          tone={paid ? "done" : closed ? "pending" : "todo"}
+          status={paid ? t.done : closed ? fr.launch.soon : t.toDo}
           href="/pro-paiements"
         />
       </DossierGroup>

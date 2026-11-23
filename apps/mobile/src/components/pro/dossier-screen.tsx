@@ -1,5 +1,6 @@
 import {
   CHARTER_RULE_COUNT,
+  PAYMENTS_OPEN,
   REQUIRED_DOCUMENT_TYPES,
   connectOnboardingOpen,
   documentState,
@@ -305,8 +306,10 @@ export function DossierScreen() {
             icon={Wallet}
             title={t.paiementsTitle}
             hint={t.paiementsHintNow}
-            tone={progress.paiements ? "done" : "todo"}
-            status={progress.paiements ? t.states.done : t.states.openNow}
+            tone={progress.paiements ? "done" : PAYMENTS_OPEN ? "todo" : "pending"}
+            status={
+              progress.paiements ? t.states.done : PAYMENTS_OPEN ? t.states.openNow : fr.launch.soon
+            }
             href="/pro-paiements"
           />
         </DossierGroup>

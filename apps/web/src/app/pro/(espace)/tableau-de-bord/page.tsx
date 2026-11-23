@@ -24,6 +24,7 @@ import { fr } from "@/i18n/fr";
 import { artisanActivity, getProShell, requireProSpace, spaceExamples } from "@/lib/artisan/space";
 import { planUsage } from "@/lib/artisan/plan-limits";
 import { formatMonthName } from "@/lib/format";
+import { paymentsOpen } from "@/lib/launch";
 
 export const metadata: Metadata = { title: `${fr.pro.dashboard.title} — MENAO` };
 
@@ -175,7 +176,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/pro/ta
         })),
       documentsToRenew: patron ? documentsToRenew : [],
       urssafMissing: patron && urssafMissing && status !== "radie",
-      paymentsMissing: patron && visibility.missing.includes("paiements"),
+      // Paiements fermés jusqu'au lancement (ADR 0387) : rien à activer pour l'instant.
+      paymentsMissing: paymentsOpen && patron && visibility.missing.includes("paiements"),
       reviewsToAnswer: patron ? badges.reviews : 0,
       welcomeGiftToChoose: patron && parseWelcomeGift(giftData)?.status === "a_choisir",
     },

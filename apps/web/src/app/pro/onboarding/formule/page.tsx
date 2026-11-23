@@ -21,6 +21,8 @@ import { Alert, Card, StatusBadge, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
 import { ManageSubscription, PlanCheckout } from "./plan-forms";
+import { PaymentsSoonCard } from "@/components/site/launch-notice";
+import { paymentsOpen } from "@/lib/launch";
 
 const t = fr.pro.onboarding.plans;
 const day = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" });
@@ -220,12 +222,15 @@ async function PlanStepContent({ searchParams }: PageProps<"/pro/onboarding/form
                     {t.cancelAtPeriodEnd(day.format(new Date(subscription.current_period_end)))}
                   </p>
                 )}
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                <ManageSubscription />
-                <p className="min-w-0 flex-1 text-[0.8125rem] text-muted-foreground">
-                  {t.manageHint}
-                </p>
-              </div>
+              {/* Espace de facturation Stripe fermé jusqu'au lancement (ADR 0387). */}
+              {paymentsOpen && (
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <ManageSubscription />
+                  <p className="min-w-0 flex-1 text-[0.8125rem] text-muted-foreground">
+                    {t.manageHint}
+                  </p>
+                </div>
+              )}
               {canStop && (
                 <Link
                   href={"/pro/onboarding/formule/arreter" as Route}
@@ -246,7 +251,8 @@ async function PlanStepContent({ searchParams }: PageProps<"/pro/onboarding/form
           <VoiceMinutesCard
             state={agentsState}
             topUp={
-              topUpData
+              // Recharges fermées jusqu'au lancement (ADR 0387).
+              topUpData && paymentsOpen
                 ? {
                     offer: firstOffer
                       ? {
@@ -269,6 +275,9 @@ async function PlanStepContent({ searchParams }: PageProps<"/pro/onboarding/form
       </div>
     );
   }
+
+  // Formule et carte fermées jusqu'au lancement (ADR 0387).
+  if (!paymentsOpen) return <PaymentsSoonCard />;
 
   const openPlans = (plans ?? []).filter((p) => p.ouverte);
   const chosenCode = openPlans.some((p) => p.code === artisan.plan_choisi)

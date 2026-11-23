@@ -32,6 +32,7 @@ import { adminClient, currentArtisan, json } from "../_shared/artisan.ts";
 import { prefillSource, saveConnectAccount } from "../_shared/connect.ts";
 import { env } from "../_shared/env.ts";
 import { logStripeError, returnOrigin, stripeClient } from "../_shared/stripe.ts";
+import { paymentsClosed, paymentsOpen } from "../_shared/launch.ts";
 
 /**
  * Pré-remplit un compte qui vient d'être créé, avant le premier lien d'inscription. Chaque étape
@@ -96,6 +97,8 @@ Deno.serve(async (req) => {
     p_window_seconds: 3600,
   });
   if (allowed !== true) return json({ status: "rate_limited" }, 429);
+  // Paiements fermés jusqu'au lancement (ADR 0387) : seul l'état d'un compte existant se relit.
+  if (!paymentsOpen && body.action !== "refresh") return paymentsClosed();
 
   const { data: row } = await admin
     .from("artisans")

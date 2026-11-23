@@ -552,6 +552,17 @@ export const fr = {
     saved: "Zone enregistrée.",
     loadError: "Votre zone n'a pas pu être chargée. Réessayez.",
   },
+  /** Ouverture progressive (F-188, ADR 0387), comme sur le site. */
+  launch: {
+    requestsTitle: "Les demandes de devis ouvrent au printemps 2027.",
+    requestsText: "MENAO vérifie en ce moment ses premiers artisans dans les Alpes-Maritimes.",
+    requestsArtisan: "Vous êtes artisan ? Rejoindre MENAO",
+    paymentsTitle: "Ouvre au lancement de MENAO",
+    paymentsText:
+      "Votre compte de paiement s'ouvrira au lancement. Rien à faire pour l'instant : nous vous préviendrons par e-mail.",
+    paymentsClosed: "Le paiement en ligne ouvrira au lancement de MENAO.",
+    soon: "Au lancement",
+  },
   /** Compte de paiement Stripe (ADR 0124), comme l'étape « Paiements » du site. */
   proPayments: {
     title: "Paiements",

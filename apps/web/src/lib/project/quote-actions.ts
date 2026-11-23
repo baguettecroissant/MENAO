@@ -120,7 +120,9 @@ export async function payDeposit(quoteId: string): Promise<FormState> {
       error instanceof FunctionsHttpError && error.context.status === 409
         ? ((await error.context.json().catch(() => null)) as { message?: string } | null)
         : null;
-    return { error: body?.message ?? t.deposit.unavailable };
+    // Paiements fermés jusqu'au lancement (ADR 0387).
+    const closed = error instanceof FunctionsHttpError && error.context.status === 503;
+    return { error: body?.message ?? (closed ? fr.launch.paymentsClosed : t.deposit.unavailable) };
   }
   redirect(data.url as Route);
 }

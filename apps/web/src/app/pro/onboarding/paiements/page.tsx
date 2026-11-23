@@ -19,6 +19,8 @@ import { ConnectStatusPanel } from "./connect-status";
 import { PaymentHow } from "./payment-how";
 import { StripeExplainerCard, StripeExplainerLink } from "@/components/pro/stripe-explainer";
 import { StripeChecklist } from "./stripe-checklist";
+import { PaymentsSoonCard } from "@/components/site/launch-notice";
+import { paymentsOpen } from "@/lib/launch";
 
 const t = fr.pro.onboarding.connect;
 
@@ -70,7 +72,10 @@ async function PaymentsStepContent({ searchParams }: PageProps<"/pro/onboarding/
     disabledReason: artisan.connect_disabled_reason,
   });
   // Premier passage : de quoi pré-remplir le compte Stripe avant sa création (ADR 0204, 0215).
-  const prefill = status === "a_demarrer" ? await loadConnectPrefill().catch(() => null) : null;
+  // Paiements fermés jusqu'au lancement (ADR 0387) : rien n'est demandé à Stripe.
+  const closed = !paymentsOpen && status !== "actif";
+  const prefill =
+    status === "a_demarrer" && !closed ? await loadConnectPrefill().catch(() => null) : null;
   // Pièce d'identité déposée en image et transmissible (ADR 0378) : jointe au pré-remplissage,
   // pour le dirigeant ou l'entrepreneur individuel.
   const personal = prefill?.person != null || prefill?.account?.business_type === "individual";
@@ -107,35 +112,38 @@ async function PaymentsStepContent({ searchParams }: PageProps<"/pro/onboarding/
       <div className="flex flex-col gap-4">
         {/* Stripe expliqué aux artisans (ADR 0384) : en tête tant que les paiements ne sont pas actifs. */}
         {status !== "actif" && <StripeExplainerCard />}
-        <Card>
-          <section aria-labelledby="paiements" className="flex flex-col gap-4">
-            <h2 id="paiements" className="text-lg">
-              {fr.pro.onboarding.steps.paiements}
-            </h2>
-            {params.lien === "expire" && <Alert tone="error">{t.linkExpired}</Alert>}
-            <ConnectStatusPanel
-              status={status}
-              payoutsEnabled={artisan.connect_payouts_enabled}
-              due={connectRequirementGroups(artisan.connect_requirements_due)}
-              pending={connectRequirementGroups(artisan.connect_requirements_pending)}
-              deadline={
-                artisan.connect_requirements_deadline
-                  ? formatDay(artisan.connect_requirements_deadline)
-                  : null
-              }
-              prefill={prefill}
-              today={parisToday()}
-              userId={context.userId}
-              sent={{
-                company: prefill?.account?.business_type === "company",
-                identity: personal,
-                piece: pieceShared,
-              }}
-            />
-          </section>
-        </Card>
+        {closed && <PaymentsSoonCard />}
+        {!closed && (
+          <Card>
+            <section aria-labelledby="paiements" className="flex flex-col gap-4">
+              <h2 id="paiements" className="text-lg">
+                {fr.pro.onboarding.steps.paiements}
+              </h2>
+              {params.lien === "expire" && <Alert tone="error">{t.linkExpired}</Alert>}
+              <ConnectStatusPanel
+                status={status}
+                payoutsEnabled={artisan.connect_payouts_enabled}
+                due={connectRequirementGroups(artisan.connect_requirements_due)}
+                pending={connectRequirementGroups(artisan.connect_requirements_pending)}
+                deadline={
+                  artisan.connect_requirements_deadline
+                    ? formatDay(artisan.connect_requirements_deadline)
+                    : null
+                }
+                prefill={prefill}
+                today={parisToday()}
+                userId={context.userId}
+                sent={{
+                  company: prefill?.account?.business_type === "company",
+                  identity: personal,
+                  piece: pieceShared,
+                }}
+              />
+            </section>
+          </Card>
+        )}
         {/* Ouvert dès le début du dossier (ADR 0353) : ce qui attend encore la validation. */}
-        {(artisan.status === "brouillon" || artisan.status === "en_verification") && (
+        {!closed && (artisan.status === "brouillon" || artisan.status === "en_verification") && (
           <p className="flex items-start gap-3 rounded-card bg-primary-softer px-4 py-3.5 text-sm text-primary-strong">
             <Lock aria-hidden="true" className="mt-0.5 size-[1.0625rem] shrink-0" />
             {t.beforeValidation}
@@ -149,7 +157,7 @@ async function PaymentsStepContent({ searchParams }: PageProps<"/pro/onboarding/
       </div>
       <div className="flex flex-col gap-4">
         {/* Avant le formulaire Stripe (ADR 0347) : ce qu'il demande, à garder sous la main. */}
-        {status === "a_demarrer" && <StripeChecklist withoutIdentity={pieceShared} />}
+        {status === "a_demarrer" && !closed && <StripeChecklist withoutIdentity={pieceShared} />}
         <PaymentHow />
         {status === "actif" && <StripeExplainerLink />}
       </div>

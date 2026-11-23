@@ -3990,6 +3990,17 @@ export const fr = {
     verification: "Vérification MENAO",
     visiteur: "Visiteur",
   },
+  /** Ouverture progressive (F-188, ADR 0387) : demandes de devis et paiements fermés. */
+  launch: {
+    requestsTitle: "Les demandes de devis ouvrent au printemps 2027.",
+    requestsText: "MENAO vérifie en ce moment ses premiers artisans dans les Alpes-Maritimes.",
+    requestsArtisan: "Vous êtes artisan ? Rejoindre MENAO",
+    paymentsTitle: "Ouvre au lancement de MENAO",
+    paymentsText:
+      "Le choix de la formule et le compte de paiement s'ouvriront au lancement. Rien à faire pour l'instant : nous vous préviendrons par e-mail.",
+    paymentsClosed: "Le paiement en ligne ouvrira au lancement de MENAO.",
+    soon: "Au lancement",
+  },
   legal: {
     eyebrow: "Informations légales",
     navTitle: "Informations légales",
@@ -9797,6 +9808,7 @@ export const fr = {
           autre: "Autres informations demandées par Stripe",
         },
         errors: {
+          payments_closed: "Le paiement en ligne ouvrira au lancement de MENAO.",
           not_validated: "Envoyez d'abord votre dossier à l'équipe MENAO.",
           no_account: "Aucun compte de paiement pour le moment.",
           rate_limited: "Trop de tentatives. Réessayez dans quelques minutes.",
@@ -10143,6 +10155,7 @@ export const fr = {
           no_customer: "Aucun abonnement à gérer pour le moment.",
           engagement_required: "Cochez la case d'engagement pour continuer.",
           already_requested: "Votre demande d'arrêt est déjà enregistrée.",
+          payments_closed: "Le paiement en ligne ouvrira au lancement de MENAO.",
           no_subscription: "Aucun abonnement à arrêter.",
           cgv_required: "Acceptez les conditions générales de vente pour continuer.",
           rate_limited: "Trop de tentatives. Réessayez dans quelques minutes.",

@@ -11,6 +11,7 @@ import {
 } from "@menao/core";
 import type { Route } from "next";
 import type { OnboardingContext } from "./context";
+import { paymentsOpen } from "@/lib/launch";
 
 /** Parcours guidé de l'inscription (ADR 0373, 0376), pour l'artisan connecté. */
 export type Guide = {
@@ -42,6 +43,8 @@ export function guideFromContext(
     kbisFromRegistry,
     // Compte transmis à Stripe, qui le vérifie : l'étape est faite côté artisan.
     paymentsStarted: connect === "verification" || connect === "actif",
+    // Paiements fermés jusqu'au lancement (ADR 0387) : formule et paiements hors du parcours.
+    withPayments: paymentsOpen,
   });
   return {
     active:

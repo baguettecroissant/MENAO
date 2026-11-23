@@ -49,6 +49,8 @@ import { useTrades } from "@/lib/trades";
 import { uploadBatch } from "@/lib/uploads";
 import { Notice } from "@/ui";
 import { theme } from "@/ui/theme";
+import { REQUESTS_OPEN } from "@menao/core";
+import { RequestsSoonScreen } from "@/components/launch-notice";
 
 const { colors, font, radius, spacing } = theme;
 const s = fr.search.suggestions;
@@ -80,7 +82,12 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
  * « Redemander un devis » (`artisan`, `depuis`, `nom`) : la demande ne part qu'à l'artisan d'un
  * chantier précédent (ADR 0198) ; le nom ne sert qu'au bandeau, le serveur vérifie le chantier commun.
  */
+/** Demandes fermées jusqu'au lancement (ADR 0387) : l'écran « Bientôt » à la place de la saisie. */
 export default function Recherche() {
+  return REQUESTS_OPEN ? <RechercheForm /> : <RequestsSoonScreen />;
+}
+
+function RechercheForm() {
   const params = useLocalSearchParams<{
     metier?: string;
     artisan?: string;

@@ -20,6 +20,7 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fr } from "@/i18n/fr";
+import { requestsOpen } from "@/lib/launch";
 import { confirmUrlFor } from "@/lib/auth/confirm-url";
 import { authErrorMessage } from "@/lib/auth/errors";
 import { checkbox, text, type FormState } from "@/lib/auth/form";
@@ -222,6 +223,8 @@ export async function sendRequest(
 ): Promise<FormState> {
   const context = parseContext(ctx);
   if (!context) return { error: fr.errors.generic };
+  // Demandes fermées jusqu'au lancement (ADR 0387) : rien ne part aux artisans.
+  if (!requestsOpen) return { error: fr.launch.requestsTitle };
   const values = {
     message: text(formData, "message") ?? "",
     phone: text(formData, "phone") ?? "",

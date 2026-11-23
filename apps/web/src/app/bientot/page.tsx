@@ -1,3 +1,4 @@
+import { SITE_OPEN } from "@menao/core";
 import { Check } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -26,7 +27,8 @@ export const metadata: Metadata = {
  * pas saisi le code des testeurs. Sans PRELAUNCH_ACCESS_CODE au build, elle n'existe pas.
  */
 export default function PrelaunchPage() {
-  if (!process.env.PRELAUNCH_ACCESS_CODE) notFound();
+  // Vitrine ouverte (ADR 0387) : la page d'attente n'existe plus.
+  if (!process.env.PRELAUNCH_ACCESS_CODE || SITE_OPEN) notFound();
   return (
     <main className="relative flex flex-1 flex-col overflow-hidden bg-background">
       {prelaunchIndexing && <JsonLd data={organizationJsonLd()} />}
