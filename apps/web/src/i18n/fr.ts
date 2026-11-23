@@ -1685,8 +1685,11 @@ export const fr = {
       process: {
         title: "De la candidature au terrain, en quatre étapes.",
         steps: [
-          { title: "Candidature", text: "3 étapes, 2 minutes, avec votre CV." },
-          { title: "Nous lisons votre CV", text: "Chaque candidature reçoit une réponse." },
+          { title: "Candidature", text: "3 étapes, 2 minutes, votre CV si vous en avez un." },
+          {
+            title: "Nous lisons votre candidature",
+            text: "Chaque candidature reçoit une réponse.",
+          },
           { title: "Entretien", text: "Au téléphone ou en visio, pour se connaître." },
           { title: "Démarrage", text: "Votre code, votre espace, la formation, puis le terrain." },
         ],
@@ -1722,10 +1725,10 @@ export const fr = {
       formEyebrow: "L'équipe de départ se forme maintenant",
       formTitle: "Rejoignez l'équipe de départ.",
       formLead:
-        "Trois étapes, avec votre CV. Nous lisons chaque candidature et revenons vers vous pour un entretien.",
+        "Trois étapes, deux minutes. Nous lisons chaque candidature et revenons vers vous pour un entretien.",
       formChecks: [
         "3 étapes, 2 minutes",
-        "Votre CV en PDF (obligatoire), LinkedIn si vous voulez",
+        "Votre CV en PDF et LinkedIn si vous voulez",
         "Réponse à chaque candidature",
       ],
       form: {
@@ -1734,13 +1737,12 @@ export const fr = {
         stepTitles: [
           "Faisons connaissance.",
           "Votre profil, en quelques clics.",
-          "Votre CV, et c'est envoyé.",
+          "Votre CV si vous voulez, et c'est envoyé.",
         ],
         next: "Continuer",
         back: "Retour",
         sending: "Envoi de votre CV…",
         cv: "Votre CV",
-        required: "(obligatoire)",
         choose: "Choisir mon CV (PDF)",
         cvHint: "PDF, 5 Mo au plus",
         replace: "Remplacer",
@@ -1755,9 +1757,9 @@ export const fr = {
       sent: {
         title: (firstName: string) => `Merci ${firstName}, votre candidature est envoyée.`,
         text: (email: string) =>
-          `Nous lisons votre CV et revenons vers vous pour un entretien, au téléphone ou en visio. Un e-mail de confirmation vient de partir à ${email}.`,
+          `Nous lisons votre candidature et revenons vers vous pour un entretien, au téléphone ou en visio. Un e-mail de confirmation vient de partir à ${email}.`,
         next: [
-          "Nous lisons votre CV",
+          "Nous lisons votre candidature",
           "Nous vous proposons un entretien",
           "Votre code, votre espace et la formation",
         ],

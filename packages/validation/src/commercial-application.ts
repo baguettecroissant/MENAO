@@ -86,16 +86,24 @@ export const commercialApplicationSteps = [
 /**
  * Candidature « Devenir commercial MENAO » (F-183, ADR 0380 et 0382), mêmes règles qu'en base
  * (`apply_as_commercial`) : identité, téléphone normalisé en +33…, secteur, quatre réponses
- * fermées, provenance, CV obligatoire (déjà rangé par process-upload), LinkedIn et motivation
- * facultatifs, accord explicite (conservation 2 ans).
+ * fermées, provenance, CV, LinkedIn et motivation facultatifs (le CV, s'il est joint, est déjà rangé
+ * par process-upload), accord explicite (conservation 2 ans).
  */
 export const commercialApplicationSchema = z.object({
   ...step1,
   ...step2,
   ...step3,
+  // CV facultatif depuis le 23/11/2026 (ADR 0386) ; s'il est joint, déjà rangé par process-upload.
   cv_path: z
-    .string({ error: messages.candidateCv })
+    .string()
     .trim()
-    .regex(CV_PATH, { error: messages.candidateCv }),
+    .transform((value, ctx) => {
+      if (!value) return null;
+      if (!CV_PATH.test(value)) {
+        ctx.addIssue({ code: "custom", message: messages.candidateCv });
+        return z.NEVER;
+      }
+      return value;
+    }),
 });
 export type CommercialApplication = z.infer<typeof commercialApplicationSchema>;

@@ -108,12 +108,9 @@ export function ApplicationForm() {
       show(step + 1);
       return;
     }
-    if (!cv) {
-      setCvError(messages.candidateCv);
-      return;
-    }
+    // CV facultatif (ADR 0386) : envoyé seulement s'il a été choisi.
     let path = cvPath;
-    if (!path) {
+    if (cv && !path) {
       setUploading(true);
       const result = await uploadCandidateCv(cv);
       setUploading(false);
@@ -249,7 +246,7 @@ export function ApplicationForm() {
           <legend className="sr-only">{k.stepNames[2]}</legend>
           <div className="flex flex-col gap-1.5">
             <span className="text-sm font-semibold">
-              {k.cv} <span className="font-normal text-muted-foreground">{k.required}</span>
+              {k.cv} <span className="font-normal text-muted-foreground">{f.optional}</span>
             </span>
             <label
               className={`flex cursor-pointer items-center gap-3.5 rounded-2xl border-2 border-dashed px-4 py-3.5 transition-colors hover:bg-background ${

@@ -3,7 +3,7 @@ import { files } from "./fixtures";
 
 // Recrutement des commerciaux (F-183, lots 77 et 79, ADR 0380 et 0382) : un candidat arrive par le
 // lien d'une annonce (provenance pré-cochée), voit les gains sans montant ni mention d'IA, puis
-// candidate en 3 étapes avec son CV (session anonyme, process-upload) et voit la confirmation ; en
+// candidate en 3 étapes avec son CV, facultatif (session anonyme, process-upload, ADR 0386), et voit la confirmation ; en
 // base : CV rangé, e-mail de bonne réception en file. Données fictives.
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
@@ -61,11 +61,10 @@ test("devenir commercial : candidature en 3 étapes avec CV", async ({ page }) =
   await form.getByText("Temps partiel").click();
   await form.getByRole("button", { name: "Continuer" }).click();
 
-  // Étape 3 : le CV est obligatoire, LinkedIn facultatif.
+  // Étape 3 : CV et LinkedIn facultatifs (ADR 0386) ; Julie joint les deux.
   await expect(form.getByText("Étape 3 sur 3")).toBeVisible();
+  await expect(form.getByText("Votre CV (facultatif)")).toBeVisible();
   await form.getByRole("checkbox").check();
-  await form.getByRole("button", { name: "Envoyer ma candidature" }).click();
-  await expect(form.getByText("Ajoutez votre CV en PDF.")).toBeVisible();
   await form.locator('input[type="file"]').setInputFiles({ ...files.pdf, name: "cv-julie.pdf" });
   await expect(form.getByText("cv-julie.pdf")).toBeVisible();
   await form.getByLabel(/Profil LinkedIn/).fill("linkedin.com/in/julie-exemple");
