@@ -3990,6 +3990,21 @@ export const fr = {
     verification: "Vérification MENAO",
     visiteur: "Visiteur",
   },
+  /** Noms des clics suivis dans Umami (F-189, ADR 0388), tels qu'ils s'affichent dans Umami. */
+  analytics: {
+    events: {
+      requestQuote: "Demander un devis",
+      proSignup: "Créer mon profil artisan",
+      proPlans: "Voir les formules",
+      proSpace: "Découvrir l'Espace Pro",
+      recruitment: "Devenir conseiller",
+      signIn: "Mon espace / connexion",
+      signUp: "Créer un compte particulier",
+      phone: "Appel téléphonique",
+      email: "E-mail",
+      app: "Télécharger l'application",
+    },
+  },
   /** Ouverture progressive (F-188, ADR 0387) : demandes de devis et paiements fermés. */
   launch: {
     requestsTitle: "Les demandes de devis ouvrent au printemps 2027.",
