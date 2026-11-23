@@ -4,7 +4,7 @@ import { env } from "@/env";
 export const SITE_URL = env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
 
 /** Adresses du site de production, seules indexables sans ALLOW_INDEXING. */
-const PRODUCTION_SITE_URLS = ["https://menao.fr", "https://www.menao.fr"];
+export const PRODUCTION_SITE_URLS = ["https://menao.fr", "https://www.menao.fr"];
 
 /**
  * Indexation par les moteurs de recherche : fermée par défaut (staging, aperçus Vercel), ouverte

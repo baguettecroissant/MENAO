@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SiteAnalytics } from "@/components/site/analytics";
 import { SiteHeader } from "@/components/site/header";
 import { appTheme } from "@/lib/fonts";
 
@@ -13,6 +14,7 @@ export default function SearchLayout({ children }: { children: ReactNode }) {
     <div className={`${appTheme} flex flex-1 flex-col`}>
       <SiteHeader />
       <div className="flex flex-1 flex-col">{children}</div>
+      <SiteAnalytics />
     </div>
   );
 }

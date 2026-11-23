@@ -239,6 +239,12 @@ export const confidentialite: LegalDocument = {
         ],
         ["OpenRouter", "Solution de secours pour les mêmes outils", "Les mêmes", "États-Unis"],
         [
+          "Umami",
+          "Mesure d'audience du site, sans cookie",
+          "Pages vues, provenance, type d'appareil, sans donnée permettant de vous identifier",
+          "Union européenne",
+        ],
+        [
           "Mistral AI",
           "Transcription de la voix en texte",
           "Enregistrement vocal, le temps de la transcription",

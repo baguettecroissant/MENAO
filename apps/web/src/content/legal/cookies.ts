@@ -1,6 +1,8 @@
 import { COMPANY, LEGAL_UPDATED_AT } from "./company";
 import type { LegalDocument } from "./types";
 
+// TODO(legal) : texte à faire valider par l'avocat, dont l'exemption de consentement pour la mesure
+// d'audience Umami, sans cookie (F-189, ADR 0388).
 // TODO(legal) : texte à faire valider par l'avocat. Un bandeau de consentement sera ajouté avant
 // tout cookie non indispensable (mesure d'audience), refus aussi simple que l'acceptation.
 // Le tableau suit le code (cookies, stockage local et de session) : le tenir à jour à chaque
@@ -19,6 +21,10 @@ export const cookies: LegalDocument = {
     {
       type: "p",
       text: "Aucun cookie publicitaire, aucun cookie de mesure d'audience ni aucun traceur de réseau social n'est déposé à ce jour.",
+    },
+    {
+      type: "p",
+      text: "Pour savoir quelles pages sont consultées, MENAO utilise Umami, un outil de mesure d'audience hébergé dans l'Union européenne qui ne dépose aucun cookie, n'enregistre rien dans votre navigateur et ne conserve aucune donnée permettant de vous identifier. Si votre navigateur demande à ne pas être suivi, aucune visite n'est comptée.",
     },
     {
       type: "table",

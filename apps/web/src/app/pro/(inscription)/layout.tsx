@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Logo } from "@/components/brand/logo";
+import { SiteAnalytics } from "@/components/site/analytics";
 import { focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { appTheme } from "@/lib/fonts";
@@ -23,6 +24,7 @@ export default function ArtisanSignupLayout({ children }: { children: ReactNode 
         </div>
       </header>
       {children}
+      <SiteAnalytics />
     </div>
   );
 }
