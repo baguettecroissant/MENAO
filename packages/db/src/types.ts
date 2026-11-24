@@ -9105,7 +9105,8 @@ export type Database = {
         | "recrutement_recue"
         | "essai_fin_proche"
         | "abonnement_reconduction"
-        | "abonnement_arret";
+        | "abonnement_arret"
+        | "equipe_nouvelle_candidature";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -9461,6 +9462,7 @@ export const Constants = {
         "essai_fin_proche",
         "abonnement_reconduction",
         "abonnement_arret",
+        "equipe_nouvelle_candidature",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],

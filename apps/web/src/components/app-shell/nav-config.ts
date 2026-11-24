@@ -47,6 +47,7 @@ export type BadgeKey =
   | "dossiers"
   | "conformite"
   | "tickets"
+  | "candidates"
   | "secretary";
 export type Badges = Partial<Record<BadgeKey, number>>;
 
@@ -262,6 +263,8 @@ export const NAV: Record<Space, readonly NavSection[]> = {
           href: "/admin/commerciaux",
           label: fr.admin.nav.contributors,
           icon: Handshake,
+          // Candidatures de commerciaux à traiter (ADR 0389).
+          badge: "candidates",
           also: ["/admin/candidats", "/admin/partenaires", "/admin/parrainages"],
         },
       ],

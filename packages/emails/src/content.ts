@@ -103,6 +103,8 @@ export const NOTIFICATION_TYPES = [
   "essai_fin_proche",
   "abonnement_reconduction",
   "abonnement_arret",
+  // Nouvelle candidature de commercial, pour les administrateurs (ADR 0389).
+  "equipe_nouvelle_candidature",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -2132,6 +2134,29 @@ export function notificationContent(
         cta: {
           label: "Vérifier le dossier",
           url: link(artisanId ? `/admin/artisans/${artisanId}` : "/admin/artisans"),
+        },
+      };
+    }
+    case "equipe_nouvelle_candidature": {
+      // Nouvelle candidature « Devenir commercial MENAO » (F-188, ADR 0389) : e-mail et cloche.
+      const candidateId = text(data, "candidate_id");
+      const name =
+        [text(data, "prenom"), text(data, "nom")].filter(Boolean).join(" ") || "Un candidat";
+      const sector = text(data, "secteur");
+      const withCv = data.cv === true;
+      return {
+        subject: `Nouvelle candidature de commercial : ${name}`,
+        preview: `${name}${sector ? ` (${sector})` : ""} veut devenir commercial MENAO.`,
+        title: "Nouvelle candidature de commercial",
+        paragraphs: [
+          hello(ctx.firstName),
+          `${name}${sector ? `, secteur ${sector},` : ""} vient de postuler sur la page « Devenir commercial MENAO »${withCv ? ", avec son CV" : ", sans CV"}.`,
+          "Sa candidature vous attend dans le back-office, rubrique Apporteurs, onglet Candidats.",
+        ],
+        quote: null,
+        cta: {
+          label: "Voir la candidature",
+          url: link(candidateId ? `/admin/candidats/${candidateId}` : "/admin/candidats"),
         },
       };
     }

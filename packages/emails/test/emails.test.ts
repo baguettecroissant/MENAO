@@ -1039,6 +1039,23 @@ describe("dossier et documents de l'artisan (F-50, F-51)", () => {
     );
     expect(dossier.subject).toBe("Dossier artisan à vérifier : PEINTURE EXEMPLE");
     expect(dossier.cta.url).toBe(`https://menao.example/admin/artisans/${ids.chantier_id}`);
+    const candidate = notificationContent(
+      "equipe_nouvelle_candidature",
+      {
+        candidate_id: ids.request_id,
+        prenom: "Marc",
+        nom: "Exemple",
+        secteur: "Cannes",
+        cv: false,
+      },
+      pro,
+    );
+    expect(candidate.subject).toBe("Nouvelle candidature de commercial : Marc Exemple");
+    expect(candidate.paragraphs.join(" ")).toContain(
+      "Marc Exemple, secteur Cannes, vient de postuler",
+    );
+    expect(candidate.paragraphs.join(" ")).toContain("sans CV");
+    expect(candidate.cta.url).toBe(`https://menao.example/admin/candidats/${ids.request_id}`);
     const late = notificationContent(
       "equipe_ticket_en_retard",
       { ticket_id: ids.request_id, type: "contact", objet: null },
