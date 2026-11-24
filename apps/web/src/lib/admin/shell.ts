@@ -1,5 +1,5 @@
 import "server-only";
-import { parisToday, spotCheckPeriod } from "@menao/core";
+import { parisToday, RECRUITMENT_FILTERS, spotCheckPeriod } from "@menao/core";
 import { avatarUrl } from "@/lib/chantier/storage";
 import type { ShellAccount } from "@/lib/client/shell";
 import type { TeamRole } from "@/lib/admin/guard";
@@ -9,7 +9,8 @@ type Client = Awaited<ReturnType<typeof createClient>>;
 
 /**
  * Coque du back-office (ADR 0035) : compte et compteurs du menu (dossiers à vérifier ; conformité :
- * renouvellements à vérifier et contrôles aléatoires du mois à faire, ADR 0283 ; tickets ouverts).
+ * renouvellements à vérifier et contrôles aléatoires du mois à faire, ADR 0283 ; tickets ouverts ;
+ * candidatures de commerciaux à traiter, ADR 0389).
  * Lecture réservée à l'équipe (politiques RLS du staff).
  */
 export async function getAdminShell(
@@ -18,7 +19,7 @@ export async function getAdminShell(
   role: TeamRole = "admin",
 ): Promise<{
   account: ShellAccount;
-  badges: { dossiers: number; conformite: number; tickets: number };
+  badges: { dossiers: number; conformite: number; tickets: number; candidates: number };
 }> {
   const [
     { data: profile },
@@ -26,6 +27,7 @@ export async function getAdminShell(
     { count: renouvellements },
     { count: controles },
     { count: tickets },
+    { count: candidates },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -50,6 +52,11 @@ export async function getAdminShell(
       .from("tickets")
       .select("id", { count: "exact", head: true })
       .in("status", ["ouvert", "en_cours"]),
+    // Lisible par les administrateurs seulement (RLS) : 0 pour le reste de l'équipe.
+    supabase
+      .from("commercial_candidates")
+      .select("id", { count: "exact", head: true })
+      .in("stage", [...RECRUITMENT_FILTERS.a_traiter]),
   ]);
   return {
     account: {
@@ -62,6 +69,7 @@ export async function getAdminShell(
       dossiers: dossiers ?? 0,
       conformite: (renouvellements ?? 0) + (controles ?? 0),
       tickets: tickets ?? 0,
+      candidates: candidates ?? 0,
     },
   };
 }
