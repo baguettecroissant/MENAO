@@ -100,3 +100,45 @@ test("devenir commercial : candidature en 3 étapes avec CV", async ({ page }) =
   );
   expect(((await mails.json()) as unknown[]).length).toBe(1);
 });
+
+// Sans CV (ADR 0386) : la session anonyme s'ouvre quand même à l'envoi ; constaté en ligne le 24/11/2026
+// (« Une erreur est survenue » : l'appel partait sans session et la base le refusait).
+test("devenir commercial : candidature sans CV", async ({ page }) => {
+  test.setTimeout(90_000);
+  const stamp = Date.now() + 1;
+  const email = `commercial.sanscv.${stamp}@example.test`;
+  await page.goto("/devenir-conseiller");
+  const form = page.locator("#candidature");
+  await form.getByLabel("Prénom").fill("Marc");
+  await form.getByLabel("Nom", { exact: true }).fill("Exemple");
+  await form.getByLabel("E-mail").fill(email);
+  await form.getByLabel("Téléphone").fill(
+    `07 ${String(stamp)
+      .slice(-8)
+      .replace(/(\d{2})(?=\d)/g, "$1 ")}`,
+  );
+  await form.getByLabel("Ville ou secteur").fill("Cannes");
+  await form.getByRole("button", { name: "Continuer" }).click();
+  await expect(form.getByText("Étape 2 sur 3")).toBeVisible();
+  await form.getByText("Auto-entrepreneur").click();
+  await form
+    .getByRole("group", { name: "Vous voyez déjà des artisans pour votre travail ?" })
+    .getByText("Non")
+    .click();
+  await form.getByText("Aucune", { exact: true }).click();
+  await form.getByText("Temps partiel").click();
+  await form.getByText("Bouche-à-oreille", { exact: true }).click();
+  await form.getByRole("button", { name: "Continuer" }).click();
+  await expect(form.getByText("Étape 3 sur 3")).toBeVisible();
+  await form.getByRole("checkbox").check();
+  await form.getByRole("button", { name: "Envoyer ma candidature" }).click();
+  await expect(
+    form.getByRole("heading", { name: /Merci Marc, votre candidature est envoyée/ }),
+  ).toBeVisible();
+  const read = await fetch(
+    `${SUPABASE_URL}/rest/v1/commercial_candidates?email=eq.${encodeURIComponent(email)}&select=cv_path`,
+    { headers },
+  );
+  const [candidate] = (await read.json()) as { cv_path: string | null }[];
+  expect(candidate).toEqual({ cv_path: null });
+});

@@ -14,6 +14,7 @@ import {
 } from "react";
 import { Alert, Button, Field, FieldError, focusRing, inputClasses } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { ensureSession } from "@/lib/project/client";
 import { applyAsCommercial, type ApplicationState } from "@/lib/site/recruitment-actions";
 import { uploadCandidateCv } from "@/lib/site/recruitment-cv";
 import { ChoicePills } from "./choice-pills";
@@ -120,6 +121,12 @@ export function ApplicationForm() {
       }
       path = result.path;
       setCvPath(path);
+    } else if (!path) {
+      // Sans CV, la session anonyme est ouverte ici (apply_as_commercial est réservée aux
+      // comptes connectés, ADR 0382) ; un échec retombe sur le message d'erreur du serveur.
+      setUploading(true);
+      await ensureSession();
+      setUploading(false);
     }
     const data = new FormData(form);
     data.set("cv_path", path);
