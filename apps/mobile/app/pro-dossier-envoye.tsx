@@ -1,7 +1,7 @@
 import { PAYMENTS_OPEN } from "@menao/core";
 import { router } from "expo-router";
 import { Check, Wallet } from "lucide-react-native";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { ExamplesCard } from "@/components/examples";
 import { DossierGroup, DossierRow, PageHead } from "@/components/pro/dossier-kit";
 import { FicheButton, FicheScreen, FicheSkeleton } from "@/components/pro/fiche-kit";
@@ -21,6 +21,8 @@ const { colors } = theme;
 export default function DossierSentScreen() {
   const [dossier] = useFocusData(loadDossier);
   if (dossier === undefined) return <FicheSkeleton />;
+  // Compte d'essai validé tout de suite (lot 82, ADR 0392).
+  if (dossier?.compteEssai && dossier.status === "valide") return <TestValidated />;
   const paid = dossier?.progress.paiements === true;
   // Paiements fermés jusqu'au lancement (ADR 0387) : pas d'invitation à les activer.
   const closed = !paid && !PAYMENTS_OPEN;
@@ -69,4 +71,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+});
+
+const e = fr.proDossier.essai.validated;
+
+function TestValidated() {
+  return (
+    <FicheScreen footer={<FicheButton label={e.cta} tall onPress={() => router.replace("/pro")} />}>
+      <View style={styles.success}>
+        <Check size={28} color={colors["primary-foreground"]} strokeWidth={2.6} />
+      </View>
+      <PageHead title={e.title} lead={e.text} />
+      <View style={testStyles.box}>
+        <Text style={testStyles.boxTitle}>{e.fictiveTitle}</Text>
+        {e.fictive.map((line) => (
+          <Text key={line} style={testStyles.line}>
+            {`· ${line}`}
+          </Text>
+        ))}
+      </View>
+    </FicheScreen>
+  );
+}
+
+const testStyles = StyleSheet.create({
+  box: { gap: 6, padding: 14, borderRadius: 14, backgroundColor: colors["violet-soft"] },
+  boxTitle: { fontFamily: theme.font.bold, fontSize: 14, color: colors.violet },
+  line: { fontFamily: theme.font.regular, fontSize: 13.5, lineHeight: 19, color: colors.violet },
 });

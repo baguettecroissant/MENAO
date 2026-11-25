@@ -1701,6 +1701,7 @@ export type Database = {
           base_label: string | null;
           base_location: unknown;
           budget_minimum: Database["public"]["Enums"]["project_budget"] | null;
+          compte_essai: boolean;
           connect_charges_enabled: boolean;
           connect_details_submitted: boolean;
           connect_disabled_reason: string | null;
@@ -1715,6 +1716,7 @@ export type Database = {
           default_deposit_percent: number;
           default_start_percent: number;
           diplome_metier: Database["public"]["Enums"]["diplome_metier"] | null;
+          essai_code_id: string | null;
           examples_hidden_at: string | null;
           experience_years: number | null;
           forme_juridique_code: string | null;
@@ -1771,6 +1773,7 @@ export type Database = {
           base_label?: string | null;
           base_location?: unknown;
           budget_minimum?: Database["public"]["Enums"]["project_budget"] | null;
+          compte_essai?: boolean;
           connect_charges_enabled?: boolean;
           connect_details_submitted?: boolean;
           connect_disabled_reason?: string | null;
@@ -1785,6 +1788,7 @@ export type Database = {
           default_deposit_percent?: number;
           default_start_percent?: number;
           diplome_metier?: Database["public"]["Enums"]["diplome_metier"] | null;
+          essai_code_id?: string | null;
           examples_hidden_at?: string | null;
           experience_years?: number | null;
           forme_juridique_code?: string | null;
@@ -1840,6 +1844,7 @@ export type Database = {
           base_label?: string | null;
           base_location?: unknown;
           budget_minimum?: Database["public"]["Enums"]["project_budget"] | null;
+          compte_essai?: boolean;
           connect_charges_enabled?: boolean;
           connect_details_submitted?: boolean;
           connect_disabled_reason?: string | null;
@@ -1854,6 +1859,7 @@ export type Database = {
           default_deposit_percent?: number;
           default_start_percent?: number;
           diplome_metier?: Database["public"]["Enums"]["diplome_metier"] | null;
+          essai_code_id?: string | null;
           examples_hidden_at?: string | null;
           experience_years?: number | null;
           forme_juridique_code?: string | null;
@@ -1896,7 +1902,15 @@ export type Database = {
           user_id?: string;
           zone_mode?: Database["public"]["Enums"]["zone_mode"] | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "artisans_essai_code_id_fkey";
+            columns: ["essai_code_id"];
+            isOneToOne: false;
+            referencedRelation: "test_codes";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       audit_logs: {
         Row: {
@@ -6345,6 +6359,39 @@ export type Database = {
           },
         ];
       };
+      test_codes: {
+        Row: {
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          disabled_at: string | null;
+          expires_at: string;
+          id: string;
+          max_uses: number;
+          uses: number;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          disabled_at?: string | null;
+          expires_at: string;
+          id?: string;
+          max_uses: number;
+          uses?: number;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          disabled_at?: string | null;
+          expires_at?: string;
+          id?: string;
+          max_uses?: number;
+          uses?: number;
+        };
+        Relationships: [];
+      };
       ticket_messages: {
         Row: {
           author_id: string | null;
@@ -7110,6 +7157,10 @@ export type Database = {
         Returns: undefined;
       };
       admin_copy_launch_tasks: { Args: { p_from: string; p_to: string }; Returns: number };
+      admin_create_test_code: {
+        Args: { p_code: string; p_days: number; p_max_uses: number };
+        Returns: string;
+      };
       admin_cv_deletions_done: { Args: { p_paths: string[] }; Returns: undefined };
       admin_decide_artisan: {
         Args: {
@@ -7122,6 +7173,8 @@ export type Database = {
       admin_decline_candidate: { Args: { p_id: string }; Returns: undefined };
       admin_delete_launch_member: { Args: { p_id: string }; Returns: undefined };
       admin_delete_launch_task: { Args: { p_id: string }; Returns: undefined };
+      admin_delete_test_account: { Args: { p_artisan_id: string }; Returns: undefined };
+      admin_disable_test_code: { Args: { p_id: string }; Returns: undefined };
       admin_draw_spot_checks: { Args: Record<PropertyKey, never>; Returns: number };
       admin_grant_voice_minutes: {
         Args: { p_artisan_id: string; p_minutes: number; p_note: string };
@@ -7503,6 +7556,16 @@ export type Database = {
       admin_suspend_artisan: {
         Args: { p_artisan_id: string; p_reason: string };
         Returns: undefined;
+      };
+      admin_test_accounts: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          artisan_id: string;
+          code: string;
+          created_at: string;
+          nom: string;
+          status: Database["public"]["Enums"]["artisan_status"];
+        }[];
       };
       admin_ticket_conversation: {
         Args: { p_ticket_id: string };
@@ -8031,6 +8094,7 @@ export type Database = {
         }[];
       };
       clear_external_busy: { Args: Record<PropertyKey, never>; Returns: undefined };
+      clear_test_attestations: { Args: Record<PropertyKey, never>; Returns: undefined };
       client_ratings_visible: { Args: Record<PropertyKey, never>; Returns: boolean };
       client_reputation: {
         Args: { p_request_id: string };
@@ -8204,6 +8268,7 @@ export type Database = {
       delete_artisan_absence: { Args: { p_id: string }; Returns: undefined };
       delete_artisan_blocked_slot: { Args: { p_id: string }; Returns: undefined };
       disable_artisan_calendar_feed: { Args: Record<PropertyKey, never>; Returns: undefined };
+      fill_test_onboarding: { Args: { p_steps: string[] }; Returns: undefined };
       forget_push_tokens: { Args: { p_tokens: string[] }; Returns: undefined };
       free_month_candidates: {
         Args: { p_stripe_subscription_id: string };

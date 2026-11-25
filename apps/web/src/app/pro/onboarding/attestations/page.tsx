@@ -13,6 +13,7 @@ import { GuideBar, GuideBarSpace } from "@/components/pro/guide-bar";
 import { Alert, ButtonLink, Card, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { setDecennaleExempt } from "@/lib/artisan/actions";
+import { TestAttestationsBanner } from "@/components/pro/test-account";
 import { getOnboardingContext } from "@/lib/artisan/context";
 import { guideAround, guideFromContext, suiteHref } from "@/lib/artisan/guide";
 import { DocumentUpload } from "../documents/document-upload";
@@ -54,6 +55,14 @@ export default async function AttestationsPage() {
   return (
     <div className="flex max-w-3xl flex-col gap-4">
       <p className="leading-relaxed text-label">{a.lead}</p>
+      {/* Compte d'essai (lot 82, ADR 0392) : attestations d'exemple, ou les retirer. */}
+      {artisan.compte_essai && (artisan.status === "brouillon" || artisan.status === "refuse") && (
+        <TestAttestationsBanner
+          filled={documents.some(
+            (doc) => doc.source === "essai" && doc.type !== "kbis" && doc.type !== "identite",
+          )}
+        />
+      )}
       {ATTESTATION_TYPES.map((type) => {
         const state = documentState(type, snapshot.documents[type]);
         const rows = documents.filter((doc) => doc.type === type);

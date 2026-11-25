@@ -8,6 +8,7 @@ import {
   registryCheckPending,
   presentationDraft,
   subscriptionGrantsAccess,
+  testFillUntil,
   type ArtisanOnboardingSnapshot,
   type DocumentSnapshot,
   type RequiredDocumentType,
@@ -58,6 +59,8 @@ export type Dossier = {
   indexable: boolean;
   /** Bloc « Pour vous démarquer » (lot 81, ADR 0391). */
   standOut: StandOutView;
+  /** Compte d'essai (ADR 0392) : données fictives, validé automatiquement à l'envoi. */
+  compteEssai: boolean;
   itemsLeft: number;
   canSubmit: boolean;
   progress: ReturnType<typeof onboardingProgress>;
@@ -69,7 +72,7 @@ export async function loadDossier(): Promise<Dossier | null> {
   const { data: artisan } = await supabase
     .from("artisans")
     .select(
-      "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, nom_commercial, forme_juridique_code, adresse_commune, date_creation_entreprise, experience_years, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled, decennale_non_soumis, indexable, registre_statut, image_logo, diplome_metier, budget_minimum",
+      "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, nom_commercial, forme_juridique_code, adresse_commune, date_creation_entreprise, experience_years, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled, decennale_non_soumis, indexable, registre_statut, image_logo, diplome_metier, budget_minimum, compte_essai",
     )
     .eq("id", await myArtisanKey())
     .maybeSingle();
@@ -212,6 +215,7 @@ export async function loadDossier(): Promise<Dossier | null> {
       hasKbis: rows.some((d) => d.type === "kbis"),
     }),
     indexable: artisan.indexable,
+    compteEssai: artisan.compte_essai,
     standOut: standOutView(
       {
         avatarPath,
@@ -256,7 +260,18 @@ export async function retryRegistry(): Promise<boolean> {
 /** Envoi du dossier en vérification (la base refait les contrôles). Message d'erreur, ou null. */
 export async function submitDossier(): Promise<string | null> {
   const { error } = await supabase.rpc("submit_artisan_onboarding");
-  return error ? fr.proDossier.submitError : null;
+  if (error) return fr.proDossier.submitError;
+  // Compte d'essai validé tout de suite (ADR 0392) : le rôle « artisan » dans la session.
+  await supabase.auth.refreshSession();
+  return null;
+}
+
+/** Compte d'essai (ADR 0392) : « Tout remplir » avec des données fictives. Message d'erreur, ou null. */
+export async function fillTestDossier(): Promise<string | null> {
+  const { error } = await supabase.rpc("fill_test_onboarding", {
+    p_steps: testFillUntil("attestations"),
+  });
+  return error ? fr.errors.generic : null;
 }
 
 /** « Non soumis » à la décennale (ADR 0116), tant que le dossier n'est pas envoyé. */

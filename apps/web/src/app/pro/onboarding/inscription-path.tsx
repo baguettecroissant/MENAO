@@ -3,6 +3,7 @@ import {
   guideSendSteps,
   guideStepPath,
   nextGuideStep,
+  testFillable,
   type GuideStep,
   type GuideStepKey,
 } from "@menao/core";
@@ -12,6 +13,7 @@ import Link from "next/link";
 import { GuideBar, GuideBarSpace } from "@/components/pro/guide-bar";
 import { HelpVideo } from "@/components/pro/help-video";
 import { StandOutCard, type StandOutCardProps } from "@/components/pro/stand-out-card";
+import { FillRowButton, TestBanner } from "@/components/pro/test-account";
 import { Alert, ButtonLink, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { OnboardingContext } from "@/lib/artisan/context";
@@ -51,6 +53,13 @@ export function InscriptionPath({
   );
   const editable = artisan.status === "brouillon" || artisan.status === "refuse";
   const companyName = artisan.nom_commercial ?? artisan.raison_sociale;
+  // Compte d'essai (lot 82, ADR 0392) : « Remplir » sur chaque ligne à faire, « Tout remplir ».
+  const essai = artisan.compte_essai && editable;
+  const fillRows = essai
+    ? steps
+        .filter((step) => !step.done && testFillable(step.key))
+        .map((step) => ({ key: step.key, label: p.steps[step.key].title }))
+    : [];
 
   return (
     <div className="flex w-full max-w-5xl flex-col gap-5">
@@ -90,6 +99,8 @@ export function InscriptionPath({
         </div>
       </div>
 
+      {fillRows.length > 0 && <TestBanner rows={fillRows} />}
+
       <ol className="flex flex-col rounded-card border border-border bg-surface px-4 py-1.5 shadow-card sm:px-6">
         {/* Entreprise, métiers et zone faits à l'inscription : une ligne, pour les modifier. */}
         {!steps.some((step) => step.key === "entreprise") && (
@@ -115,18 +126,28 @@ export function InscriptionPath({
                 : texts.todo;
           return (
             <li key={step.key} className="border-b border-border last:border-b-0">
-              {step.done ? (
-                <DoneRow
-                  href={guideStepPath(step.key)}
-                  title={title}
-                  hint={hint}
-                  action={step.key === "charte" ? p.reread : p.modify}
-                />
-              ) : step.key === next ? (
-                <CurrentRow step={step} index={i + 1} title={texts.title} hint={hint} />
-              ) : (
-                <TodoRow step={step} index={i + 1} title={texts.title} hint={hint} />
-              )}
+              {(() => {
+                const row = step.done ? (
+                  <DoneRow
+                    href={guideStepPath(step.key)}
+                    title={title}
+                    hint={hint}
+                    action={step.key === "charte" ? p.reread : p.modify}
+                  />
+                ) : step.key === next ? (
+                  <CurrentRow step={step} index={i + 1} title={texts.title} hint={hint} />
+                ) : (
+                  <TodoRow step={step} index={i + 1} title={texts.title} hint={hint} />
+                );
+                return fillRows.some((r) => r.key === step.key) ? (
+                  <div className="flex items-center gap-1">
+                    <div className="min-w-0 flex-1">{row}</div>
+                    <FillRowButton row={step.key} label={texts.title} />
+                  </div>
+                ) : (
+                  row
+                );
+              })()}
               {sent && step.key === lastSendKey && (
                 <p className="mb-2 flex items-center gap-2.5 rounded-input bg-success-soft px-3.5 py-2.5 text-sm font-semibold text-success">
                   <Send aria-hidden="true" className="size-4 shrink-0" />
