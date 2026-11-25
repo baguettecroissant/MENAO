@@ -13,6 +13,7 @@ export const SETTINGS_SECTIONS = [
   "partenaires",
   "commerciaux",
   "lancement",
+  "essai",
 ] as const;
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 
@@ -26,6 +27,7 @@ const AUDIT_ACTIONS: Record<Exclude<SettingsSection, "accueil">, string> = {
   partenaires: "partenaires.reglages",
   commerciaux: "commerciaux.reglages_primes",
   lancement: "lancement.reglages",
+  essai: "code_essai.cree",
 };
 
 /**
@@ -33,32 +35,47 @@ const AUDIT_ACTIONS: Record<Exclude<SettingsSection, "accueil">, string> = {
  * dernière modification de chacun (journal d'audit ; horaires d'accueil : colonnes updated_*).
  */
 export async function getSettingsPage(supabase: Client) {
-  const [platform, reception, receptionMeta, partners, commercials, launch, audit] =
-    await Promise.all([
-      supabase
-        .from("platform_settings")
-        .select("key, value")
-        .in("key", ["client_ratings_visible", "objectif_demandes_mois"]),
-      getReception(supabase),
-      supabase.from("reception_settings").select("updated_at, updated_by").maybeSingle(),
-      getPartnerSettings(supabase),
-      supabase
-        .from("commercial_bonus_settings")
-        .select(
-          "prime_validation_centimes, prime_validation_pub_centimes, prime_abonnement_centimes, prime_abonnement_premium_centimes, prime_abonnement_entreprise_centimes, delai_validation_jours, objectif_valides_mois",
-        )
-        .maybeSingle(),
-      supabase
-        .from("launch_settings")
-        .select("debut_recrutement, fin_recrutement, seuil_couverture, seuil_fiche_complete")
-        .maybeSingle(),
-      supabase
-        .from("audit_logs")
-        .select("action, actor_id, target_type, data, created_at")
-        .in("action", Object.values(AUDIT_ACTIONS))
-        .order("created_at", { ascending: false })
-        .limit(200),
-    ]);
+  const [
+    platform,
+    reception,
+    receptionMeta,
+    partners,
+    commercials,
+    launch,
+    audit,
+    codes,
+    accounts,
+  ] = await Promise.all([
+    supabase
+      .from("platform_settings")
+      .select("key, value")
+      .in("key", ["client_ratings_visible", "objectif_demandes_mois"]),
+    getReception(supabase),
+    supabase.from("reception_settings").select("updated_at, updated_by").maybeSingle(),
+    getPartnerSettings(supabase),
+    supabase
+      .from("commercial_bonus_settings")
+      .select(
+        "prime_validation_centimes, prime_validation_pub_centimes, prime_abonnement_centimes, prime_abonnement_premium_centimes, prime_abonnement_entreprise_centimes, delai_validation_jours, objectif_valides_mois",
+      )
+      .maybeSingle(),
+    supabase
+      .from("launch_settings")
+      .select("debut_recrutement, fin_recrutement, seuil_couverture, seuil_fiche_complete")
+      .maybeSingle(),
+    supabase
+      .from("audit_logs")
+      .select("action, actor_id, target_type, data, created_at")
+      .in("action", Object.values(AUDIT_ACTIONS))
+      .order("created_at", { ascending: false })
+      .limit(200),
+    // Codes d'essai et comptes d'essai (ADR 0392).
+    supabase
+      .from("test_codes")
+      .select("id, code, expires_at, max_uses, uses, disabled_at, created_by, created_at")
+      .order("created_at", { ascending: false }),
+    supabase.rpc("admin_test_accounts"),
+  ]);
 
   const value = (key: string) => platform.data?.find((row) => row.key === key)?.value;
   const raw: Partial<Record<SettingsSection, { at: string; actor: string | null }>> = {};
@@ -76,7 +93,12 @@ export async function getSettingsPage(supabase: Client) {
   if (receptionMeta.data?.updated_by) {
     raw.accueil = { at: receptionMeta.data.updated_at, actor: receptionMeta.data.updated_by };
   }
-  const actors = [...new Set(Object.values(raw).flatMap((c) => (c?.actor ? [c.actor] : [])))];
+  const actors = [
+    ...new Set([
+      ...Object.values(raw).flatMap((c) => (c?.actor ? [c.actor] : [])),
+      ...(codes.data ?? []).flatMap((c) => (c.created_by ? [c.created_by] : [])),
+    ]),
+  ];
   const { data: profiles } = actors.length
     ? await supabase.from("profiles").select("user_id, first_name, last_name").in("user_id", actors)
     : { data: [] };
@@ -107,5 +129,11 @@ export async function getSettingsPage(supabase: Client) {
       seuil_fiche_complete: 100,
     },
     changes,
+    testCodes: (codes.data ?? []).map((c) => ({
+      ...c,
+      expired: new Date(c.expires_at).getTime() <= Date.now(),
+      createdBy: c.created_by ? (name.get(c.created_by) ?? null) : null,
+    })),
+    testAccounts: accounts.data ?? [],
   };
 }

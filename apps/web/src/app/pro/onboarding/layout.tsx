@@ -94,6 +94,11 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
           <span className="rounded-chip bg-primary-soft px-2 py-1 text-xs font-medium text-primary-strong">
             {fr.nav.pro}
           </span>
+          {artisan.compte_essai && (
+            <span className="rounded-chip bg-violet-soft px-2 py-1 text-xs font-bold text-violet">
+              {fr.pro.onboarding.dossier.essai.badge}
+            </span>
+          )}
         </div>
       </header>
       {content}

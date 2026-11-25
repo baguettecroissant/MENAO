@@ -388,6 +388,24 @@ export const fr = {
     exemptHint: "Vous avez déclaré vos métiers non soumis : l'équipe MENAO le vérifie.",
     refusedBecause: (motif: string) => `Motif du refus : ${motif}`,
     /** Bloc « Pour vous démarquer » de « Mon inscription » (lot 81, ADR 0391), comme sur le site. */
+    /** Compte d'essai (lot 82, ADR 0392), comme sur le site. */
+    essai: {
+      badge: "ESSAI",
+      title: "Compte d'essai",
+      text: "Données fictives, jamais visible des clients. Le dossier est validé automatiquement à l'envoi.",
+      fillAll: "Tout remplir avec des données d'essai",
+      validated: {
+        title: "Dossier d'essai validé",
+        text: "Compte d'essai : votre dossier est validé tout de suite, sans passer par l'équipe. Vous pouvez parcourir votre espace artisan comme un artisan validé.",
+        fictiveTitle: "Ce qui reste fictif",
+        fictive: [
+          "Votre fiche n'est pas montrée aux clients.",
+          "Les paiements passent par Stripe en mode test.",
+          "Le compte se supprime depuis le back-office.",
+        ],
+        cta: "Découvrir mon espace",
+      },
+    },
     standOut: {
       title: "Pour vous démarquer",
       lead: "Facultatif : rien de tout cela ne retarde votre dossier. Mais c'est ce qui fait choisir votre fiche plutôt qu'une autre.",

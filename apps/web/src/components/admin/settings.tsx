@@ -1,4 +1,12 @@
-import { Clock3, Rocket, SlidersHorizontal, Store, Target, UsersRound } from "lucide-react";
+import {
+  Clock3,
+  FlaskConical,
+  Rocket,
+  SlidersHorizontal,
+  Store,
+  Target,
+  UsersRound,
+} from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -27,6 +35,7 @@ const ICONS: Record<SettingsSection, typeof Clock3> = {
   partenaires: UsersRound,
   commerciaux: Store,
   lancement: Rocket,
+  essai: FlaskConical,
 };
 
 /** Sous-menu de la page Réglages : un lien par section (ancres), collé en haut sur ordinateur. */

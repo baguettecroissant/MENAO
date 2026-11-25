@@ -63,6 +63,7 @@ export * from "./partners";
 export * from "./referral";
 export * from "./menao-score";
 export * from "./stand-out";
+export * from "./test-fill";
 export * from "./artisan-page";
 export * from "./new-artisans";
 export * from "./document-reading";

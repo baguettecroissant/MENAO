@@ -9234,6 +9234,33 @@ export const fr = {
             "Tous les budgets pour l'instant : choisissez un minimum si vous le souhaitez",
           budgetSet: "Budget minimum choisi",
         },
+        /** Compte d'essai (lot 82, ADR 0392). */
+        essai: {
+          badge: "ESSAI",
+          title: "Compte d'essai",
+          text: "Données fictives, jamais visible des clients. Le dossier est validé automatiquement à l'envoi.",
+          until: "Jusqu'à l'étape",
+          fillAll: "Tout remplir",
+          fill: "Remplir",
+          fillLabel: (step: string) => `Remplir avec des données d'essai : ${step}`,
+          fillStep: "Remplir avec des données d'essai",
+          attestationsFilled:
+            "Les trois attestations ont été remplies avec des documents d'exemple.",
+          attestationsTodo: "Remplissez les trois attestations avec des documents d'exemple.",
+          clear: "Vider et déposer de vrais documents",
+          example: "EXEMPLE",
+          validated: {
+            title: "Dossier d'essai validé",
+            text: "Compte d'essai : votre dossier est validé tout de suite, sans passer par l'équipe. Vous pouvez parcourir votre espace artisan comme un artisan validé.",
+            fictiveTitle: "Ce qui reste fictif",
+            fictive: [
+              "Votre fiche n'est pas montrée aux clients.",
+              "Les paiements passent par Stripe en mode test.",
+              "Le compte se supprime depuis le back-office.",
+            ],
+            cta: "Découvrir mon espace",
+          },
+        },
         /** Bloc « Pour vous démarquer » de « Mon inscription » (lot 81, ADR 0391). */
         standOut: {
           title: "Pour vous démarquer",
@@ -10709,6 +10736,7 @@ export const fr = {
         partenaires: "Programme Partenaires",
         commerciaux: "Primes des commerciaux",
         lancement: "Lancement : réglages des chiffres",
+        essai: "Codes d'essai",
       },
       menu: {
         plateforme: "Plateforme",
@@ -10717,6 +10745,54 @@ export const fr = {
         partenaires: "Partenaires",
         commerciaux: "Commerciaux",
         lancement: "Lancement",
+        essai: "Codes d'essai",
+      },
+      // Codes d'essai de l'inscription artisan (lot 82, ADR 0392).
+      testCodes: {
+        lead: "Pour tester l'inscription artisan sans vrais documents : le compte créé avec un code est un compte d'essai, rempli de données fictives, validé automatiquement à l'envoi, jamais visible des clients et hors chiffres de lancement. Paiements en mode test seulement.",
+        code: "Nom du code",
+        codeHint: "Lettres, chiffres et tirets. C'est ce qu'on tape dans « J'ai un code ».",
+        days: "Valable (jours)",
+        uses: "Utilisations",
+        create: "Créer le code",
+        created: "Code créé.",
+        errors: {
+          invalid:
+            "Vérifiez le code (3 à 32 caractères), la durée (1 à 90 jours) et les utilisations (1 à 500).",
+          taken: "Ce code est déjà utilisé.",
+          generic: "Action impossible pour le moment. Réessayez.",
+        },
+        head: {
+          code: "Code",
+          by: "Créé par",
+          used: "Utilisé",
+          validity: "Validité",
+          state: "État",
+        },
+        usedCount: (uses: number, max: number) => `${uses} sur ${max}`,
+        until: (date: string) => `jusqu'au ${date}`,
+        expiredOn: (date: string) => `expiré le ${date}`,
+        states: { actif: "Actif", epuise: "Épuisé", expire: "Expiré", desactive: "Désactivé" },
+        disable: "Désactiver",
+        disableLabel: (code: string) => `Désactiver le code ${code}`,
+        none: "Aucun code d'essai pour l'instant.",
+        accountsTitle: "Comptes d'essai",
+        accountsLead:
+          "Les comptes créés avec un code. « Supprimer » efface le compte, sa fiche et ses documents d'exemple.",
+        noAccounts: "Aucun compte d'essai.",
+        badge: "ESSAI",
+        accountStatus: {
+          brouillon: "Inscription en cours",
+          en_verification: "En vérification",
+          valide: "Validé automatiquement",
+          refuse: "Refusé",
+          suspendu: "Suspendu",
+          radie: "Radié",
+        } as Record<string, string>,
+        delete: "Supprimer",
+        deleteLabel: (name: string) => `Supprimer le compte d'essai ${name}`,
+        deleteConfirm:
+          "Supprimer ce compte d'essai ? Le compte, sa fiche et ses documents d'exemple seront effacés.",
       },
       platformLead: "Décisions [À VALIDER] réglables par un admin.",
       changed: (date: string, who: string) => `Modifié le ${date} par ${who}`,

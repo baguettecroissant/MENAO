@@ -42,6 +42,7 @@ import {
   type DossierTone,
 } from "./dossier-kit";
 import { StandOutCard } from "./stand-out-card";
+import { TestBanner } from "./test-banner";
 import { FicheButton } from "./fiche-kit";
 import { HelpVideoCard } from "./onboarding-help";
 import { ProgressBar } from "./tools-kit";
@@ -152,6 +153,8 @@ export function DossierScreen() {
       }
     >
       <TabHeader title={editable && dossier.canSubmit ? g.readyTitle : t.title} />
+      {/* Compte d'essai (lot 82, ADR 0392) : tout remplir avec des données fictives. */}
+      {editable && dossier.compteEssai ? <TestBanner onFilled={() => void reload()} /> : null}
       {dossier.status === "en_verification" ? <Notice tone="success">{t.sent}</Notice> : null}
       {/* Pendant la vérification : l'espace rempli d'exemples (ADR 0184), comme sur le site. */}
       {dossier.status === "en_verification" ? (

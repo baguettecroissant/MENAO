@@ -6,11 +6,13 @@ import { PartnerSettingsForm } from "@/components/admin/partner-forms";
 import { ClientRatingsSetting } from "@/components/admin/platform-setting";
 import { ReceptionCard } from "@/components/admin/reception-card";
 import { SettingsCard, SettingsChangeLine, SettingsNav } from "@/components/admin/settings";
+import { TestCodes } from "@/components/admin/test-codes";
 import { LaunchSettingsForm } from "@/components/launch/figures-forms";
 import { Alert } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
 import { getSettingsPage } from "@/lib/admin/settings";
+import { formatDay } from "@/lib/format";
 
 const t = fr.admin.settingsPage;
 
@@ -103,6 +105,31 @@ export default async function AdminSettingsPage({ searchParams }: PageProps<"/ad
               <Alert tone="success">{fr.admin.launch.figures.settings.saved}</Alert>
             )}
             <LaunchSettingsForm settings={s.launch} />
+          </SettingsCard>
+
+          {/* Codes d'essai de l'inscription artisan (lot 82, ADR 0392). */}
+          <SettingsCard
+            id="essai"
+            title={t.sections.essai}
+            lead={t.testCodes.lead}
+            change={c.essai}
+          >
+            <TestCodes
+              codes={s.testCodes.map((code) => ({
+                id: code.id,
+                code: code.code,
+                expiresOn: formatDay(code.expires_at),
+                expired: code.expired,
+                uses: code.uses,
+                max_uses: code.max_uses,
+                disabled: code.disabled_at !== null,
+                createdBy: code.createdBy,
+              }))}
+              accounts={s.testAccounts.map((account) => ({
+                ...account,
+                createdOn: formatDay(account.created_at),
+              }))}
+            />
           </SettingsCard>
         </div>
       </div>
