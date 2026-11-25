@@ -30,5 +30,8 @@ quelles pages sont vues, d'où viennent les visiteurs et ce qu'ils font, avec l'
 
 - Aucun bandeau de consentement n'est ajouté : mesure sans cookie, à faire confirmer par l'avocat
   (TODO(legal) dans la page cookies).
-- Les événements (clics sur « Demander un devis », inscription…) pourront s'ajouter plus tard avec
-  les attributs `data-umami-event`.
+- Clics suivis (23 novembre 2026, à la demande des dirigeants) d'après la destination du lien ou du
+  formulaire (`lib/site/click-events.ts`) : demande de devis, inscription artisan, formules, Espace
+  Pro, recrutement des conseillers, espace et connexion, compte particulier, téléphone, e-mail,
+  application. Chaque clic porte la page d'origine et le texte du bouton, jamais de donnée
+  personnelle. Un nouveau bouton vers ces pages est suivi sans changement de code.

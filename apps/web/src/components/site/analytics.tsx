@@ -1,4 +1,5 @@
 import Script from "next/script";
+import { ClickTracking } from "@/components/site/click-tracking";
 import { UMAMI_SCRIPT_URL, UMAMI_WEBSITE_ID, analyticsEnabled } from "@/lib/site/analytics";
 
 /**
@@ -10,8 +11,9 @@ const PRIVATE_PATHS = /^\/(demande-preparee|espace-partenaire)(\/|$)/;
 const BEFORE_SEND = `window.menaoUmamiBeforeSend=function(type,payload){return payload&&typeof payload.url==="string"&&${PRIVATE_PATHS.toString()}.test(payload.url)?false:payload;};`;
 
 /**
- * Mesure d'audience Umami (F-189, ADR 0388), dans les mises en page du site public : visites et
- * pages vues, sans cookie ; le choix « ne pas suivre » du navigateur est respecté.
+ * Mesure d'audience Umami (F-189, ADR 0388), dans les mises en page du site public : visites,
+ * pages vues et clics sur les boutons principaux, sans cookie ; le choix « ne pas suivre » du
+ * navigateur est respecté.
  */
 export function SiteAnalytics() {
   if (!analyticsEnabled || !UMAMI_WEBSITE_ID) return null;
@@ -30,6 +32,8 @@ export function SiteAnalytics() {
         data-before-send="menaoUmamiBeforeSend"
         strategy="afterInteractive"
       />
+      {/* Clics sur les boutons principaux (demande de devis, inscription artisan…). */}
+      <ClickTracking />
     </>
   );
 }
