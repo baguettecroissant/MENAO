@@ -61,7 +61,9 @@ export function CodeStep({ email, onChangeEmail }: { email: string; onChangeEmai
         />
         {state.error && <Alert tone="error">{state.error}</Alert>}
         {state.resent && <Alert tone="success">{t.resent}</Alert>}
-        <p className="text-sm text-muted-foreground">{t.linkToo}</p>
+        <p className="text-sm text-muted-foreground">
+          {t.linkToo} {t.spam}
+        </p>
       </form>
       <div className="flex flex-wrap gap-x-6">
         <LinkButton onClick={resend}>{t.resend}</LinkButton>

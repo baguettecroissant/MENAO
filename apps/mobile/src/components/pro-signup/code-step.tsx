@@ -1,6 +1,6 @@
 import { Mail } from "lucide-react-native";
 import { useState } from "react";
-import { StyleSheet, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
 import { FicheButton } from "@/components/pro/fiche-kit";
 import { IconSquare } from "@/components/pro/tools-kit";
 import { fr } from "@/i18n/fr";
@@ -54,6 +54,7 @@ export function CodeStep({
       />
       {error ? <Notice tone="error">{error}</Notice> : null}
       {resent ? <Notice tone="success">{t.resent}</Notice> : null}
+      <Text style={styles.hint}>{t.spam}</Text>
       <FicheButton
         label={t.submit}
         tall
@@ -90,5 +91,11 @@ const styles = StyleSheet.create({
     color: colors.foreground,
   },
   codeError: { borderColor: colors.danger },
+  hint: {
+    fontFamily: font.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors["muted-foreground"],
+  },
   links: { flexDirection: "row", flexWrap: "wrap", gap: spacing(6) },
 });

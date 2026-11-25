@@ -186,7 +186,7 @@ const DOCUMENTS: Record<string, string> = {
   decennale: "attestation d'assurance décennale",
   rc_pro: "attestation de responsabilité civile professionnelle",
   identite: "pièce d'identité du dirigeant",
-  urssaf: "attestation de vigilance URSSAF",
+  urssaf: "attestation de vigilance URSSAF ou MSA",
 };
 /** Documents dont l'expiration suspend l'artisan : assurances (F-51) et URSSAF (ADR 0115). */
 const SUSPENDING = ["decennale", "rc_pro", "urssaf"];
@@ -784,7 +784,7 @@ export function notificationContent(
         const names: Record<string, string> = {
           decennale: "votre attestation d'assurance décennale",
           rc_pro: "votre attestation de responsabilité civile professionnelle",
-          urssaf: "votre attestation de vigilance URSSAF",
+          urssaf: "votre attestation de vigilance URSSAF ou MSA",
         };
         const missing = (Array.isArray(data.manque) ? data.manque : [])
           .map((type) => (typeof type === "string" ? names[type] : undefined))

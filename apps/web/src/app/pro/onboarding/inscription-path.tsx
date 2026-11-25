@@ -6,7 +6,17 @@ import {
   type GuideStep,
   type GuideStepKey,
 } from "@menao/core";
-import { ArrowRight, Check, ChevronDown, ChevronRight, Eye, Lock, Plus, Send } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Eye,
+  Lock,
+  Plus,
+  Send,
+  ShieldCheck,
+} from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { GuideBar, GuideBarSpace } from "@/components/pro/guide-bar";
@@ -201,6 +211,10 @@ export function InscriptionPath({ context }: { context: OnboardingContext }) {
       <p className="flex items-start gap-2 px-1 text-sm text-muted-foreground">
         <Lock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
         {t.dossier.privacy} {t.dossier.nextHint}
+      </p>
+      <p className="flex items-start gap-2 px-1 text-sm font-medium">
+        <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary-strong" />
+        {t.dossier.validation}
       </p>
 
       <GuideBarSpace />

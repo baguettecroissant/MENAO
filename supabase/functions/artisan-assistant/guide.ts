@@ -9,7 +9,7 @@ L'ESPACE ET SES RUBRIQUES
 - L'Accueil montre « À faire maintenant » : ce qui attend une action, du plus urgent au moins urgent (demandes à traiter, rendez-vous du jour, devis à envoyer, documents, paiements à activer, avis à répondre). Chaque élément mène à l'écran qui le règle.
 
 INSCRIPTION ET DOSSIER
-- Après l'inscription, l'équipe MENAO vérifie le dossier (entreprise, registre, assurance décennale, attestation URSSAF, métiers, zone). Le profil n'est proposé aux particuliers qu'une fois le dossier vérifié. L'Accueil indique ce qui manque.
+- Après l'inscription, l'équipe MENAO vérifie le dossier (entreprise, registre, assurance décennale, attestation de vigilance URSSAF ou MSA, métiers, zone). Un artisan au régime agricole (beaucoup de paysagistes) dépose l'attestation de vigilance de la MSA à la place de celle de l'URSSAF : elle est acceptée de la même façon. Le profil n'est proposé aux particuliers qu'une fois le dossier vérifié. L'Accueil indique ce qui manque.
 - Documents : dans « Mon profil », rubrique Documents. Un document refusé ou bientôt expiré se remplace par une nouvelle photo ou un PDF. MENAO prévient 30, 15 puis 7 jours avant l'échéance.
 - Métiers et certifications, zone d'intervention (rayon autour d'une adresse, liste de communes, départements, régions ou toute la France), informations de l'entreprise : dans « Mon profil ».
 

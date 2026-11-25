@@ -504,7 +504,9 @@ describe("contenu des notifications (F-41)", () => {
       { document: "urssaf", jours: 20 },
       ctx,
     );
-    expect(urssaf.subject).toBe("Votre attestation de vigilance URSSAF expire dans 20\u00a0jours");
+    expect(urssaf.subject).toBe(
+      "Votre attestation de vigilance URSSAF ou MSA expire dans 20\u00a0jours",
+    );
     expect(urssaf.paragraphs[2]).toContain("suspendu automatiquement");
   });
 

@@ -37,7 +37,7 @@ export function DocumentHelpSteps({ type }: { type: RequiredDocumentType }) {
               type="button"
               aria-pressed={i === index}
               onClick={() => setIndex(i)}
-              className={`min-h-10 flex-1 rounded-pill px-3 text-sm font-semibold ${focusRing} ${
+              className={`min-h-10 flex-1 rounded-pill px-2 text-sm font-semibold ${focusRing} ${
                 i === index ? "bg-foreground text-white" : "text-foreground hover:bg-background"
               }`}
             >

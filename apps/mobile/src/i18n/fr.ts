@@ -1,3 +1,7 @@
+/** Courrier d'inscription ou de connexion classé en indésirable (retour terrain du 24/11/2026). */
+const SPAM_HINT =
+  "Pas reçu ? Regardez dans vos courriers indésirables : l'e-mail vient de notifications@menao.fr.";
+
 /** Textes de l'application native, en français et centralisés (comme ceux du site). */
 export const fr = {
   brand: "MENAO",
@@ -62,7 +66,7 @@ export const fr = {
     haveAccount: "Déjà un compte ?",
     checkEmailTitle: "Vérifiez vos e-mails",
     checkEmailText: (email: string) =>
-      `Nous avons envoyé un lien de confirmation à ${email}. Ouvrez-le pour activer votre compte, puis connectez-vous.`,
+      `Nous avons envoyé un lien de confirmation à ${email}. Ouvrez-le pour activer votre compte, puis connectez-vous. ${SPAM_HINT}`,
     backToSignIn: "Revenir à la connexion",
     continueBrowsing: "Continuer la visite",
     resetTitle: "Mot de passe oublié",
@@ -222,6 +226,7 @@ export const fr = {
       resent: "Nous venons de vous envoyer un nouveau code.",
       changeEmail: "Modifier l'adresse",
       invalid: "Ce code est incorrect ou a expiré. Vérifiez-le, ou demandez un nouveau code.",
+      spam: SPAM_HINT,
     },
     welcome: {
       title: "Votre profil est créé",
@@ -240,7 +245,7 @@ export const fr = {
           decennale: "décennale",
           rc_pro: "RC Pro",
           identite: "pièce d'identité",
-          urssaf: "attestation URSSAF",
+          urssaf: "attestation URSSAF ou MSA",
         },
         kbisDone: "Kbis : déjà vérifié au registre, rien à déposer",
         profilTitle: "Votre fiche",
@@ -355,7 +360,7 @@ export const fr = {
       decennale: "Attestation d'assurance décennale",
       rc_pro: "Attestation de responsabilité civile professionnelle",
       identite: "Pièce d'identité du dirigeant",
-      urssaf: "Attestation de vigilance URSSAF",
+      urssaf: "Attestation de vigilance URSSAF ou MSA",
     },
     documentHints: {
       kbis: "De moins de 3 mois",
@@ -387,7 +392,9 @@ export const fr = {
     exemptHint: "Vous avez déclaré vos métiers non soumis : l'équipe MENAO le vérifie.",
     refusedBecause: (motif: string) => `Motif du refus : ${motif}`,
     privacy: "Vos documents restent privés : seule l'équipe MENAO les consulte.",
-    after: "Une fois votre entreprise vérifiée, MENAO vous écrit pour la suite.",
+    // Rappel explicite de la validation par l'équipe (retour terrain du 24/11/2026).
+    after:
+      "Votre fiche n'est visible des clients qu'après la validation de votre dossier par l'équipe MENAO. Vous recevez un e-mail dès qu'il est validé.",
   },
   /** Entreprise et logo (ADR 0125), comme l'étape « Entreprise » du site. */
   proCompany: {
@@ -857,7 +864,7 @@ export const fr = {
     dateEmissionUrssaf: "Date d'émission",
     securityCode: "Code de sécurité",
     securityCodeHint:
-      "Le code inscrit sur l'attestation : l'équipe MENAO le vérifie sur le site de l'URSSAF.",
+      "Le code inscrit sur l'attestation : l'équipe MENAO le vérifie sur le site de l'URSSAF ou de la MSA.",
     dateFin: "Valable jusqu'au",
     dateFinIdentite: "Date d'expiration (facultatif)",
     // Pièce d'identité selon son type, recto et verso (F-181, ADR 0378), comme sur le site.
@@ -1681,8 +1688,7 @@ export const fr = {
     noAccountTitle: "Pas encore d'espace MENAO ?",
     backToSignUp: "Créer un espace client",
     free: "La création de votre espace MENAO et la mise en relation avec un artisan sont 100\u00a0% gratuites.",
-    checkEmail:
-      "Nous venons de vous envoyer un e-mail de confirmation. Ouvrez le lien qu'il contient, puis connectez-vous ici pour envoyer votre demande.",
+    checkEmail: `Nous venons de vous envoyer un e-mail de confirmation. Ouvrez le lien qu'il contient, puis connectez-vous ici pour envoyer votre demande. ${SPAM_HINT}`,
     selected: "Artisans sélectionnés",
     selectedOne: "Artisan sélectionné",
     changeSelection: "Modifier la sélection",
@@ -2501,7 +2507,7 @@ export const fr = {
       devis: "Devis à envoyer",
       devisAction: "Préparer",
       documents: "À renouveler",
-      urssaf: "Attestation URSSAF",
+      urssaf: "Attestation URSSAF ou MSA",
       urssafHint: "Désormais demandée à tous les artisans MENAO.",
       paiements: "Activez vos paiements",
       paiementsHint: "Pour recevoir l'argent de vos chantiers.",
@@ -2521,8 +2527,8 @@ export const fr = {
     error: "Votre tableau de bord n'a pas pu être chargé. Tirez vers le bas pour réessayer.",
     suspended: "Votre compte est suspendu. Contactez l'équipe MENAO.",
     urssafMissing:
-      "Ajoutez votre attestation de vigilance URSSAF : elle est désormais demandée à tous les artisans MENAO.",
-    urssafAdd: "Ajouter mon attestation URSSAF",
+      "Ajoutez votre attestation de vigilance URSSAF (ou MSA au régime agricole) : elle est désormais demandée à tous les artisans MENAO.",
+    urssafAdd: "Ajouter mon attestation URSSAF ou MSA",
     // Documents à renouveler (F-51), comme le tableau de bord du site (ADR 0123).
     toRenew: (documents: string) => `Pensez à renouveler : ${documents}.`,
     renew: "Renouveler",

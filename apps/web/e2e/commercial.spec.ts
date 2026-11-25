@@ -85,7 +85,7 @@ test("espace commercial : code, QR code, inscrits, guide terrain et cartes", asy
   await page.goto("/commercial/memo");
   await expect(page.getByRole("heading", { name: "Mémo pour l'artisan", level: 1 })).toBeVisible();
   await expect(page.getByRole("button", { name: "Imprimer le mémo" })).toBeVisible();
-  await expect(page.getByText("Attestation URSSAF")).toBeVisible();
+  await expect(page.getByText("Attestation URSSAF ou MSA")).toBeVisible();
   await expect(page.getByText("Code conseiller : remi-06")).toBeVisible();
 
   // Le back-office et l'espace pro lui restent fermés.

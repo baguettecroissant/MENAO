@@ -27,11 +27,15 @@ describe("aide de l'inscription", () => {
     expect(withRequest).toEqual(["decennale", "rc_pro"]);
   });
 
-  it("distingue micro-entrepreneur et société pour l'URSSAF, avec des liens officiels", () => {
+  it("distingue micro-entrepreneur, société et régime agricole (MSA), avec des liens officiels", () => {
     const urssaf = DOCUMENT_HELP.urssaf;
-    expect(urssaf.variants.map((v) => v.label)).toEqual(["Micro-entrepreneur", "Autre statut"]);
-    for (const v of urssaf.variants)
-      expect(v.link?.url).toMatch(/^https:\/\/www\.[a-z.]*urssaf\.fr$/);
+    expect(urssaf.variants.map((v) => v.label)).toEqual(["Micro", "Autre statut", "MSA"]);
+    const [micro, autre, agricole] = urssaf.variants;
+    for (const v of [micro, autre])
+      expect(v?.link?.url).toMatch(/^https:\/\/www\.[a-z.]*urssaf\.fr$/);
+    // Paysagistes et autres artisans au régime agricole : l'attestation vient de la MSA.
+    expect(agricole?.link?.url).toBe("https://www.msa.fr");
+    expect(urssaf.title).toContain("MSA");
     expect(urssaf.note).toContain("6 mois");
     // Guillemets français : espaces insécables, jamais de « seul en fin de ligne.
     expect(urssaf.variants[0]?.steps[1]).toContain("«\u00a0Mon compte\u00a0»");

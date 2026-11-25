@@ -27,8 +27,8 @@ export const PREPARE_ITEMS: readonly { key: PrepareItemKey; title: string; hint:
   },
   {
     key: "urssaf",
-    title: "Attestation URSSAF",
-    hint: "Gratuite, dans votre espace URSSAF. Valable 6 mois.",
+    title: "Attestation URSSAF ou MSA",
+    hint: "Gratuite, dans votre espace URSSAF (ou MSA au régime agricole). Valable 6 mois.",
   },
   {
     key: "identite",
@@ -105,10 +105,10 @@ export const DOCUMENT_HELP: Record<RequiredDocumentType, DocumentHelp> = {
     insurerRequest: true,
   },
   urssaf: {
-    title: "Où trouver votre attestation URSSAF ?",
+    title: "Où trouver votre attestation URSSAF ou MSA ?",
     variants: [
       {
-        label: "Micro-entrepreneur",
+        label: "Micro",
         steps: [
           "Connectez-vous à votre espace sur autoentrepreneur.urssaf.fr.",
           "Ouvrez «\u00a0Mon compte\u00a0», puis «\u00a0Mes documents\u00a0» et «\u00a0Mes attestations\u00a0».",
@@ -125,8 +125,19 @@ export const DOCUMENT_HELP: Record<RequiredDocumentType, DocumentHelp> = {
         ],
         link: { label: "Ouvrir mon espace URSSAF", url: "https://www.urssaf.fr" },
       },
+      {
+        // Paysagistes, entrepreneurs de travaux agricoles ou forestiers : cotisations à la MSA,
+        // qui délivre l'attestation de vigilance à la place de l'URSSAF (retour terrain du 24/11/2026).
+        label: "MSA",
+        steps: [
+          "Au régime agricole, l’attestation vient de la MSA : connectez-vous à votre espace privé sur msa.fr.",
+          "Ouvrez la rubrique des attestations et demandez l’attestation de vigilance.",
+          "Téléchargez-la, puis revenez ici pour la déposer.",
+        ],
+        link: { label: "Ouvrir mon espace MSA", url: "https://www.msa.fr" },
+      },
     ],
-    note: "Elle n’est délivrée que si vos déclarations et vos cotisations sont à jour ; sinon, votre espace URSSAF indique ce qui manque. Elle vaut 6 mois.",
+    note: "Elle n’est délivrée que si vos déclarations et vos cotisations sont à jour ; sinon, votre espace URSSAF ou MSA indique ce qui manque. Elle vaut 6 mois.",
     insurerRequest: false,
   },
   identite: {
