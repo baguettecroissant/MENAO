@@ -6370,6 +6370,7 @@ export type Database = {
           max_uses: number;
           uses: number;
         };
+        ComputedFields: never;
         Insert: {
           code: string;
           created_at?: string;

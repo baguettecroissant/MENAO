@@ -11,8 +11,8 @@ $$;
 
 insert into auth.users (id, email, is_anonymous, email_confirmed_at, raw_app_meta_data, raw_user_meta_data) values
   ('c1820000-0000-4000-8000-000000000001', 'essai182.admin@example.test', false, now(), '{"role":"admin"}', '{}'),
-  ('c1820000-0000-4000-8000-000000000002', 'essai182.artisan@example.test', false, now(), '{"role":"artisan_en_attente"}', '{}'),
-  ('c1820000-0000-4000-8000-000000000003', 'essai182.vrai@example.test', false, now(), '{"role":"artisan_en_attente"}', '{}');
+  ('c1820000-0000-4000-8000-000000000002', 'essai182.artisan@example.test', false, now(), '{"role":"artisan"}', '{}'),
+  ('c1820000-0000-4000-8000-000000000003', 'essai182.vrai@example.test', false, now(), '{"role":"artisan"}', '{}');
 
 insert into public.artisans (id, user_id, status, siret, zone_mode) values
   ('c1830000-0000-4000-8000-000000000002', 'c1820000-0000-4000-8000-000000000002', 'brouillon', '00000018200006', 'communes'),
