@@ -370,8 +370,14 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
     "Votre formule et votre carte",
   );
   await expect(page.getByRole("button", { name: /Envoyer mon dossier|Renvoyer/ })).toHaveCount(0);
-  // Ce qui est facultatif reste proposé, replié (ADR 0354).
-  await expect(page.getByText("Pour vous démarquer")).toBeVisible();
+  // Ce qui est facultatif est proposé ouvert, avec les points du Score MENAO (lot 81, ADR 0391).
+  const standOut = page.getByRole("region", { name: "Pour vous démarquer" });
+  await expect(standOut).toBeVisible();
+  await expect(standOut.getByText("Votre Score MENAO")).toBeVisible();
+  await expect(
+    standOut.getByRole("complementary", { name: "Ce que verront les clients" }),
+  ).toBeVisible();
+  await expect(standOut.getByRole("heading", { name: "Photos de vos chantiers" })).toBeVisible();
   // Après l'envoi, une attestation se remplace encore (ADR 0376).
   await page.goto("/pro/onboarding/attestations");
   await expect(

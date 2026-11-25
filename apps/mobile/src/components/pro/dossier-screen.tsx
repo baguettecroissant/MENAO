@@ -15,7 +15,6 @@ import {
   Building2,
   Camera,
   FileText,
-  ImageIcon,
   PenLine,
   ShieldCheck,
   Users,
@@ -42,6 +41,7 @@ import {
   SoftBanner,
   type DossierTone,
 } from "./dossier-kit";
+import { StandOutCard } from "./stand-out-card";
 import { FicheButton } from "./fiche-kit";
 import { HelpVideoCard } from "./onboarding-help";
 import { ProgressBar } from "./tools-kit";
@@ -315,17 +315,8 @@ export function DossierScreen() {
         </DossierGroup>
       ) : null}
 
-      {/* Facultatif, rendu visible (ADR 0354, 0355) : rien ici ne retarde le dossier. */}
-      <DossierGroup title={t.groups.extras} count={t.states.optional}>
-        <DossierRow
-          icon={ImageIcon}
-          title={t.imageTitle}
-          hint={t.imageHint}
-          tone={dossier.avatarPath ? "done" : "todo"}
-          status={dossier.avatarPath ? t.states.added : t.states.add}
-          href="/pro-profil-public"
-        />
-      </DossierGroup>
+      {/* Facultatif, ouvert et mis en valeur (lot 81, ADR 0391) : rien ici ne retarde le dossier. */}
+      <StandOutCard view={dossier.standOut} />
 
       <PrivacyNote text={t.privacy} />
       <Text style={styles.after}>{t.after}</Text>

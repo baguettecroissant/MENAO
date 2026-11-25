@@ -6,21 +6,12 @@ import {
   type GuideStep,
   type GuideStepKey,
 } from "@menao/core";
-import {
-  ArrowRight,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  Eye,
-  Lock,
-  Plus,
-  Send,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowRight, Check, ChevronRight, Eye, Lock, Send, ShieldCheck } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { GuideBar, GuideBarSpace } from "@/components/pro/guide-bar";
 import { HelpVideo } from "@/components/pro/help-video";
+import { StandOutCard, type StandOutCardProps } from "@/components/pro/stand-out-card";
 import { Alert, ButtonLink, focusRing } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import type { OnboardingContext } from "@/lib/artisan/context";
@@ -38,7 +29,13 @@ const p = g.path;
  * d'identité et la fiche faites ; « Renvoyer » n'apparaît qu'après un refus ou une demande de
  * compléments.
  */
-export function InscriptionPath({ context }: { context: OnboardingContext }) {
+export function InscriptionPath({
+  context,
+  standOut,
+}: {
+  context: OnboardingContext;
+  standOut: StandOutCardProps;
+}) {
   const { artisan, snapshot, documents, canSubmit } = context;
   const guide = guideFromContext(context);
   const steps = guide.steps;
@@ -56,7 +53,7 @@ export function InscriptionPath({ context }: { context: OnboardingContext }) {
   const companyName = artisan.nom_commercial ?? artisan.raison_sociale;
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-5">
+    <div className="flex w-full max-w-5xl flex-col gap-5">
       {artisan.status === "refuse" && (
         <Alert tone="error">{t.status.refuse(artisan.refusal_reason)}</Alert>
       )}
@@ -167,42 +164,8 @@ export function InscriptionPath({ context }: { context: OnboardingContext }) {
         </section>
       )}
 
-      {/* Facultatif, replié : rien ici ne retarde l'inscription (ADR 0354). */}
-      <details className="group rounded-card border border-border bg-surface">
-        <summary
-          className={`flex min-h-touch cursor-pointer list-none items-center gap-2.5 rounded-card px-4 py-3 [&::-webkit-details-marker]:hidden ${focusRing}`}
-        >
-          <Plus aria-hidden="true" className="size-4 shrink-0 text-primary-strong" />
-          <span className="min-w-0 flex-1 text-[0.9375rem]">
-            <b className="font-semibold">{p.extras}</b>{" "}
-            <span className="text-muted-foreground">· {p.extrasHint}</span>
-          </span>
-          <ChevronDown
-            aria-hidden="true"
-            className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
-          />
-        </summary>
-        <ul className="flex flex-col divide-y divide-border border-t border-border">
-          {(
-            [
-              ["/pro/onboarding/profil#image", t.dossier.extras.logoTitle],
-              ["/pro/onboarding/metiers", t.dossier.extras.skillsTitle],
-              ["/pro/onboarding/metiers#certif-titre", t.dossier.extras.certsTitle],
-              ["/pro/onboarding/metiers", t.dossier.extras.budgetTitle],
-            ] as const
-          ).map(([href, label]) => (
-            <li key={label}>
-              <Link
-                href={href as Route}
-                className={`flex min-h-touch items-center justify-between gap-3 px-4 py-2.5 text-[0.9375rem] font-semibold hover:bg-background ${focusRing}`}
-              >
-                {label}
-                <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </details>
+      {/* Facultatif, ouvert et mis en valeur (lot 81, ADR 0391) : rien ici ne retarde l'inscription. */}
+      <StandOutCard {...standOut} />
 
       {/* Tant qu'aucune pièce n'est déposée : la vidéo de présentation (ADR 0349). */}
       {editable && documents.every((doc) => doc.source === "registre") && (
