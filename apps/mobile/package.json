@@ -25,7 +25,7 @@
     "@menao/validation": "workspace:^",
     "@react-native-community/datetimepicker": "9.2.1",
     "@stripe/stripe-react-native": "0.81.0",
-    "@supabase/supabase-js": "2.119.0",
+    "@supabase/supabase-js": "2.119.2",
     "expo": "58.0.25",
     "expo-asset": "~58.0.21",
     "expo-audio": "~58.0.12",
@@ -46,7 +46,7 @@
     "expo-splash-screen": "~58.0.14",
     "expo-status-bar": "~58.0.5",
     "expo-web-browser": "~58.0.8",
-    "lucide-react-native": "1.70.0",
+    "lucide-react-native": "1.77.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-native": "0.88.1",
@@ -69,7 +69,7 @@
     "eslint": "9.39.5",
     "eslint-config-expo": "58.0.4",
     "typescript": "6.0.3",
-    "vitest": "5.1.0"
+    "vitest": "5.1.1"
   },
   "expo": {
     "install": {

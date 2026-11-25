@@ -22,9 +22,9 @@
   },
   "devDependencies": {
     "@menao/config": "workspace:*",
-    "prettier": "3.9.10",
+    "prettier": "3.10.1",
     "supabase": "2.120.0",
-    "turbo": "2.11.10",
+    "turbo": "2.11.13",
     "typescript": "6.0.3"
   },
   "type": "module"
