@@ -15,6 +15,8 @@ import {
 } from "@menao/core";
 import { presentationSchema } from "@menao/validation";
 import { fr } from "@/i18n/fr";
+import { publicUrl } from "./project";
+import { standOutView, type StandOutView } from "./stand-out-view";
 import { supabase } from "./supabase";
 import { myArtisanKey } from "./team";
 
@@ -54,6 +56,8 @@ export type Dossier = {
   registryPending: boolean;
   /** Fiche proposée par Google (ADR 0144), cochée par défaut. */
   indexable: boolean;
+  /** Bloc « Pour vous démarquer » (lot 81, ADR 0391). */
+  standOut: StandOutView;
   itemsLeft: number;
   canSubmit: boolean;
   progress: ReturnType<typeof onboardingProgress>;
@@ -65,44 +69,66 @@ export async function loadDossier(): Promise<Dossier | null> {
   const { data: artisan } = await supabase
     .from("artisans")
     .select(
-      "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, nom_commercial, forme_juridique_code, adresse_commune, date_creation_entreprise, experience_years, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled, decennale_non_soumis, indexable, registre_statut, image_logo",
+      "id, status, refusal_reason, sirene_checked_at, sirene_active, raison_sociale, nom_commercial, forme_juridique_code, adresse_commune, date_creation_entreprise, experience_years, assujetti_tva, zone_mode, radius_km, base_location, presentation, connect_charges_enabled, decennale_non_soumis, indexable, registre_statut, image_logo, diplome_metier, budget_minimum",
     )
     .eq("id", await myArtisanKey())
     .maybeSingle();
   if (!artisan) return null;
 
-  const [trades, zones, territories, documents, profile, charter, subscription, rge] =
-    await Promise.all([
-      supabase.from("artisan_trades").select("trade_code").eq("artisan_id", artisan.id),
-      supabase.from("artisan_zones").select("code_insee").eq("artisan_id", artisan.id),
-      supabase
-        .from("artisan_territories")
-        .select("departement_code, region_code")
-        .eq("artisan_id", artisan.id),
-      supabase
-        .from("artisan_documents")
-        .select("type, source, status, date_emission, date_fin, refusal_reason")
-        .eq("artisan_id", artisan.id),
-      supabase.from("profiles").select("avatar_path").eq("user_id", auth.user.id).maybeSingle(),
-      supabase
-        .from("artisan_charter_acceptances")
-        .select("id")
-        .eq("artisan_id", artisan.id)
-        .eq("version", CHARTER_VERSION)
-        .eq("engagement_version", ENGAGEMENT_VERSION)
-        .maybeSingle(),
-      supabase
-        .from("subscriptions")
-        .select("status, past_due_since")
-        .eq("artisan_id", artisan.id)
-        .maybeSingle(),
-      // Qualification RGE en cours, pour la présentation proposée.
-      supabase
-        .from("artisan_rge_qualifications")
-        .select("id", { count: "exact", head: true })
-        .eq("artisan_id", artisan.id)
-        .gte("date_fin", parisToday()),
-    ]);
+  const [
+    trades,
+    zones,
+    territories,
+    documents,
+    profile,
+    charter,
+    subscription,
+    rge,
+    workTypes,
+    certifications,
+    photos,
+  ] = await Promise.all([
+    supabase.from("artisan_trades").select("trade_code").eq("artisan_id", artisan.id),
+    supabase.from("artisan_zones").select("code_insee").eq("artisan_id", artisan.id),
+    supabase
+      .from("artisan_territories")
+      .select("departement_code, region_code")
+      .eq("artisan_id", artisan.id),
+    supabase
+      .from("artisan_documents")
+      .select("type, source, status, date_emission, date_fin, refusal_reason")
+      .eq("artisan_id", artisan.id),
+    supabase.from("profiles").select("avatar_path").eq("user_id", auth.user.id).maybeSingle(),
+    supabase
+      .from("artisan_charter_acceptances")
+      .select("id")
+      .eq("artisan_id", artisan.id)
+      .eq("version", CHARTER_VERSION)
+      .eq("engagement_version", ENGAGEMENT_VERSION)
+      .maybeSingle(),
+    supabase
+      .from("subscriptions")
+      .select("status, past_due_since")
+      .eq("artisan_id", artisan.id)
+      .maybeSingle(),
+    // Qualification RGE en cours, pour la présentation proposée.
+    supabase
+      .from("artisan_rge_qualifications")
+      .select("id", { count: "exact", head: true })
+      .eq("artisan_id", artisan.id)
+      .gte("date_fin", parisToday()),
+    // Bloc « Pour vous démarquer » (lot 81, ADR 0391).
+    supabase
+      .from("artisan_work_types")
+      .select("work_type_code", { count: "exact", head: true })
+      .eq("artisan_id", artisan.id),
+    supabase.from("certifications").select("type").eq("artisan_id", artisan.id).order("date_fin"),
+    supabase
+      .from("artisan_photos")
+      .select("storage_path")
+      .eq("artisan_id", artisan.id)
+      .order("sort_order"),
+  ]);
 
   // Par type : le document validé s'il existe, sinon celui en cours d'examen (« remplace » ignoré).
   const rows = (documents.data ?? []).filter(
@@ -186,6 +212,24 @@ export async function loadDossier(): Promise<Dossier | null> {
       hasKbis: rows.some((d) => d.type === "kbis"),
     }),
     indexable: artisan.indexable,
+    standOut: standOutView(
+      {
+        avatarPath,
+        photoPaths: (photos.data ?? []).map((photo) => photo.storage_path),
+        diploma: artisan.diplome_metier,
+        experienceYears: artisan.experience_years,
+        dateCreation: artisan.date_creation_entreprise,
+        workTypeCount: workTypes.count ?? 0,
+        certificationTypes: (certifications.data ?? []).map((c) => c.type),
+        rge: (rge.count ?? 0) > 0,
+        budgetMinimum: artisan.budget_minimum,
+        name: artisan.nom_commercial ?? artisan.raison_sociale ?? "",
+        tradeLabels: (tradeLabels ?? []).map((trade) => trade.label),
+        city: artisan.adresse_commune,
+        presentation,
+      },
+      publicUrl,
+    ),
     itemsLeft: dossierItemsLeft(snapshot),
     canSubmit: canSubmitOnboarding(snapshot),
     progress: onboardingProgress(snapshot),

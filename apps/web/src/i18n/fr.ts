@@ -9219,6 +9219,64 @@ export const fr = {
             "Tous les budgets pour l'instant : choisissez un minimum si vous le souhaitez",
           budgetSet: "Budget minimum choisi",
         },
+        /** Bloc « Pour vous démarquer » de « Mon inscription » (lot 81, ADR 0391). */
+        standOut: {
+          title: "Pour vous démarquer",
+          lead: "Facultatif : rien de tout cela ne retarde votre dossier. Mais c'est ce qui fait choisir votre fiche plutôt qu'une autre.",
+          count: (done: number, total: number) => `${done} sur ${total}`,
+          score: "Votre Score MENAO",
+          toWinBefore: "jusqu'à",
+          toWinAfter: "à gagner ici",
+          allWon: "Tous les points de ce bloc sont gagnés",
+          scoreHint:
+            "Le Score MENAO est affiché sur votre fiche et compte dans le classement des artisans proposés aux clients.",
+          points: (n: number) => `+${n} point${n > 1 ? "s" : ""}`,
+          upTo: (n: number) => `jusqu'à +${n} point${n > 1 ? "s" : ""}`,
+          gained: (n: number) => `+${n} point${n > 1 ? "s" : ""} gagné${n > 1 ? "s" : ""}`,
+          modify: "Modifier",
+          items: {
+            image: {
+              title: "Votre image",
+              text: "Votre logo ou une photo : sur votre fiche, vos devis et vos cartes de visite.",
+              action: "Ajouter",
+              done: "Ajoutée",
+            },
+            savoir_faire: {
+              title: "Diplôme, expérience, spécialités",
+              text: "CAP, BP… vos années de métier, et ce que vous faites le mieux.",
+              action: "Compléter",
+              done: "Complété",
+            },
+            certifications: {
+              title: "Certifications",
+              text: "Qualibat, Qualifelec, QualiPAC… vérifiées par l'équipe. Le RGE est détecté tout seul avec votre SIRET.",
+              action: "Ajouter",
+              done: "Ajoutée",
+            },
+            realisations: {
+              title: "Photos de vos chantiers",
+              text: "3 photos de réalisations, prises avec votre téléphone.",
+              action: "Ajouter",
+              done: "Ajouté",
+            },
+          },
+          photosDone: (n: number) => `Ajouté · ${n} photo${n > 1 ? "s" : ""}`,
+          certsDone: (n: number) => (n === 0 ? "RGE détecté" : `${n} ajoutée${n > 1 ? "s" : ""}`),
+          budgetTitle: "Budget minimum des chantiers",
+          budgetAll: "Réglage facultatif · tous les budgets pour l'instant",
+          budgetSet: (label: string) => `Réglage facultatif · ${label.toLowerCase()}`,
+          preview: "Ce que verront les clients",
+          previewHint: "Les pointillés se remplissent à mesure que vous complétez.",
+          previewImage: "Votre image",
+          previewPhoto: (n: number) => `Réalisation ${n}`,
+          slots: {
+            diploma: "+ diplôme",
+            certification: "+ certification",
+            specialites: "+ spécialités",
+            photo: "+ photo",
+          },
+          specialites: (n: number) => `${n} spécialité${n > 1 ? "s" : ""}`,
+        },
         states: {
           missing: "À ajouter",
           en_attente: "Déposé",
@@ -9402,8 +9460,6 @@ export const fr = {
           continueWith: (name: string) => `Continuer : ${name}`,
           resendTitle: "Votre dossier est prêt à repartir",
           resend: "Renvoyer mon dossier",
-          extras: "Pour vous démarquer",
-          extrasHint: "logo, spécialités, certifications, budget minimum (facultatif)",
         },
         /** Les trois attestations sur un seul écran (lot 73) : on dépose ce qu'on a. */
         attestations: {

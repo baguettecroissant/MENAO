@@ -38,6 +38,7 @@ import { fr } from "@/i18n/fr";
 import { getOnboardingContext } from "@/lib/artisan/context";
 import { HelpVideo } from "@/components/pro/help-video";
 import { InscriptionPath } from "./inscription-path";
+import { standOutProps } from "@/lib/artisan/stand-out";
 import { SubmitOnboarding } from "./submit-onboarding";
 import { paymentsOpen } from "@/lib/launch";
 
@@ -76,7 +77,7 @@ export default async function OnboardingIndexPage() {
     context.artisan.status === "refuse" ||
     context.artisan.status === "en_verification"
   ) {
-    return <InscriptionPath context={context} />;
+    return <InscriptionPath context={context} standOut={await standOutProps(context)} />;
   }
   const {
     supabase,

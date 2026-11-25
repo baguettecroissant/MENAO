@@ -339,7 +339,6 @@ export const fr = {
       documents: "Vos documents",
       profile: "Votre fiche",
       parallel: "À faire en attendant",
-      extras: "Pour vous démarquer",
     },
     profileParts: { entreprise: "Entreprise", metiers: "Métiers", zone: "Zone" },
     profileTitle: "Votre entreprise, vos métiers, votre zone",
@@ -349,9 +348,6 @@ export const fr = {
       `${rules} règles à cocher et votre engagement à certifier, puis une signature`,
     profilTitle: "Votre présentation",
     profilHint: "Ce que les clients liront sur votre fiche",
-    // Image de la fiche, facultative (ADR 0355), comme sur le site.
-    imageTitle: "Votre image",
-    imageHint: "Votre logo ou une photo, sur votre fiche et vos devis",
     // Paiements ouverts dès le début du dossier (ADR 0353).
     paiementsTitle: "Recevoir les paiements de vos clients",
     paiementsHintNow: "Vous pouvez le faire dès maintenant : Stripe vérifie pendant ce temps",
@@ -391,6 +387,64 @@ export const fr = {
     },
     exemptHint: "Vous avez déclaré vos métiers non soumis : l'équipe MENAO le vérifie.",
     refusedBecause: (motif: string) => `Motif du refus : ${motif}`,
+    /** Bloc « Pour vous démarquer » de « Mon inscription » (lot 81, ADR 0391), comme sur le site. */
+    standOut: {
+      title: "Pour vous démarquer",
+      lead: "Facultatif : rien de tout cela ne retarde votre dossier. Mais c'est ce qui fait choisir votre fiche plutôt qu'une autre.",
+      count: (done: number, total: number) => `${done} sur ${total}`,
+      score: "Votre Score MENAO",
+      toWinBefore: "jusqu'à",
+      toWinAfter: "à gagner ici",
+      allWon: "Tous les points de ce bloc sont gagnés",
+      scoreHint:
+        "Le Score MENAO est affiché sur votre fiche et compte dans le classement des artisans proposés aux clients.",
+      points: (n: number) => `+${n} point${n > 1 ? "s" : ""}`,
+      upTo: (n: number) => `jusqu'à +${n} point${n > 1 ? "s" : ""}`,
+      gained: (n: number) => `+${n} point${n > 1 ? "s" : ""} gagné${n > 1 ? "s" : ""}`,
+      modify: "Modifier",
+      items: {
+        image: {
+          title: "Votre image",
+          text: "Votre logo ou une photo : sur votre fiche, vos devis et vos cartes de visite.",
+          action: "Ajouter",
+          done: "Ajoutée",
+        },
+        savoir_faire: {
+          title: "Diplôme, expérience, spécialités",
+          text: "CAP, BP… vos années de métier, et ce que vous faites le mieux.",
+          action: "Compléter",
+          done: "Complété",
+        },
+        certifications: {
+          title: "Certifications",
+          text: "Qualibat, Qualifelec, QualiPAC… vérifiées par l'équipe. Le RGE est détecté tout seul avec votre SIRET.",
+          action: "Ajouter",
+          done: "Ajoutée",
+        },
+        realisations: {
+          title: "Photos de vos chantiers",
+          text: "3 photos de réalisations, prises avec votre téléphone.",
+          action: "Ajouter",
+          done: "Ajouté",
+        },
+      },
+      photosDone: (n: number) => `Ajouté · ${n} photo${n > 1 ? "s" : ""}`,
+      certsDone: (n: number) => (n === 0 ? "RGE détecté" : `${n} ajoutée${n > 1 ? "s" : ""}`),
+      budgetTitle: "Budget minimum des chantiers",
+      budgetAll: "Réglage facultatif · tous les budgets pour l'instant",
+      budgetSet: (label: string) => `Réglage facultatif · ${label.toLowerCase()}`,
+      preview: "Ce que verront les clients",
+      previewHint: "Les pointillés se remplissent à mesure que vous complétez.",
+      previewImage: "Votre image",
+      previewPhoto: (n: number) => `Réalisation ${n}`,
+      slots: {
+        diploma: "+ diplôme",
+        certification: "+ certification",
+        specialites: "+ spécialités",
+        photo: "+ photo",
+      },
+      specialites: (n: number) => `${n} spécialité${n > 1 ? "s" : ""}`,
+    },
     privacy: "Vos documents restent privés : seule l'équipe MENAO les consulte.",
     // Rappel explicite de la validation par l'équipe (retour terrain du 24/11/2026).
     after:
