@@ -182,7 +182,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
     page.getByRole("link", { name: /MENAO prépare le message pour votre assureur/ }),
   ).toHaveAttribute("href", "/pro/onboarding/documents/assureur?type=decennale");
   // Attestation de vigilance URSSAF (ADR 0115) : date d'émission et code de sécurité.
-  const urssaf = page.getByRole("region", { name: "Attestation de vigilance URSSAF" });
+  const urssaf = page.getByRole("region", { name: "Attestation de vigilance URSSAF ou MSA" });
   await expect(urssaf.getByLabel("Prendre en photo")).toHaveAttribute("capture", "environment");
   // Aide de l'inscription (ADR 0347) : où trouver la pièce, avec la vidéo et le lien officiel.
   await urssaf.getByText("Où trouver ce document ?").click();
@@ -376,7 +376,7 @@ test("inscription artisan, onboarding complet et envoi en vérification", async 
   await page.goto("/pro/onboarding/attestations");
   await expect(
     page
-      .getByRole("region", { name: "Attestation de vigilance URSSAF" })
+      .getByRole("region", { name: "Attestation de vigilance URSSAF ou MSA" })
       .getByLabel("Choisir un fichier"),
   ).toBeAttached();
 

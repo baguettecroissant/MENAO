@@ -137,7 +137,7 @@ test("admin : double authentification obligatoire puis validation d'un dossier",
     "Attestation d'assurance décennale",
     "Attestation de responsabilité civile professionnelle",
     "Pièce d'identité du dirigeant",
-    "Attestation de vigilance URSSAF",
+    "Attestation de vigilance URSSAF ou MSA",
   ]) {
     const item = page.getByRole("listitem", { name: doc });
     await item.getByRole("button", { name: "Valider le document" }).click();

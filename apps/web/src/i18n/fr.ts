@@ -10,6 +10,10 @@ import {
   type LaunchTaskStatus,
 } from "@menao/core";
 
+/** Courrier d'inscription ou de connexion classé en indésirable (retour terrain du 24/11/2026). */
+const SPAM_HINT =
+  "Pas reçu ? Regardez dans vos courriers indésirables : l'e-mail vient de notifications@menao.fr.";
+
 /** Textes de l'interface, centralisés (CLAUDE.md : pas de chaînes en dur dispersées). */
 export const fr = {
   /** Cadrage de la photo de profil avant l'envoi (ADR 0202). */
@@ -2706,8 +2710,7 @@ export const fr = {
       signInTitle: "Me connecter à mon espace",
       signInSubmit: "Me connecter et continuer",
       backToSignUp: "Créer un espace client",
-      checkEmail:
-        "Nous venons de vous envoyer un e-mail de confirmation. Cliquez sur le lien qu'il contient : vous reviendrez ici pour envoyer votre demande.",
+      checkEmail: `Nous venons de vous envoyer un e-mail de confirmation. Cliquez sur le lien qu'il contient : vous reviendrez ici pour envoyer votre demande. ${SPAM_HINT}`,
       selected: "Artisan sélectionné",
       selectedMany: "Artisans sélectionnés",
       responseBands: {
@@ -2907,6 +2910,7 @@ export const fr = {
   verifyEmail: {
     title: "Vérifiez votre boîte mail",
     body: "Si cette adresse n'a pas encore de compte, nous venons d'y envoyer un lien de confirmation. Cliquez dessus pour activer votre compte.",
+    spam: SPAM_HINT,
   },
   signIn: {
     title: "Me connecter",
@@ -2957,7 +2961,7 @@ export const fr = {
       "Saisissez votre adresse e-mail : nous vous enverrons un lien de connexion valable une heure.",
     email: "Adresse e-mail",
     submit: "Recevoir mon lien",
-    sent: "Si un compte existe pour cette adresse, un lien de connexion vient d'être envoyé.",
+    sent: `Si un compte existe pour cette adresse, un lien de connexion vient d'être envoyé. ${SPAM_HINT}`,
     back: "Revenir à la connexion par mot de passe",
   },
   myRequests: {
@@ -4474,7 +4478,7 @@ export const fr = {
         devis: "Devis à envoyer",
         devisAction: "Préparer",
         documents: "À renouveler",
-        urssaf: "Attestation URSSAF",
+        urssaf: "Attestation URSSAF ou MSA",
         urssafHint: "Désormais demandée à tous les artisans MENAO.",
         paiements: "Activez vos paiements",
         paiementsHint: "Pour recevoir l'argent de vos chantiers.",
@@ -7827,7 +7831,7 @@ export const fr = {
         },
         {
           q: "Que faut-il pour m'inscrire ?",
-          a: "Votre numéro SIRET (MENAO vérifie votre entreprise au registre ; un Kbis n'est demandé que si cette vérification échoue), vos attestations d'assurance décennale (si votre activité y est soumise) et de responsabilité civile professionnelle, votre attestation de vigilance URSSAF et une pièce d'identité. L'équipe MENAO vérifie votre entreprise et vos documents avant de vous rendre visible.",
+          a: "Votre numéro SIRET (MENAO vérifie votre entreprise au registre ; un Kbis n'est demandé que si cette vérification échoue), vos attestations d'assurance décennale (si votre activité y est soumise) et de responsabilité civile professionnelle, votre attestation de vigilance URSSAF (ou MSA au régime agricole) et une pièce d'identité. L'équipe MENAO vérifie votre entreprise et vos documents avant de vous rendre visible.",
         },
         {
           q: "Combien d'artisans reçoivent la même demande ?",
@@ -8524,7 +8528,7 @@ export const fr = {
         },
         {
           q: "Que faut-il pour m'inscrire ?",
-          a: "Votre numéro SIRET (MENAO vérifie votre entreprise au registre ; un Kbis n'est demandé que si cette vérification échoue), vos attestations d'assurance décennale et de responsabilité civile professionnelle, votre attestation de vigilance URSSAF, une pièce d'identité, puis vos métiers, votre zone d'intervention et une courte présentation.",
+          a: "Votre numéro SIRET (MENAO vérifie votre entreprise au registre ; un Kbis n'est demandé que si cette vérification échoue), vos attestations d'assurance décennale et de responsabilité civile professionnelle, votre attestation de vigilance URSSAF (ou MSA au régime agricole), une pièce d'identité, puis vos métiers, votre zone d'intervention et une courte présentation.",
         },
         {
           q: "Qui vérifie mon dossier ?",
@@ -8928,7 +8932,7 @@ export const fr = {
               a: "Trois conditions sont nécessaires : votre dossier validé par l'équipe MENAO, un abonnement actif et un compte de paiement actif. Votre espace pro vous indique ce qui manque ; vous n'apparaissez pas non plus quand vous êtes en pause ou en congés.",
             },
             {
-              q: "Que se passe-t-il quand une assurance ou mon attestation URSSAF arrive à échéance ?",
+              q: "Que se passe-t-il quand une assurance ou mon attestation URSSAF ou MSA arrive à échéance ?",
               a: "MENAO vous prévient 30, 15 puis 7 jours avant l'expiration : déposez le document à jour dans « Documents ». Si un document obligatoire expire sans renouvellement validé, votre compte est suspendu, puis réactivé dès la validation du nouveau document.",
             },
             {
@@ -9106,6 +9110,7 @@ export const fr = {
         changeEmail: "Modifier l'adresse",
         invalid: "Ce code est incorrect ou a expiré. Vérifiez-le, ou demandez un nouveau code.",
         linkToo: "Vous pouvez aussi cliquer sur le lien reçu dans l'e-mail.",
+        spam: SPAM_HINT,
       },
       finalize: {
         title: "Finaliser mon profil professionnel",
@@ -9133,7 +9138,7 @@ export const fr = {
           minutes: (n: number) => `≈ ${n} min`,
         },
         skipHint:
-          "Ensuite, à votre rythme : votre formule, vos trois attestations (décennale, RC Pro, URSSAF) et vos paiements.",
+          "Ensuite, à votre rythme : votre formule, vos trois attestations (décennale, RC Pro, URSSAF ou MSA) et vos paiements.",
         later: "Pas le temps maintenant ? Nous vous enverrons un rappel par e-mail.",
         sirene: {
           not_found:
@@ -9161,6 +9166,9 @@ export const fr = {
       dossier: {
         nextLabel: "Prochaine étape",
         nextHint: "Tout est enregistré : vous pouvez vous arrêter et reprendre quand vous voulez.",
+        // Rappel explicite de la validation par l'équipe (retour terrain du 24/11/2026).
+        validation:
+          "Votre fiche n'est visible des clients qu'après la validation de votre dossier par l'équipe MENAO. Vous recevez un e-mail dès qu'il est validé.",
         nextButton: "Continuer",
         minutes: (n: number) => `≈ ${n} min`,
         title: "Faire vérifier mon entreprise",
@@ -9373,7 +9381,7 @@ export const fr = {
             },
             attestations: {
               title: "Vos attestations",
-              todo: "Décennale, RC Pro, URSSAF : déposez celles que vous avez",
+              todo: "Décennale, RC Pro, URSSAF ou MSA : déposez celles que vous avez",
               done: "Déposées",
             },
             paiements: {
@@ -9485,7 +9493,7 @@ export const fr = {
         radie: (motif: string | null) =>
           `Votre compte a été radié du réseau MENAO${motif ? ` : ${motif}` : ""}. Votre profil n'apparaît plus. Vous gardez l'accès à vos chantiers en cours et à vos factures ; pour toute question, contactez l'équipe MENAO.`,
         suspenduDocuments:
-          "Votre compte est suspendu : un document obligatoire a expiré (assurance ou attestation URSSAF). Déposez l'attestation à jour dans « Documents » ; le compte sera réactivé dès sa validation.",
+          "Votre compte est suspendu : un document obligatoire a expiré (assurance ou attestation URSSAF ou MSA). Déposez l'attestation à jour dans « Documents » ; le compte sera réactivé dès sa validation.",
       },
       company: {
         siretLabel: "Numéro SIRET",
@@ -10237,7 +10245,7 @@ export const fr = {
           decennale: "Attestation d'assurance décennale",
           rc_pro: "Attestation de responsabilité civile professionnelle",
           identite: "Pièce d'identité du dirigeant",
-          urssaf: "Attestation de vigilance URSSAF",
+          urssaf: "Attestation de vigilance URSSAF ou MSA",
         },
         missing: "À déposer",
         statuses: {
@@ -10340,9 +10348,9 @@ export const fr = {
         exemptCancel: "Annuler : je dépose mon attestation décennale",
         securityCode: "Code de sécurité",
         securityCodeHint:
-          "Le code inscrit sur l'attestation : l'équipe MENAO le vérifie sur le site de l'URSSAF.",
+          "Le code inscrit sur l'attestation : l'équipe MENAO le vérifie sur le site de l'URSSAF ou de la MSA.",
         urssafMissing:
-          "Ajoutez votre attestation de vigilance URSSAF dans « Documents » : elle est désormais demandée à tous les artisans MENAO.",
+          "Ajoutez votre attestation de vigilance URSSAF (ou MSA au régime agricole) dans « Documents » : elle est désormais demandée à tous les artisans MENAO.",
         assureur: "Assureur",
         numero: "Numéro de contrat",
         couverture: "Couverture géographique",
@@ -10367,7 +10375,7 @@ export const fr = {
           urssaf: [
             "Le SIRET",
             "La date : moins de 6 mois",
-            "Le code de sécurité, sur le site de l'URSSAF",
+            "Le code de sécurité, sur le site de l'URSSAF ou de la MSA",
           ],
         },
         validUntil: (date: string) => `valable jusqu'au ${date}`,
@@ -13374,7 +13382,7 @@ export const fr = {
         decennale: "Décennale",
         rc_pro: "RC Pro",
         identite: "Identité",
-        urssaf: "URSSAF",
+        urssaf: "URSSAF / MSA",
       } as Record<string, string>,
       docState: {
         valide: "vérifié",
@@ -13413,7 +13421,7 @@ export const fr = {
         profil: "présentation",
         decennale: "décennale",
         rc_pro: "RC Pro",
-        urssaf: "URSSAF",
+        urssaf: "URSSAF / MSA",
         paiements: "paiements",
         formule: "formule",
       } as Record<string, string>,
@@ -13558,7 +13566,7 @@ export const fr = {
         dates_differentes: "Les dates saisies ne correspondent pas à celles du document.",
         couverture_insuffisante: "L'assurance ne couvre pas les métiers que vous avez déclarés.",
         code_securite_invalide:
-          "Le code de sécurité de l'attestation n'a pas pu être vérifié sur le site de l'URSSAF.",
+          "Le code de sécurité de l'attestation n'a pas pu être vérifié sur le site de l'URSSAF ou de la MSA.",
         autre: "Autre motif",
       },
       // Vue côte à côte (ADR 0120).
@@ -13611,7 +13619,7 @@ export const fr = {
           "Document en cours de validité, recto et verso lisibles",
         ],
         urssaf: [
-          "Code de sécurité vérifié sur le site de l'URSSAF",
+          "Code de sécurité vérifié sur le site de l'URSSAF ou de la MSA",
           "Raison sociale et SIRET identiques à la fiche",
           "Date d'émission conforme (moins de 6 mois)",
         ],
