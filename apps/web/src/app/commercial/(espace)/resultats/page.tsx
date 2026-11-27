@@ -48,7 +48,7 @@ const resultsSchema = z.object({
   bonuses: z.object({ pending: n, validated_cents: n, paid_cents: n }),
   prime_validation_centimes: n.nullable(),
   prime_abonnement_centimes: n.nullable(),
-  // Primes d'abonnement des offres 500 € et 1 500 € (ADR 0366) ; absentes avant la migration.
+  // Primes d'abonnement des offres 350 € et 950 € (ADR 0366, prix de l'ADR 0393) ; absentes avant la migration.
   prime_abonnement_premium_centimes: n.nullable().optional(),
   prime_abonnement_entreprise_centimes: n.nullable().optional(),
   objectif_valides_mois: n.nullable(),

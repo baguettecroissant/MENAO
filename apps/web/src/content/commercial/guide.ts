@@ -615,7 +615,7 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
           {
             title: "Ce que vous payez",
             items: [
-              "Base 150 € HT par mois, Premium 500 € HT, Ultimate 1 500 € HT.",
+              "Base 150 € HT par mois, Premium 350 € HT, Ultimate 950 € HT.",
               "Un abonnement d'un an, payé chaque mois, ou d'avance avec 2 mois offerts.",
               "Frais de paiement Stripe à votre charge sur les sommes encaissées.",
             ],
@@ -812,7 +812,7 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
         caption: "Les formules MENAO et leurs conditions",
         head: ["Ce que vous dites", "Le détail"],
         rows: [
-          ["Trois formules", "Base 150 € HT par mois, Premium 500 € HT, Ultimate 1 500 € HT."],
+          ["Trois formules", "Base 150 € HT par mois, Premium 350 € HT, Ultimate 950 € HT."],
           [
             "Engagement",
             "Un an à partir du premier paiement, à la fin de l'essai, renouvelé chaque année. L'artisan arrête depuis son espace pro ou par recommandé, au plus tard 3 mois avant l'échéance. Pas d'arrêt en cours d'année.",
@@ -820,7 +820,7 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
           ["Au mois", "12 prélèvements mensuels pendant l'année."],
           [
             "À l'année",
-            "Payée d'avance, 2 mois offerts : 1 500 €, 5 000 € ou 15 000 € HT par an, soit 125 €, 417 € ou 1 250 € HT par mois.",
+            "Payée d'avance, 2 mois offerts : 1 500 €, 3 500 € ou 9 500 € HT par an, soit 125 €, 292 € ou 792 € HT par mois.",
           ],
           [
             "Essai gratuit",

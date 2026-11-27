@@ -752,7 +752,7 @@ export const fr = {
         validation: (amount: string) => `${amount} par artisan validé, réglé en fin de mois.`,
         subscription:
           "Puis, quand il devient abonné payant après ses 2 mois offerts, selon son offre :",
-        plans: { base: "Offre 150 €", premium: "Offre 500 €", entreprise: "Offre 1 500 €" },
+        plans: { base: "Offre 150 €", premium: "Offre 350 €", entreprise: "Offre 950 €" },
       },
       pending: (n: number) =>
         n === 0
@@ -8527,7 +8527,7 @@ export const fr = {
       faq: [
         {
           q: "Combien coûte MENAO ?",
-          a: "Trois formules, après 2 mois d'essai gratuits : Base à 150 €, Premium à 500 € et Ultimate à 1 500 € HT par mois, avec un engagement d'un an. Payée d'avance pour l'année, vous avez 2 mois offerts : 125 €, 417 € ou 1 250 € HT par mois.",
+          a: "Trois formules, après 2 mois d'essai gratuits : Base à 150 €, Premium à 350 € et Ultimate à 950 € HT par mois, avec un engagement d'un an. Payée d'avance pour l'année, vous avez 2 mois offerts : 125 €, 292 € ou 792 € HT par mois.",
         },
         {
           q: "MENAO prend-il une commission sur mes chantiers ?",
@@ -11825,8 +11825,8 @@ export const fr = {
         validationPubHint:
           "À la place de la prime par artisan validé, pour un artisan confié depuis nos publicités. Primes d'abonnement inchangées.",
         subscription: "Prime d'abonnement, offre 150 € (€)",
-        subscriptionPremium: "Prime d'abonnement, offre 500 € (€)",
-        subscriptionEnterprise: "Prime d'abonnement, offre 1 500 € (€)",
+        subscriptionPremium: "Prime d'abonnement, offre 350 € (€)",
+        subscriptionEnterprise: "Prime d'abonnement, offre 950 € (€)",
         subscriptionHint: "Vide : même prime que l'offre 150 €.",
         delay: "Délai de vérification (jours)",
         objective: "Objectif mensuel d'artisans validés par commercial",
