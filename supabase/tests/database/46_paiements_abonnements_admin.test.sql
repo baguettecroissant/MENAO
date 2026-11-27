@@ -125,7 +125,7 @@ set local role authenticated;
 select results_eq(
   $$ select artisan, situation, formule, prix_cents from public.admin_subscriptions('tous', 'ABO TEST') order by artisan $$,
   $$ values ('ABO TEST ACTIF', 'actifs', 'Base', 15000), ('ABO TEST ESSAI', 'essais', 'Base', 15000),
-            ('ABO TEST FIN', 'fin_programmee', 'Base', 15000), ('ABO TEST IMPAYE', 'impayes', 'Premium', 50000),
+            ('ABO TEST FIN', 'fin_programmee', 'Base', 15000), ('ABO TEST IMPAYE', 'impayes', 'Premium', 35000),
             ('ABO TEST RESILIE', 'resilies', 'Base', 15000) $$,
   'abonnements : une situation par abonnement');
 select results_eq(
@@ -189,11 +189,11 @@ select results_eq(
                        'impayes_cents', 'fin_programmee', 'en_cours_30j', 'perdus_30j', 'sans_formule']) as c (cle)
      order by 1 $$,
   $$ values ('actifs', 2), ('en_cours_30j', 3), ('essais', 1), ('essais_cents', 15000), ('fin_programmee', 1),
-            ('impayes', 1), ('impayes_cents', 50000), ('mrr_cents', 80000), ('payants', 3), ('perdus_30j', 1),
+            ('impayes', 1), ('impayes_cents', 35000), ('mrr_cents', 65000), ('payants', 3), ('perdus_30j', 1),
             ('resilies_30j', 1), ('sans_formule', 0) $$,
   'abonnements : revenu mensuel récurrent (actifs et impayés relancés), essais, résiliations datées');
 select ok(
-  (select f ->> 'nom' = 'Premium' and (f ->> 'mrr_cents')::int = (f ->> 'payants')::int * 50000
+  (select f ->> 'nom' = 'Premium' and (f ->> 'mrr_cents')::int = (f ->> 'payants')::int * 35000
    from jsonb_array_elements(current_setting('test.abonnements_apres')::jsonb -> 'formules') f
    where f ->> 'code' = 'premium'),
   'abonnements : revenu par formule, au tarif de la formule');
@@ -212,7 +212,7 @@ select results_eq(
          - (current_setting('test.vue_avant')::jsonb #>> c.chemin)::int
      from (values ('{abonnements,mrr_cents}'::text[]), ('{abonnements,resilies_30j}'), ('{notifications,echecs}')) as c (chemin)
      order by 1 $$,
-  $$ values ('{abonnements,mrr_cents}', 80000), ('{abonnements,resilies_30j}', 1), ('{notifications,echecs}', 3) $$,
+  $$ values ('{abonnements,mrr_cents}', 65000), ('{abonnements,resilies_30j}', 1), ('{notifications,echecs}', 3) $$,
   'vue d''ensemble : revenu mensuel récurrent, résiliations et notifications en échec');
 
 -- Un abonnement résilié il y a plus de 30 jours ne compte plus parmi les résiliations récentes.
