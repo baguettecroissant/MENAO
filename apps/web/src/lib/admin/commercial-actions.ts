@@ -149,7 +149,7 @@ export async function saveCommercialBonusSettings(
   if ("invalid" in subscription) {
     return { fieldErrors: { subscription: [tr.errors.amount] }, values };
   }
-  // Primes d'abonnement des offres 500 € et 1 500 € (ADR 0366) ; vides : celle de l'offre 150 €.
+  // Primes d'abonnement des offres 350 € et 950 € (ADR 0366, prix de l'ADR 0393) ; vides : celle de l'offre 150 €.
   const premium = optionalCents(formData, "subscriptionPremium");
   if ("invalid" in premium) {
     return { fieldErrors: { subscriptionPremium: [tr.errors.amount] }, values };

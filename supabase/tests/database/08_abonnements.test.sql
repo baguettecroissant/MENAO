@@ -19,8 +19,8 @@ $$;
 
 select results_eq(
   $$ select code, prix_mensuel_ht_centimes, ouverte from public.plans order by ordre $$,
-  $$ values ('base'::text, 15000, true), ('premium', 50000, true), ('entreprise', 150000, true) $$,
-  'formules 150 / 500 / 1 500 € HT, toutes ouvertes (ADR 0200)');
+  $$ values ('base'::text, 15000, true), ('premium', 35000, true), ('entreprise', 95000, true) $$,
+  'formules 150 / 350 / 950 € HT, toutes ouvertes (ADR 0200, ADR 0393)');
 
 -- Le webhook (service_role) enregistre un abonnement en essai pour A.
 set local role service_role;

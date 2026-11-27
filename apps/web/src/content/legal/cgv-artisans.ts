@@ -55,7 +55,7 @@ export const cgvArtisans: LegalDocument = {
     },
     {
       type: "p",
-      text: "Les prix sont ceux affichés sur cette page au jour de la souscription : 150 euros, 500 euros et 1 500 euros par mois, hors taxes. La taxe sur la valeur ajoutée s'ajoute au taux en vigueur. Le prix est payable d'avance, chaque mois, ou en une fois pour douze mois, avec deux mois offerts.",
+      text: "Les prix sont ceux affichés sur cette page au jour de la souscription : 150 euros, 350 euros et 950 euros par mois, hors taxes. La taxe sur la valeur ajoutée s'ajoute au taux en vigueur. Le prix est payable d'avance, chaque mois, ou en une fois pour douze mois, avec deux mois offerts.",
     },
     {
       type: "p",

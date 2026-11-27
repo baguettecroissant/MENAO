@@ -141,8 +141,8 @@ test("robots.txt fermé hors production, sitemap, pages statiques et contact", a
     comparison.getByRole("rowheader", { name: /^Signature électronique du client/ }),
   ).toBeVisible();
   await expect(compare.getByRole("button", { name: /^Ce qui change/ })).toHaveCount(0);
-  // Calculateur de rentabilité (ADR 0265) : Premium à 500 €, chantier de 4 500 € à 25 %.
-  await expect(page.getByText("1 chantier tous les 2 mois")).toBeVisible();
+  // Calculateur de rentabilité (ADR 0265) : Premium à 350 €, chantier de 4 500 € à 25 %.
+  await expect(page.getByText("1 chantier tous les 3 mois")).toBeVisible();
 
   // Pages par fonction (ADR 0267) : titre, extrait du comparatif lu en base, liens entre elles.
   await page.goto("/pro/logiciel-devis");
