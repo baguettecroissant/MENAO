@@ -20,7 +20,7 @@ insert into public.commercials (id, user_id, code, nom, status) values
 
 -- Une entreprise déjà inscrite.
 insert into public.artisans (id, user_id, siret, raison_sociale, status) values
-  ('c1842000-0000-4000-8000-000000000001', 'c1840000-0000-4000-8000-000000000004', '00000184900019', 'DEJA C184', 'brouillon');
+  ('c1842000-0000-4000-8000-000000000001', 'c1840000-0000-4000-8000-000000000004', '00000189100019', 'DEJA C184', 'brouillon');
 
 create function pg_temp.connecter(uid uuid, app_role text, aal text default 'aal2') returns void language sql as $$
   select set_config('request.jwt.claims', jsonb_build_object(
@@ -34,15 +34,15 @@ select ok((select relrowsecurity from pg_class where oid = 'public.prepared_sign
 -- ---------- Sarah prépare ----------
 select pg_temp.connecter('c1840000-0000-4000-8000-000000000002', 'commercial');
 set local role authenticated;
-select throws_ok($$ select public.commercial_prepare_signup('00000184900019', 'DEJA', '{}', 'Karim', 'B', 'k@example.test', '+33612345678') $$,
+select throws_ok($$ select public.commercial_prepare_signup('00000189100019', 'DEJA', '{}', 'Karim', 'B', 'k@example.test', '+33612345678') $$,
   '22023', 'Cette entreprise est déjà inscrite sur MENAO.', 'entreprise déjà inscrite : refusée');
-select throws_ok($$ select public.commercial_prepare_signup('00000184100011', 'BAINS', '{}', 'Karim', 'B', 'pas-un-mail', '+33612345678') $$,
+select throws_ok($$ select public.commercial_prepare_signup('00000184200012', 'BAINS', '{}', 'Karim', 'B', 'pas-un-mail', '+33612345678') $$,
   '22023', 'Adresse e-mail invalide.', 'e-mail invalide refusé');
-select throws_ok($$ select public.commercial_prepare_signup('00000184100011', 'BAINS', '{}', 'Karim', 'B', 'k@example.test', '0612') $$,
+select throws_ok($$ select public.commercial_prepare_signup('00000184200012', 'BAINS', '{}', 'Karim', 'B', 'k@example.test', '0612') $$,
   '22023', null, 'téléphone invalide refusé');
-select lives_ok($$ select public.commercial_prepare_signup('00000184100011', 'BAINS C184', '{"tradeCodes":["plombier"]}',
+select lives_ok($$ select public.commercial_prepare_signup('00000184200012', 'BAINS C184', '{"tradeCodes":["plombier"]}',
   'Karim', 'B', 'Karim@Example.test', '+33612345678') $$, 'préparation enregistrée');
-select lives_ok($$ select public.commercial_prepare_signup('00000184100011', 'BAINS C184', '{"tradeCodes":["plombier","chauffagiste"]}',
+select lives_ok($$ select public.commercial_prepare_signup('00000184200012', 'BAINS C184', '{"tradeCodes":["plombier","chauffagiste"]}',
   'Karim', 'B', 'karim@example.test', '+33612345678') $$, 'nouvelle préparation du même SIRET');
 select is((select count(*)::int from public.prepared_signups), 1, 'la nouvelle remplace l''ancienne');
 select is((select email from public.prepared_signups), 'karim@example.test', 'e-mail en minuscules');
@@ -58,7 +58,7 @@ select is((select count(*)::int from public.prepared_signups), 0, 'préparation 
 select lives_ok($$ select public.commercial_delete_prepared_signup((select id from public.prepared_signups limit 1)) $$,
   'suppression sans effet sur celle d''un collègue');
 reset role;
-select is((select count(*)::int from public.prepared_signups where siret = '00000184100011'), 1, 'toujours là');
+select is((select count(*)::int from public.prepared_signups where siret = '00000184200012'), 1, 'toujours là');
 
 -- ---------- L'artisan ouvre son lien, sans compte ----------
 set local role anon;
@@ -67,7 +67,7 @@ select is(public.prepared_signup_open('pas-une-cle'), null, 'clé mal formée : 
 select throws_ok($$ select count(*) from public.prepared_signups $$, '42501', null,
   'anonyme : la table ne lui est pas lisible directement');
 reset role;
-create temp table cle as select key from public.prepared_signups where siret = '00000184100011';
+create temp table cle as select key from public.prepared_signups where siret = '00000184200012';
 grant select on cle to anon;
 set local role anon;
 select is(public.prepared_signup_open((select key from cle)) ->> 'advisor', 'Sarah', 'lien : prénom de la conseillère');
@@ -75,7 +75,7 @@ select is(public.prepared_signup_open((select key from cle)) ->> 'code', 'sarah-
 select is(public.prepared_signup_open((select key from cle)) -> 'draft' -> 'tradeCodes', '["plombier", "chauffagiste"]'::jsonb,
   'lien : métiers préparés');
 reset role;
-select isnt((select opened_at from public.prepared_signups where siret = '00000184100011'), null, 'première ouverture notée');
+select isnt((select opened_at from public.prepared_signups where siret = '00000184200012'), null, 'première ouverture notée');
 
 -- Lien expiré sans avoir été ouvert.
 insert into public.prepared_signups (commercial_id, siret, company_name, draft, first_name, email, phone, expires_at, key)
@@ -92,16 +92,16 @@ select is((select count(*)::int from public.prepared_signups where siret = '0000
 insert into auth.users (id, email, is_anonymous, email_confirmed_at, raw_app_meta_data, raw_user_meta_data) values
   ('c1840000-0000-4000-8000-000000000005', 'c184.bains@example.test', false, now(), '{"role":"artisan"}', '{}');
 insert into public.artisans (id, user_id, siret, raison_sociale, status) values
-  ('c1842000-0000-4000-8000-000000000002', 'c1840000-0000-4000-8000-000000000005', '00000184100011', 'BAINS C184', 'brouillon');
+  ('c1842000-0000-4000-8000-000000000002', 'c1840000-0000-4000-8000-000000000005', '00000184200012', 'BAINS C184', 'brouillon');
 insert into public.commercial_attributions (commercial_id, artisan_id) values
   ('c1841000-0000-4000-8000-000000000001', 'c1842000-0000-4000-8000-000000000002');
-select isnt((select converted_at from public.prepared_signups where siret = '00000184100011'), null, 'préparation devenue inscription');
-select is((select email from public.prepared_signups where siret = '00000184100011'), null, 'e-mail effacé à l''inscription');
-select is((select draft from public.prepared_signups where siret = '00000184100011'), null, 'brouillon effacé à l''inscription');
+select isnt((select converted_at from public.prepared_signups where siret = '00000184200012'), null, 'préparation devenue inscription');
+select is((select email from public.prepared_signups where siret = '00000184200012'), null, 'e-mail effacé à l''inscription');
+select is((select draft from public.prepared_signups where siret = '00000184200012'), null, 'brouillon effacé à l''inscription');
 
 select pg_temp.connecter('c1840000-0000-4000-8000-000000000002', 'commercial');
 set local role authenticated;
-select is((select artisan_status::text from public.commercial_prepared_signups() where siret = '00000184100011'), 'brouillon',
+select is((select artisan_status::text from public.commercial_prepared_signups() where siret = '00000184200012'), 'brouillon',
   'suivi : étape du dossier de l''artisan');
 reset role;
 
@@ -129,7 +129,7 @@ values
   ('c1841000-0000-4000-8000-000000000001', '00000184500010', 'RECENT C184', '{}', 'Max', 'max@example.test', '+33633333333',
    now() + interval '6 days', now());
 select is(app.purge_prepared_signups(), 1, 'purge : lien jamais ouvert après 7 jours');
-select is((select count(*)::int from public.prepared_signups where siret in ('00000184100011', '00000184500010')), 2,
+select is((select count(*)::int from public.prepared_signups where siret in ('00000184200012', '00000184500010')), 2,
   'purge : inscription faite et lien récent gardés');
 
 select * from finish();
