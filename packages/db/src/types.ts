@@ -4588,6 +4588,69 @@ export type Database = {
         };
         Relationships: [];
       };
+      prepared_signups: {
+        Row: {
+          commercial_id: string;
+          company_name: string | null;
+          consent_at: string;
+          converted_at: string | null;
+          created_at: string;
+          draft: Json | null;
+          email: string | null;
+          expires_at: string;
+          first_name: string | null;
+          id: string;
+          key: string;
+          last_name: string | null;
+          opened_at: string | null;
+          phone: string | null;
+          siret: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          commercial_id: string;
+          company_name?: string | null;
+          consent_at?: string;
+          converted_at?: string | null;
+          created_at?: string;
+          draft?: Json | null;
+          email?: string | null;
+          expires_at?: string;
+          first_name?: string | null;
+          id?: string;
+          key?: string;
+          last_name?: string | null;
+          opened_at?: string | null;
+          phone?: string | null;
+          siret: string;
+        };
+        Update: {
+          commercial_id?: string;
+          company_name?: string | null;
+          consent_at?: string;
+          converted_at?: string | null;
+          created_at?: string;
+          draft?: Json | null;
+          email?: string | null;
+          expires_at?: string;
+          first_name?: string | null;
+          id?: string;
+          key?: string;
+          last_name?: string | null;
+          opened_at?: string | null;
+          phone?: string | null;
+          siret?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "prepared_signups_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: false;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_path: string | null;
@@ -7219,6 +7282,7 @@ export type Database = {
       admin_ai_summary: { Args: { p_days?: number }; Returns: Json };
       admin_artisan_activity: { Args: { p_artisan_id: string }; Returns: Json };
       admin_artisan_menao_score: { Args: { p_artisan_id: string }; Returns: Json };
+      admin_artisan_prepared_signup: { Args: { p_artisan: string }; Returns: Json };
       admin_artisan_referral: { Args: { p_artisan_id: string }; Returns: Json };
       admin_audit_counts: { Args: { p_query?: string }; Returns: Json };
       admin_audit_log: {
@@ -8338,6 +8402,7 @@ export type Database = {
           status: Database["public"]["Enums"]["prospect_status"];
         }[];
       };
+      commercial_delete_prepared_signup: { Args: { p_id: string }; Returns: undefined };
       commercial_demo_open: { Args: { p_key: string }; Returns: boolean };
       commercial_do_not_contact: { Args: { p_id: string }; Returns: undefined };
       commercial_end_tour: { Args: { p_tour: string }; Returns: undefined };
@@ -8346,6 +8411,35 @@ export type Database = {
       commercial_mark_home_screen: { Args: Record<PropertyKey, never>; Returns: undefined };
       commercial_onboarding_state: { Args: Record<PropertyKey, never>; Returns: Json };
       commercial_pace: { Args: Record<PropertyKey, never>; Returns: Json };
+      commercial_prepare_signup: {
+        Args: {
+          p_company_name: string;
+          p_draft: Json;
+          p_email: string;
+          p_first_name: string;
+          p_last_name: string;
+          p_phone: string;
+          p_siret: string;
+        };
+        Returns: string;
+      };
+      commercial_prepared_signups: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          artisan_status: Database["public"]["Enums"]["artisan_status"];
+          company_name: string;
+          converted_at: string;
+          created_at: string;
+          expires_at: string;
+          first_name: string;
+          id: string;
+          key: string;
+          manque: string[];
+          opened_at: string;
+          phone: string;
+          siret: string;
+        }[];
+      };
       commercial_prospect: {
         Args: { p_id: string };
         Returns: {
@@ -8787,6 +8881,8 @@ export type Database = {
           trade_label: string;
         }[];
       };
+      prepared_signup_forget: { Args: { p_key: string }; Returns: undefined };
+      prepared_signup_open: { Args: { p_key: string }; Returns: Json };
       public_artisan_pages: {
         Args: Record<PropertyKey, never>;
         Returns: {

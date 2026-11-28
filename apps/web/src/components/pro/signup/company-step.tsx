@@ -31,7 +31,7 @@ type SearchState =
   | { status: "done"; results: CompanySuggestion[] }
   | { status: "error" };
 
-function toDraftCompany(c: CompanySuggestion): ArtisanSignupCompany {
+export function toDraftCompany(c: CompanySuggestion): ArtisanSignupCompany {
   return {
     siret: c.siret,
     name: c.name,
@@ -151,14 +151,17 @@ export function CompanyStep({
   );
 }
 
-function CompanyFinder({
+export function CompanyFinder({
   onPick,
   onManual,
+  initialQuery = "",
 }: {
   onPick: (company: CompanySuggestion) => void;
   onManual: (siret: string) => void;
+  /** Recherche de départ (inscription préparée depuis un prospect, ADR 0395). */
+  initialQuery?: string;
 }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [search, setSearch] = useState<SearchState>({ status: "idle" });
   const [manual, setManual] = useState(false);
   // « Réessayer » : relance la même recherche.

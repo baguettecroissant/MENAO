@@ -196,6 +196,9 @@ export default async function CommercialDayPage() {
                 <p className="text-sm text-label">{t.day.phoneText}</p>
               </Card>
 
+              <ButtonLink href={"/commercial/inscrire" as Route} className="self-start">
+                {fr.commercialField.prepare.cta}
+              </ButtonLink>
               <ButtonLink
                 href={"/commercial/prospects?filtre=miens" as Route}
                 variant="outline"
