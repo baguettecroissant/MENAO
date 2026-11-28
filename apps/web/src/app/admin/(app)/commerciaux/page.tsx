@@ -2,6 +2,8 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { z } from "zod";
 import { CommercialAlertSettingsCard } from "@/components/admin/commercial-alert-settings";
+import { CommercialStatementsCard } from "@/components/admin/commercial-statements-card";
+import { getAdminStatements, monthParam } from "@/lib/admin/commercial-statements";
 import { CommercialInviteForm, CommercialStatusForm } from "@/components/admin/commercial-forms";
 import {
   CommercialOnboardingCard,
@@ -55,7 +57,8 @@ function suggestedCode(firstName: string): string {
 export default async function AdminCommercialsPage({
   searchParams,
 }: PageProps<"/admin/commerciaux">) {
-  const { candidat } = await searchParams;
+  const { candidat, mois } = await searchParams;
+  const month = monthParam(mois);
   const { supabase } = await requireAdmin();
   // « Inviter comme commercial » depuis la fiche d'un candidat (ADR 0380) : invitation remplie.
   const candidateId =
@@ -81,6 +84,7 @@ export default async function AdminCommercialsPage({
     { data: demo },
     { data: onboardingData },
     { data: alertSettings },
+    statements,
   ] = await Promise.all([
     supabase.rpc("admin_commercials_dashboard"),
     supabase.rpc("admin_prospects_summary"),
@@ -99,6 +103,8 @@ export default async function AdminCommercialsPage({
       .from("commercial_alert_settings")
       .select("bloque_jours, fin_essai_jours, lien_jours")
       .maybeSingle(),
+    // Relevés et virements du mois (ADR 0397).
+    getAdminStatements(supabase, month),
   ]);
   const onboarding = onboardingRowsSchema.safeParse(onboardingData);
   const commercials = data ?? [];
@@ -123,6 +129,12 @@ export default async function AdminCommercialsPage({
       />
       {amountsNotSet && <Alert tone="info">{tr.settings.notSet}</Alert>}
       {onboarding.success && <CommercialOnboardingCard rows={onboarding.data} />}
+      {statements && (
+        <CommercialStatementsCard
+          month={month}
+          rows={statements.map((r) => ({ ...r, has_iban: Boolean(r.iban) }))}
+        />
+      )}
       {alertSettings && <CommercialAlertSettingsCard settings={alertSettings} />}
       {demoLink && (
         <CommercialDemoCard

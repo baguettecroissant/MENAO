@@ -69,6 +69,8 @@ export type CommercialOnboardingRaw = {
   remindersOn: boolean;
   /** Notifications activées sur au moins un téléphone (web push, ADR 0396). */
   pushOn: boolean;
+  /** Informations de facturation complètes (ADR 0397). */
+  billingDone: boolean;
   /** Meilleure note de chaque quiz réussi ou non. */
   modules: Partial<Record<FormationModule, number>>;
   /** Meilleure note au simulateur de vente, null s'il n'a pas servi. */
@@ -83,6 +85,7 @@ export type CommercialStepKey =
   | "rsac"
   | "urssaf"
   | "rib"
+  | "facturation"
   | "ecran"
   | "rappels"
   | `module_${FormationModule}`
@@ -104,7 +107,7 @@ export const COMMERCIAL_STEP_GROUPS: readonly CommercialStepGroup[] = [
   "prospect",
 ];
 
-/** Les 13 étapes, dans l'ordre de la page. L'Urssaf compte faite tant qu'elle n'a pas expiré. */
+/** Les 14 étapes, dans l'ordre de la page. L'Urssaf compte faite tant qu'elle n'a pas expiré. */
 export function commercialOnboardingSteps(
   raw: CommercialOnboardingRaw,
   today: string,
@@ -121,6 +124,8 @@ export function commercialOnboardingSteps(
     step("rsac", "statut", Boolean(raw.rsacNumber)),
     step("urssaf", "statut", urssaf === "valide" || urssaf === "bientot"),
     step("rib", "statut", raw.ribDepositedOn !== null),
+    // Informations de facturation (SIRET, adresse, TVA, IBAN) des factures préparées (ADR 0397).
+    step("facturation", "statut", raw.billingDone),
     step("ecran", "telephone", raw.homeScreenOn !== null),
     // Notifications sur le téléphone (ADR 0396) ; l'e-mail et la cloche restent toujours actifs.
     step("rappels", "telephone", raw.pushOn),

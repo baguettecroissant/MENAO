@@ -67,16 +67,33 @@ test("espace commercial : code, QR code, inscrits, guide terrain et cartes", asy
   await page.getByRole("button", { name: /Le méfiant/ }).click();
   await expect(page.getByText("Oui ? C'est pour quoi ?")).toBeVisible();
 
-  // Mes résultats (lot 3) : l'inscrit du seed, primes non réglées (règle 15).
+  // Mes gains (lot 3, puis ADR 0397) : l'inscrit du seed, primes non réglées (règle 15).
   await page
     .getByRole("navigation", { name: "Navigation de l'espace commercial" })
-    .getByRole("link", { name: "Mes résultats" })
+    .getByRole("link", { name: "Mes gains" })
     .click();
-  await expect(page.getByRole("heading", { name: "Mes résultats", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mes gains", level: 1 })).toBeVisible();
+  await expect(page.getByText("Pas encore de prime ce mois-ci.")).toBeVisible();
+  await expect(page.getByText("Votre premier relevé arrivera le 25.").last()).toBeVisible();
   await expect(page.getByText("1 au total").first()).toBeVisible();
   await expect(
     page.getByText("Les montants des primes ne sont pas encore fixés par l'équipe MENAO."),
   ).toBeVisible();
+
+  // Informations de facturation (ADR 0397) : contrôlées, puis enregistrées. Données fictives.
+  await page.goto("/commercial/facturation");
+  await expect(
+    page.getByRole("heading", { name: "Mes informations de facturation", level: 1 }),
+  ).toBeVisible();
+  await page.getByLabel("Nom ou raison sociale").fill("Rémi Exemple");
+  await page.getByLabel("SIRET").fill("00000186300000");
+  await page.getByLabel("Adresse").fill("12 rue de l'Exemple, 06000 Nice");
+  await page.getByLabel("IBAN").fill("FR76 3000 6000 0112 3456 7890 188");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByText("IBAN invalide : vérifiez-le sur votre RIB.")).toBeVisible();
+  await page.getByLabel("IBAN").fill("FR76 3000 6000 0112 3456 7890 189");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByText("Informations enregistrées")).toBeVisible();
 
   // Cartes à imprimer, hors de la coque.
   await page.goto("/commercial/cartes");

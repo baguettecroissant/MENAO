@@ -352,3 +352,25 @@ export async function saveCommercialAlertSettings(
   revalidatePath(PATH);
   return { success: fr.commercialField.moments.admin.saved };
 }
+
+/** Virement d'une facture de conseiller fait : facture et primes du relevé payées (ADR 0397). */
+export async function markCommercialInvoicePaid(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const invoice = text(formData, "invoice") ?? "";
+  const reference = text(formData, "reference")?.trim() ?? "";
+  const values = { reference };
+  if (!UUID.test(invoice)) return { error: fr.errors.generic, values };
+  if (!reference) {
+    return { fieldErrors: { reference: [fr.admin.partners.errors.reference] }, values };
+  }
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_mark_commercial_invoice_paid", {
+    p_invoice: invoice,
+    p_reference: reference,
+  });
+  if (error) return { error: dbError(error), values };
+  revalidatePath("/admin/commerciaux");
+  return { success: fr.commercialGains.admin.marked };
+}

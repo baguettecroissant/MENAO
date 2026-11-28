@@ -1086,6 +1086,17 @@ describe("dossier et documents de l'artisan (F-50, F-51)", () => {
     expect(notificationContent("conseiller_lien", { entreprise: "PAILLON" }, pro).cta.url).toBe(
       "https://menao.example/commercial/inscriptions",
     );
+    const releve = notificationContent(
+      "conseiller_releve",
+      { statement_id: ids.request_id, total_centimes: 14000, primes: 2 },
+      pro,
+    );
+    expect(releve.subject).toBe("Votre relevé est prêt : 140,00\u00a0€");
+    expect(releve.paragraphs.join(" ")).toContain("(2 primes)");
+    expect(releve.cta.url).toBe(
+      `https://menao.example/commercial/resultats/releve/${ids.request_id}`,
+    );
+    expect(notificationContent("conseiller_releve", {}, pro).subject).toBe("Votre relevé est prêt");
     const late = notificationContent(
       "equipe_ticket_en_retard",
       { ticket_id: ids.request_id, type: "contact", objet: null },
