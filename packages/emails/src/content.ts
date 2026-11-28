@@ -112,6 +112,8 @@ export const NOTIFICATION_TYPES = [
   "conseiller_relance",
   "conseiller_fin_essai",
   "conseiller_lien",
+  // Relevé mensuel des primes d'un conseiller, le 25 (ADR 0397).
+  "conseiller_releve",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -2262,6 +2264,28 @@ export function notificationContent(
         ],
         quote: null,
         cta: { label: "Renvoyer le lien", url: link("/commercial/inscriptions") },
+      };
+    }
+    case "conseiller_releve": {
+      // Relevé des primes du mois, émis le 25 (contrat, article 11 ; ADR 0397).
+      const total = amount(data, "total_centimes");
+      const count = integer(data, "primes");
+      const id = text(data, "statement_id");
+      const title = total ? `Votre relevé est prêt : ${total}` : "Votre relevé est prêt";
+      return {
+        subject: title,
+        preview: "Émettez votre facture avant le 28 pour être payé à la fin du mois.",
+        title,
+        paragraphs: [
+          hello(ctx.firstName),
+          `Votre relevé des primes du mois est disponible${count ? ` (${count} prime${count > 1 ? "s" : ""})` : ""}.`,
+          "Votre facture est préparée à partir du relevé : vérifiez-la et émettez-la en un toucher, ou déposez la vôtre. Reçue avant le 28, elle est payée par virement le dernier jour du mois.",
+        ],
+        quote: null,
+        cta: {
+          label: "Voir mon relevé",
+          url: link(id ? `/commercial/resultats/releve/${id}` : "/commercial/resultats"),
+        },
       };
     }
     case "conseiller_urssaf": {

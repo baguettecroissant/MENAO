@@ -2,15 +2,18 @@ import {
   COMMERCIAL_MONTHLY_TARGET,
   COMMERCIAL_TRADE_TARGETS,
   formatZoneCodes,
+  parisToday,
   sectorOfZone,
 } from "@menao/core";
 import type { Metadata } from "next";
 import { z } from "zod";
+import { GainsOverview } from "@/components/commercial/gains/gains-overview";
 import { PacePanel } from "@/components/commercial/pace-panel";
 import { EmptyState } from "@/components/empty-state";
 import { ListPanel, ListRow, type ListTone } from "@/components/list-kit";
 import { Alert, Card } from "@/components/ui";
 import { fr } from "@/i18n/fr";
+import { getGains } from "@/lib/commercial/gains";
 import { getCommercialPace } from "@/lib/commercial/pace";
 import { getCommercialSpace } from "@/lib/commercial/space";
 import { formatDay } from "@/lib/format";
@@ -76,20 +79,24 @@ function Tile({ label, value, hint }: { label: string; value: string; hint?: str
 }
 
 /**
- * « Mes résultats » des commerciaux (F-65, lot 3, ADR 0207 ; ma semaine en tête, ADR 0381) : inscrits, validés et abonnés (mois
+ * « Mes gains » des commerciaux (F-65, lot 3, ADR 0207 ; ma semaine, ADR 0381 ; gains, relevé et
+ * facture en tête, ADR 0397) : inscrits, validés et abonnés (mois
  * en cours et total), objectif du mois s'il est fixé, prospects suivis, les six derniers mois, puis
  * les primes (montants fixés par l'équipe, en attente, à payer, payées) et leur règle.
  */
 export default async function CommercialResultsPage() {
   const space = await getCommercialSpace();
-  const [results, bonusList, pace] = space.active
+  const [results, bonusList, pace, gains, statements] = space.active
     ? await Promise.all([
         space.supabase.rpc("commercial_results"),
         space.supabase.rpc("commercial_bonuses_list"),
         // Ma semaine, objectif commun et classement (ADR 0381).
         getCommercialPace(space.supabase),
+        // Gains, relevés et factures (ADR 0397).
+        getGains(space.supabase),
+        space.supabase.rpc("commercial_statements_list"),
       ])
-    : [null, null, null];
+    : [null, null, null, null, null];
   const parsed = results?.error ? null : resultsSchema.safeParse(results?.data);
   const data = parsed?.success ? parsed.data : null;
   const bonuses = bonusList?.data ?? [];
@@ -118,6 +125,14 @@ export default async function CommercialResultsPage() {
           <Alert tone="error">{fr.commercialProspects.errors.unavailable}</Alert>
         ) : (
           <>
+            {gains && (
+              <GainsOverview
+                gains={gains}
+                statements={statements?.data ?? []}
+                bonuses={bonuses}
+                today={parisToday()}
+              />
+            )}
             {pace ? <PacePanel pace={pace} /> : <Alert tone="error">{t.pace.unavailable}</Alert>}
             <dl className="grid gap-px overflow-hidden rounded-card border border-border bg-border shadow-card sm:grid-cols-3">
               <Tile

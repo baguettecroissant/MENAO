@@ -166,6 +166,18 @@ function stepContent(
           </div>
         ),
       };
+    case "facturation":
+      return {
+        title: s.facturation.title,
+        detail: step.done ? s.facturation.done : s.facturation.todo,
+        action: (
+          <ActionLink
+            href="/commercial/facturation"
+            label={step.done ? s.facturation.edit : s.facturation.action}
+            primary={next && !step.done}
+          />
+        ),
+      };
     case "ecran":
       return {
         title: s.ecran.title,

@@ -49,6 +49,10 @@ test("démo commerciale : lien secret, données fictives, rien d'envoyé", async
   // Résultats fictifs, puis la démo de l'espace artisan.
   await page.goto("/commercial/resultats");
   await expect(page.getByText("440,00 €").first()).toBeVisible();
+  // Gains du mois et primes à venir (ADR 0397).
+  await expect(page.getByText("jusqu'à 660 €").filter({ visible: true })).toBeVisible();
+  await page.goto("/commercial/resultats/a-venir");
+  await expect(page.getByText("Plomberie du Port")).toBeVisible();
   await page.getByRole("link", { name: /Voir aussi l'espace artisan/ }).click();
   await expect(page).toHaveURL(/\/pro\/decouvrir/);
   await expect(page.getByText(/Bonjour Sarah/)).toBeVisible();

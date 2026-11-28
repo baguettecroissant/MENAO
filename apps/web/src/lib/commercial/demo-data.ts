@@ -337,6 +337,125 @@ const BONUSES = (): Fn["commercial_bonuses_list"]["Returns"] =>
     paid_at: (status === "payee" ? at(d + 35, "09:00") : null) as string,
   }));
 
+// Gains, relevés et facture (ADR 0397) : novembre de la maquette du lot 86, relevé du mois
+// seulement à partir du 25.
+const STATEMENT_LINES = (
+  [
+    ["Bains & Co", "validation", null, 11_000, -16],
+    ["Thermo Azur", "validation", null, 11_000, -14],
+    ["Riviera Bains", "abonnement", "premium", 10_000, -12],
+    ["Plomberie des Oliviers", "validation", null, 11_000, -10],
+    ["Élec Garibaldi", "validation", null, 11_000, -9],
+    ["Clim Riviera", "validation", null, 11_000, -7],
+    ["Carrelages du Paillon", "abonnement", "base", 3_000, -4],
+  ] as const
+).map(([artisan, kind, plan, cents, d]) => ({
+  artisan,
+  kind,
+  plan,
+  validated_at: at(d, "04:15"),
+  amount_cents: cents,
+}));
+const hasCurrentStatement = () => Number(day(0).slice(8, 10)) >= 25;
+const currentStatementDay = () => `${day(0).slice(0, 7)}-25`;
+
+const GAINS = () => ({
+  mois_centimes: 68_000,
+  validations_mois: 5,
+  abonnements_mois: 2,
+  payes_annee_centimes: 22_000,
+  mois: [-5, -4, -3, -2, -1, 0].map((o) => ({
+    mois: month(o),
+    centimes: o === -1 ? 22_000 : o === 0 ? 68_000 : 0,
+  })),
+  a_venir: [
+    ["Riquier Électricité", "verification", null, null, 11_000],
+    ["Lumière & Réseaux", "verification", null, null, 11_000],
+    ["Bains & Co", "essai", day(43), "premium", 10_000],
+    ["Thermo Azur", "essai", day(45), "base", 3_000],
+    ["Élec Garibaldi", "essai", day(52), "entreprise", 20_000],
+    ["Plomberie du Port", "dossier", null, null, 11_000],
+  ].map(([artisan, etape, date, plan, centimes]) => ({ artisan, etape, date, plan, centimes })),
+});
+
+const STATEMENTS = () => [
+  ...(hasCurrentStatement()
+    ? [
+        {
+          id: id(971),
+          period_start: `${month(-1)}-26`,
+          period_end: currentStatementDay(),
+          issued_at: parisLocalToDate(currentStatementDay(), "06:30").toISOString(),
+          total_cents: 68_000,
+          invoice_mode: null,
+          invoice_number: null,
+          invoice_issued_at: null,
+          total_ttc_cents: null,
+          paid_at: null,
+        },
+      ]
+    : []),
+  {
+    id: id(970),
+    period_start: `${month(-1)}-01`,
+    period_end: `${month(-1)}-25`,
+    issued_at: parisLocalToDate(`${month(-1)}-25`, "06:30").toISOString(),
+    total_cents: 22_000,
+    invoice_mode: "preparee",
+    invoice_number: "SK-2026-001",
+    invoice_issued_at: parisLocalToDate(`${month(-1)}-25`, "18:40").toISOString(),
+    total_ttc_cents: 22_000,
+    paid_at: parisLocalToDate(`${month(-1)}-28`, "10:00").toISOString(),
+  },
+];
+
+const BILLING = {
+  legal_name: "Sarah K.",
+  siret: "00000000000000",
+  address: "12 rue de l'Exemple, 06000 Nice",
+  vat_mode: "franchise",
+  vat_number: null,
+  iban_end: "1234",
+  invoice_prefix: "SK-2026-",
+  next_number: 2,
+};
+
+function statement(args?: Record<string, unknown>) {
+  const row = STATEMENTS().find((s) => s.id === args?.p_id);
+  if (!row) return null;
+  const current = row.id === id(971);
+  const lines = current ? STATEMENT_LINES : STATEMENT_LINES.slice(0, 2);
+  return {
+    id: row.id,
+    commercial_id: id(400),
+    agent: "Sarah K.",
+    rsac: "2027 AC 00042",
+    rsac_greffe: "Nice",
+    period_start: row.period_start,
+    period_end: row.period_end,
+    issued_at: row.issued_at,
+    total_cents: row.total_cents,
+    lines,
+    invoice: current
+      ? null
+      : {
+          id: id(972),
+          mode: "preparee",
+          number: row.invoice_number,
+          issued_at: row.invoice_issued_at,
+          total_ht_cents: row.total_cents,
+          vat_cents: 0,
+          total_ttc_cents: row.total_cents,
+          vat_mode: "franchise",
+          seller: { ...BILLING, rsac: "2027 AC 00042", vat_number: null },
+          has_file: false,
+          paid_at: row.paid_at,
+          payout_reference: "VIR-DEMO",
+        },
+    billing: BILLING,
+  };
+}
+
 const LAUNCH_PLAN = () => ({
   member: { id: id(400), nom: "Sarah K.", mission: null, kind: "commercial" },
   tasks: [
@@ -625,6 +744,12 @@ function rpc(name: string, args?: Record<string, unknown>): unknown {
       return BONUSES();
     case "my_launch_plan":
       return LAUNCH_PLAN();
+    case "commercial_gains":
+      return GAINS();
+    case "commercial_statements_list":
+      return STATEMENTS();
+    case "commercial_statement":
+      return statement(args);
     default:
       return null;
   }

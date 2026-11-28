@@ -2612,6 +2612,54 @@ export type Database = {
           },
         ];
       };
+      commercial_billing: {
+        Row: {
+          address: string;
+          commercial_id: string;
+          iban: string;
+          invoice_prefix: string;
+          legal_name: string;
+          next_number: number;
+          siret: string;
+          updated_at: string;
+          vat_mode: string;
+          vat_number: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          address: string;
+          commercial_id: string;
+          iban: string;
+          invoice_prefix: string;
+          legal_name: string;
+          next_number?: number;
+          siret: string;
+          updated_at?: string;
+          vat_mode: string;
+          vat_number?: string | null;
+        };
+        Update: {
+          address?: string;
+          commercial_id?: string;
+          iban?: string;
+          invoice_prefix?: string;
+          legal_name?: string;
+          next_number?: number;
+          siret?: string;
+          updated_at?: string;
+          vat_mode?: string;
+          vat_number?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_billing_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: true;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       commercial_bonus_settings: {
         Row: {
           delai_validation_jours: number;
@@ -2664,6 +2712,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["commercial_bonus_kind"];
           paid_at: string | null;
           payout_reference: string | null;
+          statement_id: string | null;
           status: Database["public"]["Enums"]["commercial_bonus_status"];
           updated_at: string;
           validate_after: string;
@@ -2681,6 +2730,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["commercial_bonus_kind"];
           paid_at?: string | null;
           payout_reference?: string | null;
+          statement_id?: string | null;
           status?: Database["public"]["Enums"]["commercial_bonus_status"];
           updated_at?: string;
           validate_after: string;
@@ -2697,6 +2747,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["commercial_bonus_kind"];
           paid_at?: string | null;
           payout_reference?: string | null;
+          statement_id?: string | null;
           status?: Database["public"]["Enums"]["commercial_bonus_status"];
           updated_at?: string;
           validate_after?: string;
@@ -2715,6 +2766,13 @@ export type Database = {
             columns: ["commercial_id"];
             isOneToOne: false;
             referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "commercial_bonuses_statement_id_fkey";
+            columns: ["statement_id"];
+            isOneToOne: false;
+            referencedRelation: "commercial_statements";
             referencedColumns: ["id"];
           },
         ];
@@ -2888,6 +2946,73 @@ export type Database = {
           },
         ];
       };
+      commercial_invoices: {
+        Row: {
+          commercial_id: string;
+          file_path: string | null;
+          id: string;
+          issued_at: string;
+          mode: string;
+          number: string | null;
+          paid_at: string | null;
+          payout_reference: string | null;
+          seller: Json | null;
+          statement_id: string;
+          total_ht_cents: number;
+          total_ttc_cents: number | null;
+          vat_cents: number | null;
+          vat_mode: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          commercial_id: string;
+          file_path?: string | null;
+          id?: string;
+          issued_at?: string;
+          mode: string;
+          number?: string | null;
+          paid_at?: string | null;
+          payout_reference?: string | null;
+          seller?: Json | null;
+          statement_id: string;
+          total_ht_cents: number;
+          total_ttc_cents?: number | null;
+          vat_cents?: number | null;
+          vat_mode?: string | null;
+        };
+        Update: {
+          commercial_id?: string;
+          file_path?: string | null;
+          id?: string;
+          issued_at?: string;
+          mode?: string;
+          number?: string | null;
+          paid_at?: string | null;
+          payout_reference?: string | null;
+          seller?: Json | null;
+          statement_id?: string;
+          total_ht_cents?: number;
+          total_ttc_cents?: number | null;
+          vat_cents?: number | null;
+          vat_mode?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_invoices_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: false;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "commercial_invoices_statement_id_fkey";
+            columns: ["statement_id"];
+            isOneToOne: true;
+            referencedRelation: "commercial_statements";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       commercial_onboarding: {
         Row: {
           badge_vu_le: string | null;
@@ -2943,6 +3068,42 @@ export type Database = {
             foreignKeyName: "commercial_onboarding_commercial_id_fkey";
             columns: ["commercial_id"];
             isOneToOne: true;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      commercial_statements: {
+        Row: {
+          commercial_id: string;
+          id: string;
+          issued_at: string;
+          period_end: string;
+          period_start: string;
+          total_cents: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          commercial_id: string;
+          id?: string;
+          issued_at?: string;
+          period_end: string;
+          period_start: string;
+          total_cents: number;
+        };
+        Update: {
+          commercial_id?: string;
+          id?: string;
+          issued_at?: string;
+          period_end?: string;
+          period_start?: string;
+          total_cents?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_statements_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: false;
             referencedRelation: "commercials";
             referencedColumns: ["id"];
           },
@@ -7480,6 +7641,8 @@ export type Database = {
       };
       admin_commercial_detail: { Args: { p_id: string }; Returns: Json };
       admin_commercial_pace: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_commercial_statement: { Args: { p_id: string }; Returns: Json };
+      admin_commercial_statements: { Args: { p_month?: string }; Returns: Json };
       admin_commercials: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -7562,6 +7725,10 @@ export type Database = {
       admin_mark_commercial_bonuses_paid: {
         Args: { p_ids: string[]; p_reference: string };
         Returns: number;
+      };
+      admin_mark_commercial_invoice_paid: {
+        Args: { p_invoice: string; p_reference: string };
+        Returns: undefined;
       };
       admin_mark_commissions_paid: {
         Args: { p_ids: string[]; p_reference: string };
@@ -8542,6 +8709,8 @@ export type Database = {
       commercial_do_not_contact: { Args: { p_id: string }; Returns: undefined };
       commercial_end_tour: { Args: { p_tour: string }; Returns: undefined };
       commercial_follow_prospect: { Args: { p_id: string }; Returns: undefined };
+      commercial_gains: { Args: Record<PropertyKey, never>; Returns: Json };
+      commercial_issue_invoice: { Args: { p_statement: string }; Returns: string };
       commercial_mark_badge_seen: { Args: Record<PropertyKey, never>; Returns: undefined };
       commercial_mark_celebrated: { Args: { p_id: string }; Returns: undefined };
       commercial_mark_home_screen: { Args: Record<PropertyKey, never>; Returns: undefined };
@@ -8630,6 +8799,19 @@ export type Database = {
       };
       commercial_release_prospect: { Args: { p_id: string }; Returns: undefined };
       commercial_results: { Args: Record<PropertyKey, never>; Returns: Json };
+      commercial_save_billing: {
+        Args: {
+          p_address: string;
+          p_iban: string;
+          p_invoice_prefix: string;
+          p_legal_name: string;
+          p_next_number: number;
+          p_siret: string;
+          p_vat_mode: string;
+          p_vat_number: string;
+        };
+        Returns: undefined;
+      };
       commercial_save_brief: { Args: { p_content: Json; p_id: string }; Returns: string };
       commercial_save_formation: {
         Args: { p_module: string; p_score: number };
@@ -8644,6 +8826,22 @@ export type Database = {
       commercial_start_tour: {
         Args: { p_distance_m: number; p_duree: string; p_metiers: string[]; p_prospects: string[] };
         Returns: string;
+      };
+      commercial_statement: { Args: { p_id: string }; Returns: Json };
+      commercial_statements_list: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          id: string;
+          invoice_issued_at: string;
+          invoice_mode: string;
+          invoice_number: string;
+          issued_at: string;
+          paid_at: string;
+          period_end: string;
+          period_start: string;
+          total_cents: number;
+          total_ttc_cents: number;
+        }[];
       };
       commercial_tour: { Args: { p_id: string }; Returns: Json };
       commercial_tour_candidates: {
@@ -9651,7 +9849,8 @@ export type Database = {
         | "conseiller_prime"
         | "conseiller_relance"
         | "conseiller_fin_essai"
-        | "conseiller_lien";
+        | "conseiller_lien"
+        | "conseiller_releve";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -10014,6 +10213,7 @@ export const Constants = {
         "conseiller_relance",
         "conseiller_fin_essai",
         "conseiller_lien",
+        "conseiller_releve",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],

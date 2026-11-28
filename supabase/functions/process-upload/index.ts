@@ -39,6 +39,7 @@ const ALLOWED: Record<Purpose, DetectedFileType[]> = {
   commercial_contract: ["pdf", "jpeg", "png"],
   commercial_urssaf: ["pdf", "jpeg", "png"],
   commercial_rib: ["pdf", "jpeg", "png"],
+  commercial_invoice: ["pdf"],
 };
 // Pièces d'un conseiller (ADR 0394) : colonnes du chemin et de la date de dépôt.
 const COMMERCIAL_DOCUMENTS = {
@@ -62,7 +63,8 @@ type Purpose =
   | "candidate_cv"
   | "commercial_contract"
   | "commercial_urssaf"
-  | "commercial_rib";
+  | "commercial_rib"
+  | "commercial_invoice";
 type DocumentInput = {
   type: string;
   dateEmission?: string | null;
@@ -128,6 +130,9 @@ Deno.serve(
       chantierId?: string;
       ticketId?: string;
       expenseId?: string;
+      /** Facture d'un conseiller (ADR 0397) : relevé concerné et numéro de sa facture. */
+      statementId?: string;
+      invoiceNumber?: string;
     } | null;
     // « Retirer ma photo » (ADR 0360) : aucun fichier à lire, la photo du compte est supprimée.
     if (body?.purpose === "avatar_remove") {
@@ -203,6 +208,15 @@ Deno.serve(
         purpose === "commercial_rib"
       ) {
         return await saveCommercialDocument(admin, user.id, purpose, file);
+      }
+      if (purpose === "commercial_invoice") {
+        return await saveCommercialInvoice(
+          admin,
+          user.id,
+          body?.statementId,
+          body?.invoiceNumber,
+          file,
+        );
       }
 
       if (purpose === "avatar") {
@@ -525,6 +539,73 @@ async function saveCommercialDocument(
   }
   const old = (previous as Record<string, string | null> | null)?.[columns.path];
   if (old) await admin.storage.from("commercial-documents").remove([old]);
+  return respond("ok");
+}
+
+/**
+ * Facture déposée par un conseiller pour un relevé (ADR 0397), à la place de la facture préparée :
+ * PDF rangé dans « commercial-documents/<commercial_id>/factures/ ». Tant que le virement n'est
+ * pas fait, un nouveau dépôt remplace le précédent.
+ */
+async function saveCommercialInvoice(
+  admin: SupabaseClient,
+  userId: string,
+  statementId: unknown,
+  invoiceNumber: unknown,
+  file: CleanFile,
+) {
+  if (typeof statementId !== "string" || !new RegExp(`^${UUID}$`).test(statementId)) {
+    return respond("invalid", 400);
+  }
+  const number =
+    typeof invoiceNumber === "string" && invoiceNumber.trim()
+      ? invoiceNumber.trim().slice(0, 40)
+      : null;
+  const { data: commercial } = await admin
+    .from("commercials")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("status", "actif")
+    .maybeSingle();
+  if (!commercial) return respond("forbidden", 403);
+  const { data: statement } = await admin
+    .from("commercial_statements")
+    .select("id, total_cents")
+    .eq("id", statementId)
+    .eq("commercial_id", commercial.id)
+    .maybeSingle();
+  if (!statement) return respond("not_found", 404);
+  const { data: previous } = await admin
+    .from("commercial_invoices")
+    .select("id, mode, file_path, paid_at")
+    .eq("statement_id", statement.id)
+    .maybeSingle();
+  if (previous && (previous.mode !== "deposee" || previous.paid_at)) {
+    return respond("locked", 409);
+  }
+  const path = `${commercial.id}/factures/${file.name}`;
+  await store(admin, "commercial-documents", path, file);
+  const row = {
+    commercial_id: commercial.id,
+    statement_id: statement.id,
+    mode: "deposee",
+    number,
+    issued_at: new Date().toISOString(),
+    total_ht_cents: statement.total_cents,
+    file_path: path,
+  };
+  const { error } = previous
+    ? await admin.from("commercial_invoices").update(row).eq("id", previous.id)
+    : await admin.from("commercial_invoices").insert(row);
+  if (error) {
+    await admin.storage.from("commercial-documents").remove([path]);
+    // Même numéro qu'une autre de ses factures.
+    if (error.code === "23505") return respond("invalid", 409);
+    throw error;
+  }
+  if (previous?.file_path) {
+    await admin.storage.from("commercial-documents").remove([previous.file_path]);
+  }
   return respond("ok");
 }
 
