@@ -18,6 +18,7 @@ const EMPTY: CommercialOnboardingRaw = {
   ribDepositedOn: null,
   homeScreenOn: null,
   remindersOn: true,
+  pushOn: false,
   modules: {},
   bestTraining: null,
   firstBrief: false,
@@ -65,10 +66,12 @@ describe("quiz de formation", () => {
 });
 
 describe("étapes de « Bien démarrer »", () => {
-  it("13 étapes ; les rappels par e-mail comptent faits par défaut", () => {
+  it("13 étapes, aucune faite au départ ; les notifications comptent une fois activées", () => {
     const steps = commercialOnboardingSteps(EMPTY, "2027-01-04");
     expect(steps).toHaveLength(13);
-    expect(commercialOnboardingProgress(steps)).toEqual({ done: 1, total: 13, next: "contrat" });
+    expect(commercialOnboardingProgress(steps)).toEqual({ done: 0, total: 13, next: "contrat" });
+    const on = commercialOnboardingSteps({ ...EMPTY, pushOn: true }, "2027-01-04");
+    expect(on.find((x) => x.key === "rappels")?.done).toBe(true);
   });
   it("un quiz raté garde sa note mais n'est pas fait", () => {
     const steps = commercialOnboardingSteps({ ...EMPTY, modules: { menao: 3 } }, "2027-01-04");

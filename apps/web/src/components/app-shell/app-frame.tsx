@@ -58,6 +58,8 @@ export function AppFrame({
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   // Le tiroir mobile reste ouvert pour la page où il a été ouvert : il se referme en naviguant.
   const [drawerFor, setDrawerFor] = useState<string | null>(null);
+  // Onglet du bas touché, le temps que la page arrive (la page d'où il a été touché).
+  const [tapped, setTapped] = useState<{ href: string; from: string } | null>(null);
   const drawerOpen = drawerFor === pathname;
   const drawer = useRef<HTMLDialogElement>(null);
   const current = activeItem(space, pathname);
@@ -264,12 +266,14 @@ export function AppFrame({
           className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-surface/95 px-1.5 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
         >
           {COMMERCIAL_TABS.map((tab) => {
-            const on = isActive(tab, pathname);
+            // Onglet touché allumé tout de suite, sans attendre la page (ADR 0396).
+            const on = isActive(tab, tapped?.from === pathname ? tapped.href : pathname);
             const Icon = tab.icon;
             return (
               <Link
                 key={tab.href}
                 href={tab.href as Route}
+                onClick={() => setTapped({ href: tab.href, from: pathname })}
                 aria-current={on ? "page" : undefined}
                 className={`flex min-h-[4.25rem] flex-1 flex-col items-center justify-center gap-0.5 text-[0.6875rem] ${on ? "font-bold text-foreground" : "font-medium text-muted-foreground"}`}
               >

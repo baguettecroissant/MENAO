@@ -371,6 +371,8 @@ export const ACCOUNT_LINKS: Record<
   admin: [],
   commercial: [
     { href: "/compte", label: fr.account.title },
+    // Notifications sur le téléphone (ADR 0396).
+    { href: "/commercial/notifications", label: fr.commercialField.moments.push.nav },
     { href: "/contact", label: fr.appShell.help },
   ],
   exemples: [

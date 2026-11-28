@@ -1,5 +1,5 @@
 // Edge Function notify (F-41) : envoie les notifications en attente, par e-mail (Resend) et en
-// push vers l'application (Expo). Appelée chaque minute par la base (pg_cron + pg_net), et dès
+// push vers l'application (Expo) et vers les navigateurs abonnés (web push, ADR 0396). Appelée chaque minute par la base (pg_cron + pg_net), et dès
 // l'envoi d'un message de la messagerie, avec un secret partagé ; aucune donnée personnelle
 // journalisée (CLAUDE.md règle 11). ADR 0017, 0078, 0201.
 import { messagePushContent, notificationContent } from "../../../packages/emails/src/content.ts";
@@ -17,6 +17,7 @@ import {
   smsProvider,
   type PushMessage,
 } from "../_shared/notifications.ts";
+import { sendWebPush, webPushEnabled, type WebPushSubscription } from "../_shared/web-push.ts";
 
 const BATCH_SIZE = 20;
 const PUSH_BATCH_SIZE = 50;
@@ -45,9 +46,16 @@ type ClaimedPush = {
   type: NotificationType;
   data: Record<string, unknown> | null;
   tokens: string[] | null;
+  /** Navigateurs abonnés (web push, ADR 0396). */
+  web: WebPushSubscription[] | null;
 };
 
-type PushTarget = { id: string; tokens: string[] | null; message: Omit<PushMessage, "to"> };
+type PushTarget = {
+  id: string;
+  tokens: string[] | null;
+  web?: WebPushSubscription[] | null;
+  message: Omit<PushMessage, "to">;
+};
 
 /**
  * Envoi d'un lot vers chaque appareil du destinataire : réussi dès qu'un appareil l'a reçu ; les
@@ -75,6 +83,25 @@ async function pushBatch(
     outcome.set(m.id, current);
   });
   if (forgotten.length) await admin.rpc("forget_push_tokens", { p_tokens: forgotten });
+  // Navigateurs abonnés : réussi dès qu'un appareil l'a reçu, abonnements disparus oubliés.
+  const goneEndpoints: string[] = [];
+  if (webPushEnabled()) {
+    for (const n of targets) {
+      for (const sub of n.web ?? []) {
+        const result = await sendWebPush(sub, {
+          title: n.message.title,
+          body: n.message.body,
+          link: n.message.link ?? "/",
+        });
+        const current = outcome.get(n.id) ?? { sent: false, retry: false };
+        if (result.ok) current.sent = true;
+        else if (result.gone) goneEndpoints.push(sub.endpoint);
+        else if (result.retry) current.retry = true;
+        outcome.set(n.id, current);
+      }
+    }
+  }
+  if (goneEndpoints.length) await admin.rpc("forget_web_push", { p_endpoints: goneEndpoints });
   let pushed = 0;
   let pushFailed = 0;
   for (const n of targets) {
@@ -99,6 +126,7 @@ async function sendPushes(admin: ReturnType<typeof adminClient>) {
     return {
       id: n.id,
       tokens: n.tokens,
+      web: n.web,
       message: { title: content.subject, body: content.preview, link: content.cta.url || "/" },
     };
   });

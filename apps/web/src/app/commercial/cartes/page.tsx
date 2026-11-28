@@ -61,7 +61,7 @@ export default async function CommercialCardsPage() {
         </div>
         {card && qr ? (
           // Maquette du lot 38 : la carte en grand, l'impression et son conseil à droite.
-          <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <section
               aria-label={t.previewLabel}
               className="flex flex-col items-center gap-4 overflow-hidden rounded-card border border-border bg-surface px-4 py-8 shadow-card sm:py-10"

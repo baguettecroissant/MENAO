@@ -63,7 +63,7 @@ export function TrainingSimulator({
   // Refonte « Nette » (lot 51, maquette ComEntrainementNette) : l'échange à gauche, les artisans
   // à choisir à droite (changer d'artisan recommence l'échange).
   return (
-    <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="order-2 min-w-0 lg:order-1">
         {persona ? (
           <Session

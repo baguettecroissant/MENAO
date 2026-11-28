@@ -67,6 +67,8 @@ export type CommercialOnboardingRaw = {
   homeScreenOn: string | null;
   /** Rappels par e-mail (bilan du lundi, attestation) : activés sauf refus dans « Communications ». */
   remindersOn: boolean;
+  /** Notifications activées sur au moins un téléphone (web push, ADR 0396). */
+  pushOn: boolean;
   /** Meilleure note de chaque quiz réussi ou non. */
   modules: Partial<Record<FormationModule, number>>;
   /** Meilleure note au simulateur de vente, null s'il n'a pas servi. */
@@ -120,7 +122,8 @@ export function commercialOnboardingSteps(
     step("urssaf", "statut", urssaf === "valide" || urssaf === "bientot"),
     step("rib", "statut", raw.ribDepositedOn !== null),
     step("ecran", "telephone", raw.homeScreenOn !== null),
-    step("rappels", "telephone", raw.remindersOn),
+    // Notifications sur le téléphone (ADR 0396) ; l'e-mail et la cloche restent toujours actifs.
+    step("rappels", "telephone", raw.pushOn),
     ...FORMATION_MODULES.map((m) =>
       step(
         `module_${m}`,

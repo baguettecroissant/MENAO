@@ -1,6 +1,7 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { z } from "zod";
+import { CommercialAlertSettingsCard } from "@/components/admin/commercial-alert-settings";
 import { CommercialInviteForm, CommercialStatusForm } from "@/components/admin/commercial-forms";
 import {
   CommercialOnboardingCard,
@@ -79,6 +80,7 @@ export default async function AdminCommercialsPage({
     { data: settings },
     { data: demo },
     { data: onboardingData },
+    { data: alertSettings },
   ] = await Promise.all([
     supabase.rpc("admin_commercials_dashboard"),
     supabase.rpc("admin_prospects_summary"),
@@ -92,6 +94,11 @@ export default async function AdminCommercialsPage({
     supabase.rpc("admin_commercial_demo"),
     // Arrivée des conseillers : pièces, formation, badge (ADR 0394).
     supabase.rpc("admin_commercials_onboarding"),
+    // Délais des alertes des conseillers (ADR 0396).
+    supabase
+      .from("commercial_alert_settings")
+      .select("bloque_jours, fin_essai_jours, lien_jours")
+      .maybeSingle(),
   ]);
   const onboarding = onboardingRowsSchema.safeParse(onboardingData);
   const commercials = data ?? [];
@@ -116,6 +123,7 @@ export default async function AdminCommercialsPage({
       />
       {amountsNotSet && <Alert tone="info">{tr.settings.notSet}</Alert>}
       {onboarding.success && <CommercialOnboardingCard rows={onboarding.data} />}
+      {alertSettings && <CommercialAlertSettingsCard settings={alertSettings} />}
       {demoLink && (
         <CommercialDemoCard
           url={`${env.NEXT_PUBLIC_SITE_URL}/commercial/demo/${demoLink.key}`}

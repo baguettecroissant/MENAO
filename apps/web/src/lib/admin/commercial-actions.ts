@@ -330,3 +330,25 @@ export async function confirmCommercialContract(
   revalidateCommercial(id);
   return {};
 }
+
+/** Délais des alertes des conseillers (F-196, ADR 0396). */
+export async function saveCommercialAlertSettings(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const n = (name: string) => Number.parseInt(text(formData, name) ?? "", 10);
+  const values = {
+    bloque: text(formData, "bloque") ?? "",
+    finEssai: text(formData, "finEssai") ?? "",
+    lien: text(formData, "lien") ?? "",
+  };
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_save_commercial_alert_settings", {
+    p_bloque_jours: n("bloque"),
+    p_fin_essai_jours: n("finEssai"),
+    p_lien_jours: n("lien"),
+  });
+  if (error) return { error: fr.commercialField.moments.admin.error, values };
+  revalidatePath(PATH);
+  return { success: fr.commercialField.moments.admin.saved };
+}

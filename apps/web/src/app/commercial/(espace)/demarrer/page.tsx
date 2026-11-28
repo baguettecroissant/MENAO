@@ -185,9 +185,9 @@ function stepContent(
     case "rappels":
       return {
         title: s.rappels.title,
-        detail: state.rappels ? s.rappels.done : s.rappels.todo,
-        action: state.rappels ? null : (
-          <ActionLink href="/compte#communications" label={s.rappels.action} primary={next} />
+        detail: step.done ? s.rappels.done : s.rappels.todo,
+        action: step.done ? null : (
+          <ActionLink href="/commercial/notifications" label={s.rappels.action} primary={next} />
         ),
       };
     case "simulateur": {
@@ -350,7 +350,7 @@ export default async function CommercialStartPage({
               </div>
             </div>
 
-            <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+            <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
               <div className="flex min-w-0 flex-col gap-5">
                 {COMMERCIAL_STEP_GROUPS.map((group) => {
                   const steps = view.steps.filter((x) => x.group === group);

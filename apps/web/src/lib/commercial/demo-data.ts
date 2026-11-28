@@ -551,6 +551,33 @@ function rpc(name: string, args?: Record<string, unknown>): unknown {
   switch (name) {
     case "commercial_tour_starts":
       return TOUR_STARTS;
+    case "commercial_artisan_alerts":
+      return [
+        {
+          kind: "fin_essai",
+          subject: `fin_essai:${id(960)}`,
+          artisan_id: id(960),
+          prepared_id: null,
+          entreprise: "Plomberie des Oliviers",
+          first_name: "Marc",
+          phone: "+33639980030",
+          at: at(7, "10:00"),
+          steps: [],
+        },
+        {
+          kind: "bloque",
+          subject: `bloque:${id(961)}`,
+          artisan_id: id(961),
+          prepared_id: null,
+          entreprise: "Thermo Azur",
+          first_name: "Paul",
+          phone: "+33639980031",
+          at: at(-3, "09:00"),
+          steps: ["decennale"],
+        },
+      ];
+    case "commercial_next_celebration":
+      return null;
     case "commercial_prepared_signups":
       return [
         {

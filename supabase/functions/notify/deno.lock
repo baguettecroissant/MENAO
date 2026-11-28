@@ -13,6 +13,7 @@
     "npm:@react-email/text@0.1.6": "0.1.6_react@19.3.0",
     "npm:@supabase/supabase-js@2.117.3": "2.117.3",
     "npm:@types/react@19.3.0": "19.3.0",
+    "npm:@types/web-push@3.6.4": "3.6.4",
     "npm:react-dom@19.3.0": "19.3.0_react@19.3.0",
     "npm:react@19.3.0": "19.3.0"
   },
@@ -132,10 +133,22 @@
         "@supabase/storage-js"
       ]
     },
+    "@types/node@26.6.6": {
+      "integrity": "sha512-MzQj+8Kx3XI40OmUAE6Qoh58ZMNstNNMwn2nfd3qWsfe7nDNSqJNzes4njhz6AHwrSHOffSLwXU6yb474Q4aog==",
+      "dependencies": [
+        "undici-types"
+      ]
+    },
     "@types/react@19.3.0": {
       "integrity": "sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg==",
       "dependencies": [
         "csstype"
+      ]
+    },
+    "@types/web-push@3.6.4": {
+      "integrity": "sha512-GnJmSr40H3RAnj0s34FNTcJi1hmWFV5KXugE0mYWnYhgTAHLJ/dJKAwDmvPJYMke0RplY2XE9LnM4hqSqKIjhQ==",
+      "dependencies": [
+        "@types/node"
       ]
     },
     "csstype@3.2.3": {
@@ -159,6 +172,9 @@
     },
     "tslib@2.8.1": {
       "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="
+    },
+    "undici-types@8.9.0": {
+      "integrity": "sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg=="
     }
   },
   "workspace": {
