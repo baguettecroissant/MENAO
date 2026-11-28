@@ -147,7 +147,8 @@ $$;
 revoke execute on function public.set_push_preference(text, boolean) from public, anon;
 grant execute on function public.set_push_preference(text, boolean) to authenticated;
 
--- Une notification part en push si le compte a l'application (Expo) ou un navigateur abonné.
+-- Une notification part en push si le compte a l'application (Expo) ou un navigateur abonné ;
+-- mêmes exclusions qu'avant (règle 10, messages groupés : 20261120160100_engagement_abonnement).
 create or replace function app.notifications_push_status()
 returns trigger
 language plpgsql
@@ -156,6 +157,10 @@ set search_path = ''
 as $$
 begin
   if new.channel = 'email'
+     and new.type not in (
+       'abonnement_impaye', 'mois_offert', 'nouveaux_messages', 'activation_relance',
+       'essai_fin_proche', 'abonnement_reconduction', 'abonnement_arret'
+     )
      and (exists (select 1 from public.push_tokens t where t.user_id = new.user_id)
        or exists (select 1 from public.web_push_subscriptions w where w.user_id = new.user_id)) then
     new.push_status := 'a_envoyer';
