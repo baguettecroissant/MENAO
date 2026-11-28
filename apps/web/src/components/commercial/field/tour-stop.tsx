@@ -16,6 +16,7 @@ import {
   Smartphone,
   Sparkles,
   ThumbsUp,
+  UserPlus,
   CircleX,
 } from "lucide-react";
 import type { Route } from "next";
@@ -261,13 +262,26 @@ export function TourStopView({ tour, link }: { tour: Tour; link: string | null }
             {t.afterTitle}
           </h2>
           <Link
-            href={"/commercial/montrer?onglet=inscription" as Route}
+            href={`/commercial/inscrire?prospect=${stop.prospect_id}` as Route}
             className="flex items-center gap-3 rounded-input bg-primary p-4 text-primary-foreground"
+          >
+            <UserPlus aria-hidden="true" className="size-5" />
+            <span className="flex flex-1 flex-col">
+              <span className="font-semibold">{fr.commercialField.prepare.fromTour}</span>
+              <span className="text-[0.8125rem] opacity-85">
+                {fr.commercialField.prepare.fromTourHint}
+              </span>
+            </span>
+            <ChevronRight aria-hidden="true" className="size-5" />
+          </Link>
+          <Link
+            href={"/commercial/montrer?onglet=inscription" as Route}
+            className="flex items-center gap-3 rounded-input border border-border-strong bg-surface p-4"
           >
             <QrCode aria-hidden="true" className="size-5" />
             <span className="flex flex-1 flex-col">
               <span className="font-semibold">{t.signup}</span>
-              <span className="text-[0.8125rem] opacity-85">{t.signupHint}</span>
+              <span className="text-[0.8125rem] text-muted-foreground">{t.signupHint}</span>
             </span>
             <ChevronRight aria-hidden="true" className="size-5" />
           </Link>

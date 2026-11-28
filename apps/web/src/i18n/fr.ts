@@ -1077,6 +1077,123 @@ export const fr = {
       signupCta: "Je m'inscris",
       noCode: "Votre code n'est pas actif : demandez à l'équipe MENAO.",
     },
+    // Inscription préparée par le conseiller (F-195, lot 84, ADR 0395).
+    prepare: {
+      nav: "Inscriptions",
+      cta: "Inscrire un artisan",
+      title: "Inscrire un artisan",
+      intro:
+        "Préparez son inscription avec lui, sur place ou au téléphone. Il recevra un lien personnel pour vérifier et finir lui-même : votre code y est déjà.",
+      steps: ["L'entreprise", "Métiers et zone", "Le lien"],
+      companyHint: "Le SIRET ou le nom de son entreprise.",
+      taken: "Cette entreprise est déjà inscrite sur MENAO : rien à préparer.",
+      change: "Changer d'entreprise",
+      found: "Trouvée au registre public des entreprises",
+      continue: "C'est bien elle, continuer",
+      detailsTitle: "Métiers et zone",
+      trades: "Ses métiers",
+      tradesHint: "Proposés d'après son code APE : il les confirme.",
+      zone: "Zone d'intervention",
+      zoneValue: (km: number, city: string | null) =>
+        city ? `${km} km autour de ${city}` : `${km} km autour de son siège`,
+      zoneHint: "Il pourra la changer, ou choisir des départements, au moment de finir.",
+      contactTitle: "Pour lui envoyer son lien",
+      firstName: "Prénom",
+      lastName: "Nom",
+      email: "E-mail professionnel",
+      emailHint: "Son code de vérification arrivera ici : c'est lui qui le saisit.",
+      phone: "Téléphone portable",
+      consent: (name: string) =>
+        `${name} est d'accord pour que je prépare son inscription et qu'il reçoive son lien.`,
+      consentHint: "Ses informations sont effacées s'il n'ouvre pas le lien sous 7 jours.",
+      consentRequired: "Cochez la case : il doit être d'accord.",
+      create: "Préparer son lien",
+      creating: "Préparation…",
+      back: "Retour",
+      linkTitle: (name: string) => `Le lien de ${name} est prêt`,
+      onSite: "Sur place",
+      onSiteText: "Il scanne avec l'appareil photo de son téléphone",
+      onSiteHint: "Lien personnel avec votre code · valable 7 jours",
+      remote: "À distance",
+      sms: "Lui envoyer par SMS",
+      smsHint: "Message prêt, envoyé depuis votre téléphone",
+      emailSend: "Lui envoyer par e-mail",
+      emailSendHint: "Message prêt, envoyé depuis votre messagerie",
+      emailSubject: "Votre inscription sur MENAO",
+      copy: "Copier le lien",
+      copied: "Lien copié",
+      rules:
+        "Ne lui demandez jamais son mot de passe ni son code reçu par e-mail, et ne recevez aucun document : il les dépose lui-même.",
+      follow: "Suivre ses inscriptions",
+      another: "Inscrire un autre artisan",
+      remoteRulesTitle: "À distance : les règles",
+      remoteRules: [
+        "Appel vidéo avec partage d'écran conseillé ; jamais de prise en main de son téléphone ou de son ordinateur.",
+        "Il vous donne son accord avant la saisie.",
+        "Rien n'est enregistré, ni l'appel ni l'écran.",
+        "Aucun document par WhatsApp ou e-mail : il les dépose lui-même.",
+        "Jamais son mot de passe ni son code.",
+      ],
+      legalNote:
+        "Valable 7 jours, avec votre code. S'il ne l'ouvre pas, ses informations sont effacées.",
+      errors: {
+        unavailable: "La préparation n'a pas pu être enregistrée. Réessayez.",
+      },
+      fromTour: "Inscrire maintenant",
+      fromTourHint: "L'entreprise est déjà choisie",
+    },
+    // Suivi des inscriptions du conseiller (F-195, ADR 0395).
+    signups: {
+      title: "Mes inscriptions",
+      intro:
+        "Les artisans dont vous avez préparé l'inscription, et où ils en sont. La page se met à jour toute seule.",
+      prepared: "Préparées",
+      preparedEmpty: "Aucune inscription préparée pour l'instant.",
+      all: "Tous mes inscrits",
+      allHint: "Avec votre code, préparés ou non.",
+      states: {
+        envoye: (days: number) => `Lien envoyé, pas encore ouvert · expire dans ${days} j`,
+        ouvert: "Lien ouvert : il finit son inscription",
+        expire: "Lien expiré sans être ouvert",
+        inscrit: "Inscrit avec votre code",
+      },
+      missing: (steps: string) => `Il manque : ${steps}`,
+      sent: "Dossier envoyé : vérification par l'équipe MENAO",
+      validated: "Validé",
+      resend: "Renvoyer le lien",
+      remove: "Retirer",
+      progressLabel: (done: number, total: number) => `Étape ${done} sur ${total}`,
+    },
+    // Lien de l'artisan (F-195, ADR 0395).
+    preparedLanding: {
+      metaTitle: "Votre inscription préparée",
+      advisor: (name: string) => `${name}, conseiller MENAO`,
+      advisorText: "a préparé votre inscription avec vous",
+      title: (firstName: string | null) =>
+        firstName ? `Bonjour ${firstName}, vérifiez vos informations` : "Vérifiez vos informations",
+      rows: {
+        company: "Entreprise",
+        trades: "Métiers",
+        zone: "Zone",
+        email: "E-mail",
+        phone: "Portable",
+      },
+      siret: (siret: string) => `SIRET ${siret}`,
+      fixHint: "Vous pourrez tout corriger à l'étape suivante.",
+      cta: "C'est bien moi, finir mon inscription",
+      nextTitle: "Ensuite, à votre rythme",
+      nextText:
+        "Vous confirmez votre entreprise, vous choisissez votre mot de passe et acceptez les conditions, puis votre photo, la charte, vos documents et vos paiements. C'est vous qui les faites : personne d'autre ne connaît votre mot de passe.",
+      forget: "Ce n'est pas vous, ou vous ne voulez pas vous inscrire ?",
+      forgetCta: "Supprimer ces informations",
+      forgotten: "C'est fait : les informations préparées sont supprimées.",
+      invalidTitle: "Ce lien ne marche plus",
+      invalidText:
+        "Il a expiré, a déjà servi, ou les informations ont été supprimées. Vous pouvez vous inscrire directement, ou demander un nouveau lien à votre conseiller.",
+      signup: "M'inscrire",
+      privacy:
+        "Votre conseiller a saisi ces informations avec votre accord. Elles servent seulement à préparer votre inscription et sont effacées si vous ne la finissez pas.",
+    },
     // Back-office : arrivée des conseillers (Apporteurs › Commerciaux et fiche).
     admin: {
       title: "Bien démarrer",
@@ -1125,6 +1242,14 @@ export const fr = {
         toConfirm:
           "Le conseiller a déposé son contrat signé : relisez-le, puis confirmez la date de signature.",
         error: "Confirmation impossible : vérifiez la date.",
+      },
+      // Dossier artisan : inscription préparée (ADR 0395).
+      prepared: {
+        title: (name: string) => `Inscription préparée par ${name} (conseiller)`,
+        code: (code: string) => `Code ${code}`,
+        created: (date: string) => `Préparée le ${date}`,
+        opened: (date: string) => `Lien ouvert par l'artisan le ${date}`,
+        converted: (date: string) => `Inscription finie par l'artisan le ${date}`,
       },
     },
   },

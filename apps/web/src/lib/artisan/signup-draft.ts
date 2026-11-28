@@ -7,6 +7,7 @@ import {
   type ArtisanSignupDraft,
 } from "@menao/core";
 import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { PREPARED_PREFILL_KEY } from "./prepared-prefill";
 
 /**
  * Brouillon de l'inscription artisan (ADR 0110), gardé dans le stockage local du navigateur :
@@ -52,6 +53,8 @@ export function clearSignupDraft() {
   memory = null;
   try {
     window.localStorage.removeItem(ARTISAN_SIGNUP_DRAFT_KEY);
+    // Coordonnées d'une inscription préparée par un conseiller (ADR 0395).
+    window.localStorage.removeItem(PREPARED_PREFILL_KEY);
   } catch {
     // Rien à effacer.
   }

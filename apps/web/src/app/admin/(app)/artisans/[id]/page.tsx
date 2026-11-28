@@ -19,6 +19,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { UserPlus } from "lucide-react";
+import { z } from "zod";
 import { GoogleReviewsForm } from "@/components/admin/google-reviews-form";
 import { MenaoScore } from "@/components/artisan-profile/menao-score";
 import { Alert, StatusBadge } from "@/components/ui";
@@ -31,7 +33,7 @@ import { getLeadTargets } from "@/lib/admin/lead-targets";
 import { getArtisanActivity } from "@/lib/admin/people";
 import { getArtisanReferral, type ArtisanReferral } from "@/lib/admin/referrals";
 import { documentLogoUrl } from "@/lib/documents/logo";
-import { formatDay } from "@/lib/format";
+import { formatDay, formatDayTime } from "@/lib/format";
 import { RGE_REFRESH_STATUSES, type RgeRefreshStatus } from "@/lib/rge";
 import { ArtisanLeadTargetForm } from "@/components/admin/lead-target-forms";
 import {
@@ -59,6 +61,16 @@ const dateTime = new Intl.DateTimeFormat("fr-FR", {
   dateStyle: "medium",
   timeStyle: "short",
   timeZone: "Europe/Paris",
+});
+
+/** Inscription préparée par un conseiller (admin_artisan_prepared_signup, ADR 0395). */
+const preparedSchema = z.object({
+  commercial_id: z.string(),
+  commercial: z.string(),
+  code: z.string(),
+  created_at: z.string(),
+  opened_at: z.string().nullable(),
+  converted_at: z.string().nullable(),
 });
 
 export default async function AdminArtisanPage({
@@ -169,6 +181,7 @@ export default async function AdminArtisanPage({
     { data: starterMonth },
     leads,
     { data: ownLeadTarget },
+    { data: preparedData },
   ] = await Promise.all([
     documentLogoUrl(supabase, artisan.logo_path),
     // Onglet Activité : admin et support ; parrainage, mois offert et objectif : admin seulement.
@@ -196,7 +209,12 @@ export default async function AdminArtisanPage({
           .eq("artisan_id", artisan.id)
           .maybeSingle()
       : { data: null },
+    // Inscription préparée par un conseiller (ADR 0395).
+    isAdmin
+      ? supabase.rpc("admin_artisan_prepared_signup", { p_artisan: artisan.id })
+      : { data: null },
   ]);
+  const prepared = preparedSchema.safeParse(preparedData).data ?? null;
   const lead = leads?.artisans[0] ?? null;
   const menaoScore = menaoScorePartsSchema.safeParse(scoreData).data ?? null;
 
@@ -424,6 +442,33 @@ export default async function AdminArtisanPage({
           }))}
         />
       </div>
+      {prepared && (
+        <section className="flex flex-col gap-2 rounded-card border border-border bg-surface p-4 text-sm">
+          <div className="flex flex-wrap items-center gap-3">
+            <UserPlus aria-hidden="true" className="size-5" />
+            <Link
+              href={`/admin/commerciaux/${prepared.commercial_id}` as Route}
+              className="flex-1 font-semibold hover:underline"
+            >
+              {fr.commercialField.admin.prepared.title(prepared.commercial)}
+            </Link>
+            <span className="rounded-chip bg-primary-soft px-2.5 py-1 text-xs font-bold text-primary-strong">
+              {fr.commercialField.admin.prepared.code(prepared.code)}
+            </span>
+          </div>
+          <ul className="flex flex-col gap-0.5 text-label">
+            <li>{fr.commercialField.admin.prepared.created(formatDayTime(prepared.created_at))}</li>
+            {prepared.opened_at && (
+              <li>{fr.commercialField.admin.prepared.opened(formatDayTime(prepared.opened_at))}</li>
+            )}
+            {prepared.converted_at && (
+              <li>
+                {fr.commercialField.admin.prepared.converted(formatDayTime(prepared.converted_at))}
+              </li>
+            )}
+          </ul>
+        </section>
+      )}
       {readOnly && <ReadOnlyBanner />}
 
       {tab === "verification" && (

@@ -302,8 +302,14 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
       },
       { type: "h2", id: "inscription-accompagnee", text: "L'inscription accompagnée" },
       {
+        type: "callout",
+        tone: "menao",
+        title: "Le plus simple : « Inscrire un artisan »",
+        text: "Dans votre espace, « Inscrire un artisan » (ou « Inscrire maintenant » pendant la tournée) : vous saisissez avec lui son entreprise, ses métiers, sa zone et son contact, avec son accord. Il reçoit un lien personnel (QR code sur place, SMS ou e-mail depuis votre téléphone) qui porte déjà votre code, puis il finit lui-même : dirigeant, TVA, mot de passe, conditions, code reçu par e-mail. Vous suivez son avancement dans « Inscriptions ». Jamais son mot de passe ni son code, aucun document reçu, aucun appel enregistré.",
+      },
+      {
         type: "p",
-        text: "Une dizaine de minutes, sur son téléphone, avec lui. La liste à cocher :",
+        text: "Sans lien préparé, une dizaine de minutes sur son téléphone, avec lui. La liste à cocher :",
       },
       {
         type: "list",

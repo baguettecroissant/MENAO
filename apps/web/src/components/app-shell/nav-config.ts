@@ -28,6 +28,7 @@ import {
   Store,
   Target,
   TrendingUp,
+  UserPlus,
   UserRound,
   Users,
   Wallet,
@@ -317,6 +318,13 @@ export const NAV: Record<Space, readonly NavSection[]> = {
         // Arrivée du conseiller : statut, formation, badge (F-194, ADR 0394).
         { href: "/commercial/demarrer", label: fr.commercialField.nav.start, icon: BadgeCheck },
         { href: "/commercial", label: fr.commercialSpace.nav.home, icon: QrCode, exact: true },
+        // Inscriptions préparées et leur suivi (F-195, ADR 0395).
+        {
+          href: "/commercial/inscriptions",
+          label: fr.commercialField.prepare.nav,
+          icon: UserPlus,
+          also: ["/commercial/inscrire"],
+        },
         { href: "/commercial/journee", label: fr.commercialProspects.nav.day, icon: CalendarCheck },
         // Tournée et « Montrer à l'artisan » (F-194, ADR 0394).
         {

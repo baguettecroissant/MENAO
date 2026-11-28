@@ -551,6 +551,37 @@ function rpc(name: string, args?: Record<string, unknown>): unknown {
   switch (name) {
     case "commercial_tour_starts":
       return TOUR_STARTS;
+    case "commercial_prepared_signups":
+      return [
+        {
+          id: id(950),
+          key: "d".repeat(32),
+          siret: "00000183500012",
+          company_name: "Bains & Co",
+          first_name: "Karim",
+          phone: "+33639980020",
+          created_at: at(0, "10:52"),
+          expires_at: at(7, "10:52"),
+          opened_at: at(0, "10:54"),
+          converted_at: at(0, "10:56"),
+          artisan_status: "brouillon",
+          manque: ["documents", "paiements"],
+        },
+        {
+          id: id(951),
+          key: "e".repeat(32),
+          siret: "00000183600010",
+          company_name: "Carrelages du Paillon",
+          first_name: "Nadia",
+          phone: "+33639980021",
+          created_at: at(-3, "16:10"),
+          expires_at: at(4, "16:10"),
+          opened_at: null,
+          converted_at: null,
+          artisan_status: null,
+          manque: [],
+        },
+      ];
     case "commercial_tour_candidates":
       return tourCandidates(args);
     case "my_commercial_signups":

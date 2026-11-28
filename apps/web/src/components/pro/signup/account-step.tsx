@@ -15,6 +15,7 @@ import {
   signUpArtisan,
   type ArtisanSignupState,
 } from "@/lib/auth/artisan-signup-actions";
+import { usePreparedPrefill } from "@/lib/artisan/prepared-prefill";
 import { usePartnerCode } from "@/lib/partners/use-partner-code";
 import { StepFooter, StepTitle } from "./signup-ui";
 
@@ -75,6 +76,8 @@ export function AccountStep({
   // Lien partenaire ou de parrainage suivi (F-59, F-60) : lu dans l'adresse, transmis avec le
   // compte ; sinon, code de parrainage saisi (facultatif).
   const linkCode = usePartnerCode();
+  // Inscription préparée par un conseiller (ADR 0395) : coordonnées pré-remplies, modifiables.
+  const prepared = usePreparedPrefill();
   const [referralOpen, setReferralOpen] = useState(false);
 
   function submit(e: FormEvent<HTMLFormElement>) {
@@ -123,7 +126,7 @@ export function AccountStep({
             name="firstName"
             autoComplete="given-name"
             required
-            defaultValue={oauth?.firstName || manager?.firstName}
+            defaultValue={oauth?.firstName || prepared?.firstName || manager?.firstName}
             errors={errors.firstName}
           />
           <Field
@@ -131,7 +134,7 @@ export function AccountStep({
             name="lastName"
             autoComplete="family-name"
             required
-            defaultValue={oauth?.lastName || manager?.lastName}
+            defaultValue={oauth?.lastName || prepared?.lastName || manager?.lastName}
             errors={errors.lastName}
           />
         </div>
@@ -143,6 +146,7 @@ export function AccountStep({
               type="email"
               autoComplete="email"
               required
+              defaultValue={prepared?.email ?? undefined}
               errors={errors.email}
             />
             <PasswordField
@@ -161,6 +165,7 @@ export function AccountStep({
           name="phone"
           required
           hint={t.phoneHint}
+          defaultValue={prepared?.phone?.replace(/^\+33/, "0") ?? undefined}
           errors={errors.phone}
         />
         {linkCode ? (
