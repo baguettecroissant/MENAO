@@ -214,58 +214,57 @@ export const COMMERCIAL_GUIDE: readonly CommercialGuideSection[] = [
   },
   {
     slug: "journee",
-    title: "La journée type",
+    // Agents indépendants (ADR 0394) : des conseils et des observations, aucun horaire imposé.
+    title: "Organiser ma semaine",
     summary:
-      "Où aller et quoi faire, du comptoir du matin aux appels de fin de journée, et la permanence de la semaine.",
+      "Où et quand on rencontre le plus d'artisans, d'après le terrain. Vos jours, vos horaires et vos secteurs, c'est vous qui les choisissez.",
     body: [
-      { type: "h2", id: "creneaux", text: "Les créneaux de la journée" },
+      {
+        type: "p",
+        text: "Vous êtes indépendant : vos jours, vos horaires et vos secteurs, c'est vous qui les choisissez. Voici ce qui marche le mieux d'après le terrain.",
+      },
+      { type: "h2", id: "ou-et-quand", text: "Où et quand on rencontre le plus d'artisans" },
       {
         type: "table",
-        caption: "La journée type d'un commercial MENAO",
-        head: ["Créneau", "Où", "Ce qu'on y fait"],
+        caption: "Les moments où les artisans ont le plus de temps pour vous",
+        head: ["Où", "Souvent", "Ce qui marche"],
         rows: [
           [
-            "7 h à 9 h",
             "Comptoirs des négoces de matériaux, de plomberie et d'électricité",
-            "Conversations au comptoir, démos de 2 minutes, un prospectus remis après chaque conversation",
+            "Tôt le matin",
+            "Beaucoup d'artisans passent chercher leur matériel avant le chantier : deux minutes de démo, puis le prospectus remis après la conversation",
           ],
           [
-            "9 h à 12 h",
-            "Chantiers en cours et zones artisanales de la zone du jour",
-            "Démos et inscriptions accompagnées sur place",
+            "Chantiers en cours et zones artisanales",
+            "En matinée",
+            "La démo sur votre téléphone, puis le QR code pour qu'il commence l'inscription. La [tournée](/commercial/tournee) propose les arrêts dans l'ordre",
           ],
           [
-            "12 h à 13 h",
             "Au téléphone",
-            "Appels de prospection pour la zone du lendemain, prise de rendez-vous",
-          ],
-          ["13 h à 14 h", "Pause", "Aucun appel de prospection"],
-          [
-            "14 h à 17 h",
-            "Rendez-vous pris le matin, ateliers d'artisans",
-            "Inscriptions accompagnées",
+            "À l'heure du déjeuner et en fin de journée",
+            "Les artisans décrochent plus volontiers quand ils ne sont pas les mains dans le chantier",
           ],
           [
-            "17 h à 18 h",
-            "Au téléphone",
-            "Relance des dossiers incomplets, rappel des contacts du jour, mise à jour du suivi",
+            "Les relances",
+            "Dans les 48 heures",
+            "Un artisan relancé vite s'inscrit plus souvent : MENAO vous les remet dans « Aujourd'hui »",
           ],
         ],
       },
       {
         type: "p",
-        text: "Les appels restent toujours **en semaine, de 10 h à 13 h et de 14 h à 20 h**. Voir [les règles de prospection](/commercial/guide/regles#prospection).",
+        text: "Par prudence, les appels restent **en semaine, de 10 h à 13 h et de 14 h à 20 h**. Voir [les règles de prospection](/commercial/guide/regles#prospection).",
       },
-      { type: "h2", id: "permanence", text: "La permanence" },
+      { type: "h2", id: "publicite", text: "Les contacts venus de la publicité" },
       {
         type: "p",
-        text: "Chaque commercial tient une demi-journée de permanence par semaine, à tour de rôle. Ce jour-là, vous rappelez dans l'heure les contacts venus de la publicité ([appel 2](/commercial/guide/scripts#rappel-publicite)), toujours dans la plage d'appel.",
+        text: "Quand l'équipe vous transmet un artisan qui a laissé ses coordonnées, rappelez-le vite, toujours dans la plage d'appel ([appel 2](/commercial/guide/scripts#rappel-publicite)) : c'est le moment où il est le plus disponible.",
       },
       {
         type: "callout",
         tone: "menao",
-        title: "Rien sans suite",
-        text: "Chaque visite et chaque appel se termine par une prochaine action notée dans le suivi : rappel, rendez-vous, pièce attendue ou « ne plus contacter ».",
+        title: "Un repère, pas une consigne",
+        text: "Repère de l'équipe MENAO : pour environ 7 validés par semaine, comptez une trentaine d'artisans vus sur 4 jours. Certains travaillent à temps partiel : le rythme s'adapte à vous. Notez une suite après chaque visite ou appel : c'est ce qui fait revenir le prospect dans « Aujourd'hui ».",
       },
     ],
   },

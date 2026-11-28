@@ -494,8 +494,65 @@ function table(name: string, eq: Record<string, unknown>, inList: Record<string,
   }
 }
 
+/** Communes de départ d'une tournée d'exemple (F-194, ADR 0394). */
+const TOUR_STARTS = [
+  { commune: "NICE", code_postal: "06300", lat: 43.7009, lng: 7.2797, prospects: 1240 },
+  { commune: "ANTIBES", code_postal: "06600", lat: 43.5808, lng: 7.1251, prospects: 410 },
+  { commune: "CANNES", code_postal: "06400", lat: 43.5528, lng: 7.0174, prospects: 520 },
+  { commune: "GRASSE", code_postal: "06130", lat: 43.6588, lng: 6.9237, prospects: 330 },
+];
+const TOUR_NAMES = [
+  ["Thermo Azur", "43.22B"],
+  ["Plomberie du Port", "43.22A"],
+  ["Riquier Électricité", "43.21A"],
+  ["Bains & Co", "43.22A"],
+  ["Carrelages du Paillon", "43.33Z"],
+  ["Élec Garibaldi", "43.21A"],
+  ["Chauffage des Collines", "43.22B"],
+  ["Sanitaires Bonaparte", "43.22A"],
+  ["Lumière & Réseaux", "43.21A"],
+  ["Plomberie Ségurane", "43.22A"],
+  ["Clim Riviera", "43.22B"],
+  ["Électricité du Château", "43.21A"],
+  ["Dépannage Saint-Roch", "43.22A"],
+  ["Énergies Pasteur", "43.22B"],
+  ["Câblage Cimiez", "43.21A"],
+  ["Eau Chaude Riquier", "43.22A"],
+  ["Thermique Arson", "43.22B"],
+  ["Volts du Port", "43.21A"],
+] as const;
+
+/** Prospects fictifs autour du point choisi, pour essayer la préparation d'une tournée. */
+function tourCandidates(args: Record<string, unknown> = {}) {
+  const lat = Number(args.p_lat) || 43.7;
+  const lng = Number(args.p_lng) || 7.28;
+  const ape = Array.isArray(args.p_ape) ? (args.p_ape as string[]) : [];
+  return TOUR_NAMES.map(([nom, code], i) => {
+    const angle = i * 2.4;
+    const r = 0.0012 + i * 0.00045;
+    return {
+      id: id(900 + i),
+      nom,
+      ape_code: code,
+      adresse: `${i + 2} rue de l'Exemple`,
+      commune: "NICE",
+      lat: lat + Math.sin(angle) * r,
+      lng: lng + Math.cos(angle) * r * 1.4,
+      rge: i % 4 === 0,
+      tranche_effectif: i % 3 === 0 ? "02" : "NN",
+      date_creation: `${2008 + (i % 14)}-03-01`,
+      mine: i === 3,
+      distance_m: Math.round(r * 111_000),
+    };
+  }).filter((c) => ape.length === 0 || ape.includes(c.ape_code));
+}
+
 function rpc(name: string, args?: Record<string, unknown>): unknown {
   switch (name) {
+    case "commercial_tour_starts":
+      return TOUR_STARTS;
+    case "commercial_tour_candidates":
+      return tourCandidates(args);
     case "my_commercial_signups":
       return SIGNUPS();
     case "commercial_day":

@@ -59,7 +59,8 @@ export function homePathForRole(role: Role): string {
       // Dossiers artisans et conformité (ADR 0286).
       return "/admin/artisans";
     case "commercial":
-      return "/commercial";
+      // « Bien démarrer » renvoie vers « Aujourd'hui » une fois le badge obtenu (ADR 0394).
+      return "/commercial/demarrer?arrivee=1";
     case "visiteur":
       return "/connexion";
     default:

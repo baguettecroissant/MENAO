@@ -2,6 +2,10 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { z } from "zod";
 import { CommercialInviteForm, CommercialStatusForm } from "@/components/admin/commercial-forms";
+import {
+  CommercialOnboardingCard,
+  onboardingRowsSchema,
+} from "@/components/admin/commercial-onboarding";
 import { AdminSectionHeader } from "@/components/admin/admin-tabs";
 import { CommercialDemoCard } from "@/components/admin/commercial-demo-card";
 import { SettingsLink, settingEuros } from "@/components/admin/settings";
@@ -69,7 +73,13 @@ export default async function AdminCommercialsPage({
     email: candidateRow.email,
     code: suggestedCode(candidateRow.first_name),
   };
-  const [{ data }, { data: summaryData }, { data: settings }, { data: demo }] = await Promise.all([
+  const [
+    { data },
+    { data: summaryData },
+    { data: settings },
+    { data: demo },
+    { data: onboardingData },
+  ] = await Promise.all([
     supabase.rpc("admin_commercials_dashboard"),
     supabase.rpc("admin_prospects_summary"),
     supabase
@@ -80,7 +90,10 @@ export default async function AdminCommercialsPage({
       .maybeSingle(),
     // Lien de démo de l'espace commercial (ADR 0344).
     supabase.rpc("admin_commercial_demo"),
+    // Arrivée des conseillers : pièces, formation, badge (ADR 0394).
+    supabase.rpc("admin_commercials_onboarding"),
   ]);
+  const onboarding = onboardingRowsSchema.safeParse(onboardingData);
   const commercials = data ?? [];
   const demoLink = demo?.[0] ?? null;
   const parsedSummary = prospectsSummarySchema.safeParse(summaryData);
@@ -102,6 +115,7 @@ export default async function AdminCommercialsPage({
         lead={t.intro}
       />
       {amountsNotSet && <Alert tone="info">{tr.settings.notSet}</Alert>}
+      {onboarding.success && <CommercialOnboardingCard rows={onboarding.data} />}
       {demoLink && (
         <CommercialDemoCard
           url={`${env.NEXT_PUBLIC_SITE_URL}/commercial/demo/${demoLink.key}`}

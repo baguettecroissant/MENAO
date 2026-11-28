@@ -1,4 +1,5 @@
 import {
+  BadgeCheck,
   BookOpen,
   Building2,
   CalendarCheck,
@@ -79,8 +80,24 @@ export const SPACE_HOME: Record<Space, string> = {
   pro: "/pro/tableau-de-bord",
   admin: "/admin",
   exemples: "/pro/decouvrir/tableau-de-bord",
-  commercial: "/commercial",
+  commercial: "/commercial/journee",
 };
+
+/**
+ * Barre d'onglets en bas de l'écran, sur téléphone, dans l'espace des conseillers seulement
+ * (ADR 0394, exception à l'ADR 0043) : l'outil de terrain s'utilise au pouce. « Plus » ouvre le menu.
+ */
+export const COMMERCIAL_TABS = [
+  { href: "/commercial/journee", label: fr.commercialField.tabs.today, icon: CalendarCheck },
+  {
+    href: "/commercial/tournee",
+    label: fr.commercialField.tabs.tour,
+    icon: MapIcon,
+    also: ["/commercial/montrer"],
+  },
+  { href: "/commercial/prospects", label: fr.commercialField.tabs.prospects, icon: Building2 },
+  { href: "/commercial/resultats", label: fr.commercialField.tabs.gains, icon: TrendingUp },
+] as const satisfies readonly NavItem[];
 
 /** Messages, accessibles depuis la barre du haut sur mobile (ADR 0043). */
 export const SPACE_MESSAGES: Partial<Record<Space, string>> = {
@@ -290,14 +307,24 @@ export const NAV: Record<Space, readonly NavSection[]> = {
       ],
     },
   ],
-  // Commerciaux de terrain (ADR 0205) : leur code et leurs inscrits, leur journée, leur planning
+  // Commerciaux de terrain (ADR 0205) : « Bien démarrer » et la tournée (ADR 0394), leur code et
+  // leurs inscrits, leur journée, leur planning
   // de lancement (ADR 0208) et leurs prospects (ADR 0206), leurs résultats et leurs primes
   // (ADR 0207), puis le guide terrain.
   commercial: [
     {
       items: [
+        // Arrivée du conseiller : statut, formation, badge (F-194, ADR 0394).
+        { href: "/commercial/demarrer", label: fr.commercialField.nav.start, icon: BadgeCheck },
         { href: "/commercial", label: fr.commercialSpace.nav.home, icon: QrCode, exact: true },
         { href: "/commercial/journee", label: fr.commercialProspects.nav.day, icon: CalendarCheck },
+        // Tournée et « Montrer à l'artisan » (F-194, ADR 0394).
+        {
+          href: "/commercial/tournee",
+          label: fr.commercialField.nav.tour,
+          icon: MapIcon,
+          also: ["/commercial/montrer"],
+        },
         // Planning de lancement (F-66, ADR 0208).
         { href: "/commercial/planning", label: fr.commercialLaunch.nav, icon: CalendarCheck },
         {

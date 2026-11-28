@@ -14,6 +14,8 @@ import { useLiveUnreadMessages } from "@/lib/messages/use-live-unread";
 import { AccountMenu } from "./account-menu";
 import {
   accountLinksFor,
+  COMMERCIAL_TABS,
+  isActive,
   MENU_COOKIE,
   SPACE_HOME,
   SPACE_MESSAGES,
@@ -30,8 +32,9 @@ const t = fr.appShell;
  * en barre d'icônes (choix mémorisé), et barre du haut (rubrique, recherche, cloche), sauf dans les
  * espaces pro, exemples et commercial (ADR 0262) où repli et cloche sont dans le menu. Mobile :
  * barre du haut (messages, cloche, compte) et le même menu latéral, en tiroir ; pas d'onglets en
- * bas d'écran, réservés aux applications iOS et Android (ADR 0043). Le contenu n'est pas enveloppé
- * dans <main> : chaque page porte le sien.
+ * bas d'écran, réservés aux applications iOS et Android (ADR 0043), sauf dans l'espace des
+ * conseillers, outil de terrain utilisé au pouce (ADR 0394). Le contenu n'est pas enveloppé dans
+ * <main> : chaque page porte le sien.
  */
 export function AppFrame({
   space,
@@ -245,10 +248,53 @@ export function AppFrame({
           </div>
         </header>
 
-        <div id="contenu" tabIndex={-1} className="flex flex-1 flex-col outline-none">
+        <div
+          id="contenu"
+          tabIndex={-1}
+          className={`flex flex-1 flex-col outline-none ${space === "commercial" ? "pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-0" : ""}`}
+        >
           {children}
         </div>
       </div>
+
+      {space === "commercial" && (
+        // Onglets du conseiller sur téléphone (ADR 0394) ; « Plus » ouvre le menu complet.
+        <nav
+          aria-label={fr.commercialField.tabs.label}
+          className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-surface/95 px-1.5 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+        >
+          {COMMERCIAL_TABS.map((tab) => {
+            const on = isActive(tab, pathname);
+            const Icon = tab.icon;
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href as Route}
+                aria-current={on ? "page" : undefined}
+                className={`flex min-h-[4.25rem] flex-1 flex-col items-center justify-center gap-0.5 text-[0.6875rem] ${on ? "font-bold text-foreground" : "font-medium text-muted-foreground"}`}
+              >
+                <span
+                  className={`flex h-7 w-12 items-center justify-center rounded-pill ${on ? "bg-primary-soft text-primary-strong" : ""}`}
+                >
+                  <Icon aria-hidden="true" className="size-5" />
+                </span>
+                {tab.label}
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setDrawerFor(pathname)}
+            aria-expanded={drawerOpen}
+            className="flex min-h-[4.25rem] flex-1 flex-col items-center justify-center gap-0.5 text-[0.6875rem] font-medium text-muted-foreground"
+          >
+            <span className="flex h-7 w-12 items-center justify-center rounded-pill">
+              <Menu aria-hidden="true" className="size-5" />
+            </span>
+            {fr.commercialField.tabs.more}
+          </button>
+        </nav>
+      )}
 
       <dialog
         ref={drawer}

@@ -1,4 +1,4 @@
-// Edge Function process-upload (F-05, F-14, F-20, F-22, F-40, F-42, F-43, F-62, F-181, F-183) : vérifie un fichier déposé par l'utilisateur dans
+// Edge Function process-upload (F-05, F-14, F-20, F-22, F-40, F-42, F-43, F-62, F-181, F-183, F-194) : vérifie un fichier déposé par l'utilisateur dans
 // « uploads/<user_id>/<uuid> » (type réel, taille), supprime les métadonnées des images, puis le
 // range dans son espace définitif et l'enregistre. Le fichier brut est toujours supprimé.
 // TODO [À VALIDER] : analyse antivirus des documents (prestataire à choisir).
@@ -36,7 +36,16 @@ const ALLOWED: Record<Purpose, DetectedFileType[]> = {
   ticket_photo: ["jpeg", "png"],
   expense_document: ["pdf", "jpeg", "png"],
   candidate_cv: ["pdf"],
+  commercial_contract: ["pdf", "jpeg", "png"],
+  commercial_urssaf: ["pdf", "jpeg", "png"],
+  commercial_rib: ["pdf", "jpeg", "png"],
 };
+// Pièces d'un conseiller (ADR 0394) : colonnes du chemin et de la date de dépôt.
+const COMMERCIAL_DOCUMENTS = {
+  commercial_contract: { path: "contrat_path", date: "contrat_depose_le" },
+  commercial_urssaf: { path: "urssaf_path", date: "urssaf_deposee_le" },
+  commercial_rib: { path: "rib_path", date: "rib_depose_le" },
+} as const;
 const EXTENSIONS: Record<DetectedFileType, string> = { pdf: "pdf", jpeg: "jpg", png: "png" };
 
 type Purpose =
@@ -50,7 +59,10 @@ type Purpose =
   | "message_attachment"
   | "ticket_photo"
   | "expense_document"
-  | "candidate_cv";
+  | "candidate_cv"
+  | "commercial_contract"
+  | "commercial_urssaf"
+  | "commercial_rib";
 type DocumentInput = {
   type: string;
   dateEmission?: string | null;
@@ -183,6 +195,14 @@ Deno.serve(
         const cvPath = `${user.id}/${file.name}`;
         await store(admin, "candidate-cvs", cvPath, file);
         return respond("ok", 200, { path: cvPath });
+      }
+
+      if (
+        purpose === "commercial_contract" ||
+        purpose === "commercial_urssaf" ||
+        purpose === "commercial_rib"
+      ) {
+        return await saveCommercialDocument(admin, user.id, purpose, file);
       }
 
       if (purpose === "avatar") {
@@ -463,6 +483,51 @@ async function saveTicketPhoto(
 
 // Pièce d'une dépense (F-62, ADR 0186) : facture ou ticket de l'artisan, dans un espace privé. Une
 // nouvelle pièce remplace la précédente.
+/**
+ * Pièce d'un conseiller actif (ADR 0394) : contrat signé, attestation Urssaf ou RIB, rangée dans
+ * « commercial-documents/<commercial_id>/ ». Un nouveau dépôt remplace l'ancien ; un nouveau
+ * contrat attend une nouvelle confirmation de l'équipe.
+ */
+async function saveCommercialDocument(
+  admin: SupabaseClient,
+  userId: string,
+  purpose: keyof typeof COMMERCIAL_DOCUMENTS,
+  file: CleanFile,
+) {
+  const { data: commercial } = await admin
+    .from("commercials")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("status", "actif")
+    .maybeSingle();
+  if (!commercial) return respond("forbidden", 403);
+  const columns = COMMERCIAL_DOCUMENTS[purpose];
+  const { data: previous } = await admin
+    .from("commercial_onboarding")
+    .select(columns.path)
+    .eq("commercial_id", commercial.id)
+    .maybeSingle();
+  const path = `${commercial.id}/${file.name}`;
+  await store(admin, "commercial-documents", path, file);
+  const today = new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" }).format(new Date());
+  const row: Record<string, string | null> = {
+    commercial_id: commercial.id,
+    [columns.path]: path,
+    [columns.date]: today,
+  };
+  if (purpose === "commercial_contract") row.contrat_signe_le = null;
+  const { error } = await admin
+    .from("commercial_onboarding")
+    .upsert(row, { onConflict: "commercial_id" });
+  if (error) {
+    await admin.storage.from("commercial-documents").remove([path]);
+    throw error;
+  }
+  const old = (previous as Record<string, string | null> | null)?.[columns.path];
+  if (old) await admin.storage.from("commercial-documents").remove([old]);
+  return respond("ok");
+}
+
 async function saveExpenseDocument(
   admin: SupabaseClient,
   artisanId: string,

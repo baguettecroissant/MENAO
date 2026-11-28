@@ -85,6 +85,8 @@ export * from "./prospects";
 export * from "./commercial-results";
 export * from "./commercial-pace";
 export * from "./commercial-sectors";
+export * from "./commercial-onboarding";
+export * from "./commercial-tour";
 export * from "./launch-plan";
 export * from "./launch-figures";
 export * from "./lead-targets";

@@ -1,4 +1,9 @@
-import { COMMERCIAL_BONUS_KINDS, COMMERCIAL_BONUS_STATUSES, formatZoneCodes } from "@menao/core";
+import {
+  COMMERCIAL_BONUS_KINDS,
+  COMMERCIAL_BONUS_STATUSES,
+  formatZoneCodes,
+  parisToday,
+} from "@menao/core";
 import type { Metadata, Route } from "next";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -9,6 +14,7 @@ import {
   CommercialZoneForm,
   PayCommercialBonusesForm,
 } from "@/components/admin/commercial-forms";
+import { CommercialContractForm } from "@/components/admin/commercial-contract-form";
 import { Alert, Card, CardTitle, StatusBadge, TextLink } from "@/components/ui";
 import { fr } from "@/i18n/fr";
 import { requireAdmin } from "@/lib/admin/guard";
@@ -116,10 +122,26 @@ export default async function AdminCommercialPage({
             : null;
   if (!UUID.test(id)) notFound();
   const { supabase } = await requireAdmin();
-  const [{ data }, { data: list }] = await Promise.all([
+  const [{ data }, { data: list }, { data: docs }] = await Promise.all([
     supabase.rpc("admin_commercial_detail", { p_id: id }),
     supabase.rpc("admin_commercials"),
+    // Pièces de « Bien démarrer » (ADR 0394), lues par URL signée.
+    supabase
+      .from("commercial_onboarding")
+      .select(
+        "contrat_path, contrat_depose_le, contrat_signe_le, urssaf_path, urssaf_deposee_le, rib_path, rib_depose_le",
+      )
+      .eq("commercial_id", id)
+      .maybeSingle(),
   ]);
+  const docPaths = [docs?.contrat_path, docs?.urssaf_path, docs?.rib_path].filter(
+    (p): p is string => Boolean(p),
+  );
+  const { data: signedDocs } = docPaths.length
+    ? await supabase.storage.from("commercial-documents").createSignedUrls(docPaths, 600)
+    : { data: [] };
+  const docUrl = (path: string | null | undefined) =>
+    (path && signedDocs?.find((x) => x.path === path)?.signedUrl) || null;
   // Commercial introuvable : la fonction renvoie null.
   const parsed = detailSchema.safeParse(data);
   if (!parsed.success) notFound();
@@ -166,6 +188,55 @@ export default async function AdminCommercialPage({
           {m.followed > 0 && <CommercialTransferForm commercialId={m.id} others={others} />}
         </Card>
       </div>
+
+      <Card className="flex flex-col gap-4">
+        <CardTitle title={fr.commercialField.admin.card.title} />
+        <ul className="flex flex-col divide-y divide-border text-sm">
+          {(
+            [
+              ["contract", docs?.contrat_path, docs?.contrat_depose_le],
+              ["urssaf", docs?.urssaf_path, docs?.urssaf_deposee_le],
+              ["rib", docs?.rib_path, docs?.rib_depose_le],
+            ] as const
+          ).map(([key, path, on]) => {
+            const url = docUrl(path);
+            return (
+              <li key={key} className="flex items-center justify-between gap-3 py-2.5">
+                <span className="font-medium">{fr.commercialField.admin.card[key]}</span>
+                {url ? (
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-primary-strong hover:underline"
+                  >
+                    {fr.commercialField.admin.card.view}
+                    {on ? ` · ${formatDay(on)}` : ""}
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground">
+                    {fr.commercialField.admin.card.none}
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        {docs?.contrat_signe_le ? (
+          <Alert tone="success">
+            {fr.commercialField.admin.card.confirmed(formatDay(docs.contrat_signe_le))}
+          </Alert>
+        ) : docs?.contrat_path ? (
+          <Alert tone="info">{fr.commercialField.admin.card.toConfirm}</Alert>
+        ) : null}
+        {(docs?.contrat_path || docs?.contrat_signe_le) && (
+          <CommercialContractForm
+            commercialId={m.id}
+            signedOn={docs?.contrat_signe_le ?? null}
+            today={parisToday()}
+          />
+        )}
+      </Card>
 
       <Card className="flex flex-col gap-4">
         <CardTitle title={d.artisans} />

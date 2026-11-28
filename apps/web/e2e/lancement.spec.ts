@@ -119,7 +119,7 @@ test("mon planning : le commercial voit ses tâches et celles de l'équipe, et c
   browser,
 }) => {
   await signIn(page, "commercial@example.test");
-  await expect(page).toHaveURL(/\/commercial$/);
+  await expect(page).toHaveURL(/\/commercial\/demarrer\?arrivee=1$/);
   await page
     .getByRole("navigation", { name: "Navigation de l'espace commercial" })
     .getByRole("link", { name: "Mon planning" })
@@ -184,7 +184,7 @@ test("mon planning : le commercial voit ses tâches et celles de l'équipe, et c
   const other = await browser.newContext();
   const lea = await other.newPage();
   await signIn(lea, "commercial2@example.test");
-  await expect(lea).toHaveURL(/\/commercial$/);
+  await expect(lea).toHaveURL(/\/commercial\/demarrer\?arrivee=1$/);
   await lea.goto("/commercial/planning?vue=tout");
   await expect(lea.getByText("Appeler les plombiers d'Antibes")).toBeVisible();
   await expect(lea.getByText("Préparer la tournée de Nice Nord")).toHaveCount(0);
