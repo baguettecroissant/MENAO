@@ -857,9 +857,9 @@ export const fr = {
           action: "Comment faire",
         },
         rappels: {
-          title: "Rappels par e-mail",
-          todo: "Activez les rappels dans Mon compte, rubrique Communications",
-          done: "Bilan du lundi et rappel de votre attestation",
+          title: "Notifications sur ce téléphone",
+          todo: "Pour savoir quand un artisan est validé, bloqué ou en fin d'essai",
+          done: "Activées sur votre téléphone",
           action: "Activer",
         },
         simulateur: {
@@ -1193,6 +1193,91 @@ export const fr = {
       signup: "M'inscrire",
       privacy:
         "Votre conseiller a saisi ces informations avec votre accord. Elles servent seulement à préparer votre inscription et sont effacées si vous ne la finissez pas.",
+    },
+    // Moments forts du conseiller (F-196, lot 85, ADR 0396).
+    moments: {
+      celebration: {
+        validation: (name: string) => `${name} est validé !`,
+        abonnement: (name: string) => `${name} devient abonné !`,
+        kindValidation: "prime de validation",
+        kindAbonnement: "prime d'abonnement",
+        textValidation:
+          "Son dossier est accepté par l'équipe MENAO. Sa fiche peut maintenant être mise en ligne.",
+        textAbonnement:
+          "Il a payé son abonnement pour la première fois : merci pour votre accompagnement.",
+        month: "Gagné ce mois-ci",
+        week: "Validés cette semaine",
+        toCome: "À venir s'il devient abonné",
+        toComeValue: "selon sa formule",
+        gains: "Voir mes gains",
+        next: "Inscrire le suivant",
+        close: "Fermer",
+      },
+      alerts: {
+        title: "Vos artisans",
+        count: (n: number) => `${n} à faire`,
+        finEssai: (days: number) =>
+          days <= 1
+            ? "Fin d'essai demain. Un appel pour l'aider à continuer."
+            : `Fin d'essai dans ${days} jours. Un appel pour l'aider à continuer.`,
+        bloque: (days: number, steps: string) =>
+          `Bloqué depuis ${days} jour${days > 1 ? "s" : ""}${steps ? ` : il manque ${steps}` : ""}.`,
+        lien: (days: number) => `Lien préparé il y a ${days} jours, pas encore ouvert.`,
+        call: "Appeler",
+        message: "Message",
+        relancer: "Relancer",
+        resend: "Renvoyer le lien",
+      },
+      relance: {
+        title: (name: string) => `Relancer ${name}`,
+        since: (days: number, step: string | null) =>
+          `Bloqué depuis ${days} jour${days > 1 ? "s" : ""}${step ? ` · étape : ${step}` : ""}`,
+        ready: "Message prêt, selon l'étape",
+        hint: "Vous pouvez le modifier avant l'envoi. Ajoutez « STOP pour ne plus recevoir de messages » si c'est un premier message écrit.",
+        sms: "SMS",
+        whatsapp: "WhatsApp",
+        call: "Appeler",
+        snooze: "Me le rappeler dans 2 jours",
+        snoozed: "C'est noté : il revient dans 2 jours.",
+        close: "Fermer",
+        noPhone: "Pas de portable connu pour cet artisan.",
+      },
+      push: {
+        title: "Être prévenu au bon moment",
+        intro:
+          "Sur ce téléphone, depuis l'icône MENAO de l'écran d'accueil. Vous choisissez ce que vous recevez ; l'e-mail et la cloche restent toujours là.",
+        card: "Notifications sur ce téléphone",
+        cardText: "Votre téléphone vous demande l'autorisation : touchez « Autoriser ».",
+        enable: "Activer sur ce téléphone",
+        enabling: "Activation…",
+        enabled: "Activées sur ce téléphone",
+        disable: "Désactiver sur ce téléphone",
+        denied:
+          "Les notifications sont refusées pour MENAO sur ce téléphone. Autorisez-les dans les réglages du téléphone, puis revenez ici.",
+        unsupported:
+          "Ce navigateur ne reçoit pas les notifications. Sur iPhone, ajoutez MENAO à l'écran d'accueil (iOS 16.4 ou plus) et ouvrez-le depuis l'icône.",
+        unavailable: "Activation impossible pour le moment. Réessayez plus tard.",
+        choose: "Ce que je reçois",
+        types: {
+          conseiller_prime: ["Un artisan est validé ou devient abonné", "Avec la prime gagnée"],
+          conseiller_relance: ["Un dossier est bloqué", "Avec le message prêt pour relancer"],
+          conseiller_fin_essai: ["Un essai se termine bientôt", "Pour l'appeler à temps"],
+          conseiller_lien: ["Un lien préparé n'est pas ouvert", "Pour le renvoyer"],
+        } as Record<string, [string, string]>,
+        iphone:
+          "Sur iPhone, les notifications marchent seulement depuis l'icône ajoutée à l'écran d'accueil (iOS 16.4 et plus). Sans elles, tout arrive par e-mail et dans la cloche.",
+        nav: "Notifications",
+      },
+      admin: {
+        title: "Alertes des conseillers",
+        lead: "Quand prévenir les conseillers de leurs artisans à relancer. Les primes, elles, sont prévenues dès qu'elles sont comptées.",
+        bloque: "Dossier bloqué après (jours sans avancer)",
+        finEssai: "Fin d'essai prévenue (jours avant)",
+        lien: "Lien préparé pas ouvert après (jours)",
+        save: "Enregistrer les réglages",
+        saved: "Réglages enregistrés.",
+        error: "Délais invalides : de 1 à 30 jours (1 à 6 pour les liens).",
+      },
     },
     // Back-office : arrivée des conseillers (Apporteurs › Commerciaux et fiche).
     admin: {

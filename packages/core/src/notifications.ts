@@ -14,6 +14,8 @@ export const OPTIONAL_NOTIFICATIONS = {
     // Réponse de l'artisan à un avis, filleul validé (ADR 0183).
     "avis_reponse",
     "filleul_valide",
+    // Prime d'un conseiller (ADR 0396).
+    "conseiller_prime",
   ],
   rappels: [
     "rdv_rappel",
@@ -32,6 +34,10 @@ export const OPTIONAL_NOTIFICATIONS = {
     "finalisation_relance",
     // E-mail du lundi aux conseillers : leur semaine (ADR 0381).
     "conseiller_semaine",
+    // Artisans à relancer par les conseillers (ADR 0396).
+    "conseiller_relance",
+    "conseiller_fin_essai",
+    "conseiller_lien",
   ],
 } as const;
 export type EmailPreferenceKey = keyof typeof OPTIONAL_NOTIFICATIONS;

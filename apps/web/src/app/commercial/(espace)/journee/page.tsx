@@ -1,8 +1,9 @@
-import { parisLocalToDate } from "@menao/core";
+import { parisLocalToDate, sortCommercialAlerts, type CommercialAlertKind } from "@menao/core";
 import { ChevronRight, Clock, Mail, MapPin } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { CancelAppointmentForm } from "@/components/commercial/cancel-appointment-form";
+import { ArtisanAlerts, type ArtisanAlert } from "@/components/commercial/field/artisan-alerts";
 import { CallLink } from "@/components/commercial/prospect-forms";
 import { EmptyState } from "@/components/empty-state";
 import { ListPanel } from "@/components/list-kit";
@@ -74,6 +75,23 @@ export default async function CommercialDayPage() {
         .order("starts_at")
         .limit(30)
     : { data: null };
+  // Vos artisans (ADR 0396) : fins d'essai, dossiers bloqués, liens pas ouverts.
+  const { data: alertRows } = space.active
+    ? await space.supabase.rpc("commercial_artisan_alerts")
+    : { data: null };
+  const alerts: ArtisanAlert[] = sortCommercialAlerts(
+    (alertRows ?? [])
+      .filter((r) => ["fin_essai", "bloque", "lien"].includes(r.kind))
+      .map((r) => ({
+        kind: r.kind as CommercialAlertKind,
+        subject: r.subject,
+        entreprise: r.entreprise ?? "—",
+        first_name: r.first_name,
+        phone: r.phone,
+        at: r.at,
+        steps: r.steps ?? [],
+      })),
+  );
   const appointments = items.filter((i) => i.kind === "rdv");
   const followUps = items.filter((i) => i.kind !== "rdv");
   // Relance d'un jour passé : sa date ; relance du jour : son heure.
@@ -102,8 +120,9 @@ export default async function CommercialDayPage() {
           <Alert tone="error">{t.errors.unavailable}</Alert>
         ) : (
           // Refonte « Nette » (ADR 0260) : rendez-vous à gauche, relances et créneaux à droite.
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_23rem]">
+          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_23rem]">
             <div className="flex min-w-0 flex-col gap-6">
+              <ArtisanAlerts alerts={alerts} advisor={space.account.firstName ?? ""} />
               {camille && camille.length > 0 && (
                 <section aria-labelledby="camille" className="flex flex-col gap-3">
                   <div className="flex flex-col gap-1">

@@ -2433,6 +2433,88 @@ export type Database = {
           },
         ];
       };
+      commercial_alert_settings: {
+        Row: {
+          bloque_jours: number;
+          fin_essai_jours: number;
+          id: boolean;
+          lien_jours: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          bloque_jours?: number;
+          fin_essai_jours?: number;
+          id?: boolean;
+          lien_jours?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          bloque_jours?: number;
+          fin_essai_jours?: number;
+          id?: boolean;
+          lien_jours?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      commercial_alert_snoozes: {
+        Row: {
+          commercial_id: string;
+          subject: string;
+          until: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          commercial_id: string;
+          subject: string;
+          until: string;
+        };
+        Update: {
+          commercial_id?: string;
+          subject?: string;
+          until?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_alert_snoozes_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: false;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      commercial_alerts_sent: {
+        Row: {
+          commercial_id: string;
+          sent_at: string;
+          subject: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          commercial_id: string;
+          sent_at?: string;
+          subject: string;
+        };
+        Update: {
+          commercial_id?: string;
+          sent_at?: string;
+          subject?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_alerts_sent_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: false;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       commercial_appointments: {
         Row: {
           address: string | null;
@@ -2575,6 +2657,7 @@ export type Database = {
           amount_cents: number | null;
           artisan_id: string | null;
           cancel_reason: string | null;
+          celebrated_at: string | null;
           commercial_id: string;
           created_at: string;
           id: string;
@@ -2591,6 +2674,7 @@ export type Database = {
           amount_cents?: number | null;
           artisan_id?: string | null;
           cancel_reason?: string | null;
+          celebrated_at?: string | null;
           commercial_id: string;
           created_at?: string;
           id?: string;
@@ -2606,6 +2690,7 @@ export type Database = {
           amount_cents?: number | null;
           artisan_id?: string | null;
           cancel_reason?: string | null;
+          celebrated_at?: string | null;
           commercial_id?: string;
           created_at?: string;
           id?: string;
@@ -7091,6 +7176,37 @@ export type Database = {
           },
         ];
       };
+      web_push_subscriptions: {
+        Row: {
+          auth: string;
+          created_at: string;
+          endpoint: string;
+          id: string;
+          last_seen_at: string;
+          p256dh: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          auth: string;
+          created_at?: string;
+          endpoint: string;
+          id?: string;
+          last_seen_at?: string;
+          p256dh: string;
+          user_id: string;
+        };
+        Update: {
+          auth?: string;
+          created_at?: string;
+          endpoint?: string;
+          id?: string;
+          last_seen_at?: string;
+          p256dh?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       webhook_events: {
         Row: {
           created_at: string;
@@ -7613,6 +7729,10 @@ export type Database = {
       };
       admin_save_candidate_test: {
         Args: { p_id: string; p_persona: string; p_review: Json; p_score: number };
+        Returns: undefined;
+      };
+      admin_save_commercial_alert_settings: {
+        Args: { p_bloque_jours: number; p_fin_essai_jours: number; p_lien_jours: number };
         Returns: undefined;
       };
       admin_save_commercial_bonus_settings: {
@@ -8330,6 +8450,7 @@ export type Database = {
           id: string;
           tokens: string[];
           type: Database["public"]["Enums"]["notification_type"];
+          web: Json;
         }[];
       };
       claim_sms_notifications: {
@@ -8364,6 +8485,20 @@ export type Database = {
           p_summary: string;
         };
         Returns: string;
+      };
+      commercial_artisan_alerts: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          artisan_id: string;
+          at: string;
+          entreprise: string;
+          first_name: string;
+          kind: string;
+          phone: string;
+          prepared_id: string;
+          steps: string[];
+          subject: string;
+        }[];
       };
       commercial_bonus_rates: {
         Args: Record<PropertyKey, never>;
@@ -8408,7 +8543,9 @@ export type Database = {
       commercial_end_tour: { Args: { p_tour: string }; Returns: undefined };
       commercial_follow_prospect: { Args: { p_id: string }; Returns: undefined };
       commercial_mark_badge_seen: { Args: Record<PropertyKey, never>; Returns: undefined };
+      commercial_mark_celebrated: { Args: { p_id: string }; Returns: undefined };
       commercial_mark_home_screen: { Args: Record<PropertyKey, never>; Returns: undefined };
+      commercial_next_celebration: { Args: Record<PropertyKey, never>; Returns: Json };
       commercial_onboarding_state: { Args: Record<PropertyKey, never>; Returns: Json };
       commercial_pace: { Args: Record<PropertyKey, never>; Returns: Json };
       commercial_prepare_signup: {
@@ -8503,6 +8640,7 @@ export type Database = {
         Args: { p_persona: string; p_score: number; p_turns: number };
         Returns: string;
       };
+      commercial_snooze_alert: { Args: { p_subject: string }; Returns: undefined };
       commercial_start_tour: {
         Args: { p_distance_m: number; p_duree: string; p_metiers: string[]; p_prospects: string[] };
         Returns: string;
@@ -8598,6 +8736,7 @@ export type Database = {
       disable_artisan_calendar_feed: { Args: Record<PropertyKey, never>; Returns: undefined };
       fill_test_onboarding: { Args: { p_steps: string[] }; Returns: undefined };
       forget_push_tokens: { Args: { p_tokens: string[] }; Returns: undefined };
+      forget_web_push: { Args: { p_endpoints: string[] }; Returns: undefined };
       free_month_candidates: {
         Args: { p_stripe_subscription_id: string };
         Returns: {
@@ -9007,6 +9146,10 @@ export type Database = {
         Args: { p_platform: Database["public"]["Enums"]["push_platform"]; p_token: string };
         Returns: undefined;
       };
+      register_web_push: {
+        Args: { p_auth: string; p_endpoint: string; p_p256dh: string };
+        Returns: undefined;
+      };
       remove_team_member: { Args: { p_user_id: string }; Returns: Json };
       renew_artisan_calendar_feed: { Args: Record<PropertyKey, never>; Returns: string };
       replace_external_busy: {
@@ -9167,6 +9310,7 @@ export type Database = {
         Args: { p_project_id: string; p_urgent: boolean };
         Returns: undefined;
       };
+      set_push_preference: { Args: { p_on: boolean; p_type: string }; Returns: undefined };
       set_team_member_active: {
         Args: { p_active: boolean; p_user_id: string };
         Returns: undefined;
@@ -9224,6 +9368,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["chantier_status"];
       };
       unregister_push_token: { Args: { p_token: string }; Returns: undefined };
+      unregister_web_push: { Args: { p_endpoint: string }; Returns: undefined };
       validate_project_criteria: { Args: { p_project_id: string }; Returns: undefined };
       voice_artisan_agents: { Args: { p_artisan_id: string }; Returns: Json };
       voice_book_commercial_appointment: {
@@ -9502,7 +9647,11 @@ export type Database = {
         | "abonnement_reconduction"
         | "abonnement_arret"
         | "equipe_nouvelle_candidature"
-        | "conseiller_urssaf";
+        | "conseiller_urssaf"
+        | "conseiller_prime"
+        | "conseiller_relance"
+        | "conseiller_fin_essai"
+        | "conseiller_lien";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -9861,6 +10010,10 @@ export const Constants = {
         "abonnement_arret",
         "equipe_nouvelle_candidature",
         "conseiller_urssaf",
+        "conseiller_prime",
+        "conseiller_relance",
+        "conseiller_fin_essai",
+        "conseiller_lien",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],

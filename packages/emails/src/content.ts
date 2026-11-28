@@ -107,6 +107,11 @@ export const NOTIFICATION_TYPES = [
   "equipe_nouvelle_candidature",
   // Attestation Urssaf d'un conseiller à renouveler (ADR 0394).
   "conseiller_urssaf",
+  // Moments forts des conseillers (ADR 0396).
+  "conseiller_prime",
+  "conseiller_relance",
+  "conseiller_fin_essai",
+  "conseiller_lien",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -203,6 +208,21 @@ const TICKET_TYPES: Record<string, string> = {
   message: "message signalé",
   litige: "litige sur un chantier",
   recompense: "récompense à expédier",
+};
+
+/** Étapes manquantes d'un dossier, en clair (relances des conseillers, ADR 0396). */
+const STEP_LABELS: Record<string, string> = {
+  entreprise: "entreprise",
+  metiers: "métiers",
+  zone: "zone",
+  charte: "charte",
+  documents: "Kbis ou pièce d'identité",
+  profil: "présentation",
+  decennale: "décennale",
+  rc_pro: "RC Pro",
+  urssaf: "URSSAF / MSA",
+  paiements: "paiements",
+  formule: "formule",
 };
 
 function text(data: Record<string, unknown>, key: string): string | null {
@@ -2160,6 +2180,88 @@ export function notificationContent(
           label: "Voir la candidature",
           url: link(candidateId ? `/admin/candidats/${candidateId}` : "/admin/candidats"),
         },
+      };
+    }
+    case "conseiller_prime": {
+      // Prime d'un conseiller créée (ADR 0396) : dossier validé ou premier paiement de l'abonnement.
+      const name = text(data, "entreprise") ?? "Un de vos artisans";
+      const subscribed = data.kind === "abonnement";
+      const plus = amount(data, "montant_centimes")?.replace(/,00\s/, "\u00a0");
+      const title = `${name} ${subscribed ? "devient abonné" : "est validé"}${plus ? ` : +${plus}` : ""}`;
+      return {
+        subject: title,
+        preview: subscribed
+          ? "Sa formule a commencé : votre prime d'abonnement est comptée."
+          : "Son dossier est accepté par l'équipe MENAO.",
+        title,
+        paragraphs: [
+          hello(ctx.firstName),
+          subscribed
+            ? `${name}, inscrit avec votre code, vient de payer son abonnement pour la première fois.${plus ? ` Votre prime d'abonnement de ${plus} est comptée.` : ""}`
+            : `Bonne nouvelle : le dossier de ${name}, inscrit avec votre code, vient d'être validé par l'équipe MENAO.${plus ? ` Votre prime de validation de ${plus} est comptée.` : ""}`,
+          subscribed
+            ? "Merci pour votre accompagnement."
+            : "S'il devient abonné à la fin de ses 2 mois d'essai, une prime d'abonnement s'ajoutera selon sa formule.",
+        ],
+        quote: null,
+        cta: { label: "Voir mes gains", url: link("/commercial/resultats") },
+      };
+    }
+    case "conseiller_relance": {
+      // Artisan d'un conseiller bloqué depuis quelques jours (ADR 0396).
+      const name = text(data, "entreprise") ?? "Un de vos artisans";
+      const days = integer(data, "jours");
+      const steps = Array.isArray(data.etapes)
+        ? data.etapes
+            .filter((x): x is string => typeof x === "string")
+            .map((x) => STEP_LABELS[x] ?? x)
+        : [];
+      const since = days && days > 1 ? ` depuis ${days}\u00a0jours` : "";
+      return {
+        subject: `${name} bloqué${since}`,
+        preview: steps.length
+          ? `Il manque : ${steps.join(", ")}. Un message est prêt pour le relancer.`
+          : "Un message est prêt pour le relancer.",
+        title: `${name} bloqué${since}`,
+        paragraphs: [
+          hello(ctx.firstName),
+          `Le dossier de ${name}, inscrit avec votre code, n'avance plus${since}.${steps.length ? ` Il manque : ${steps.join(", ")}.` : ""}`,
+          "Dans « Aujourd'hui », un message est prêt pour le relancer depuis votre téléphone.",
+        ],
+        quote: null,
+        cta: { label: "Le relancer", url: link("/commercial/journee") },
+      };
+    }
+    case "conseiller_fin_essai": {
+      // Fin d'essai proche d'un artisan du conseiller (ADR 0396).
+      const name = text(data, "entreprise") ?? "Un de vos artisans";
+      const days = integer(data, "jours");
+      const when = days === null ? "bientôt" : days <= 1 ? "demain" : `dans ${days}\u00a0jours`;
+      return {
+        subject: `Fin d'essai ${when} : ${name}`,
+        preview: "Un appel pour l'aider à bien continuer.",
+        title: `Fin d'essai ${when} : ${name}`,
+        paragraphs: [
+          hello(ctx.firstName),
+          `L'essai de ${name}, inscrit avec votre code, se termine ${when}. Un appel pour prendre de ses nouvelles et l'aider à régler sa fiche et ses disponibilités.`,
+        ],
+        quote: null,
+        cta: { label: "L'appeler", url: link("/commercial/journee") },
+      };
+    }
+    case "conseiller_lien": {
+      // Lien d'inscription préparé pas encore ouvert (ADR 0396).
+      const name = text(data, "entreprise") ?? "Un artisan";
+      return {
+        subject: `${name} n'a pas ouvert son lien`,
+        preview: "Renvoyez-lui le lien depuis votre téléphone.",
+        title: `${name} n'a pas ouvert son lien`,
+        paragraphs: [
+          hello(ctx.firstName),
+          `Le lien d'inscription que vous avez préparé pour ${name} n'est pas encore ouvert. Il expire au bout de 7 jours : vous pouvez le lui renvoyer depuis « Inscriptions ».`,
+        ],
+        quote: null,
+        cta: { label: "Renvoyer le lien", url: link("/commercial/inscriptions") },
       };
     }
     case "conseiller_urssaf": {

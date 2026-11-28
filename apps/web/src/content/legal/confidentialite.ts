@@ -200,6 +200,11 @@ export const confidentialite: LegalDocument = {
       type: "p",
       text: "Vos données sont vues par l'équipe MENAO dans la limite de ses missions, par les artisans ou les particuliers avec qui vous êtes en relation, et par les prestataires ci-dessous, qui agissent sur instruction de MENAO.",
     },
+    // Conseillers MENAO (ADR 0395, 0396). TODO(legal) : phrase à faire relire par l'avocat.
+    {
+      type: "p",
+      text: "Si vous êtes artisan et que vous vous inscrivez avec le code d'un conseiller MENAO (agent commercial indépendant), ce conseiller voit le nom de votre entreprise, l'avancement de votre dossier, la fin de votre essai, votre prénom et votre numéro de portable, pour vous accompagner jusqu'à la mise en ligne de votre fiche. Il ne voit ni vos documents, ni vos paiements, ni vos échanges avec vos clients. S'il a préparé votre inscription avec vous, les informations saisies sont effacées dès votre inscription, ou au plus tard 30 jours après.",
+    },
     {
       type: "table",
       caption: "Prestataires de MENAO, leur rôle et les données concernées",

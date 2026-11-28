@@ -185,9 +185,9 @@ function stepContent(
     case "rappels":
       return {
         title: s.rappels.title,
-        detail: state.rappels ? s.rappels.done : s.rappels.todo,
-        action: state.rappels ? null : (
-          <ActionLink href="/compte#communications" label={s.rappels.action} primary={next} />
+        detail: step.done ? s.rappels.done : s.rappels.todo,
+        action: step.done ? null : (
+          <ActionLink href="/commercial/notifications" label={s.rappels.action} primary={next} />
         ),
       };
     case "simulateur": {

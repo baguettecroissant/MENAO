@@ -1062,6 +1062,30 @@ describe("dossier et documents de l'artisan (F-50, F-51)", () => {
     expect(urssaf.subject).toBe("Votre attestation Urssaf est à renouveler");
     expect(urssaf.paragraphs.join(" ")).toContain("plus valable après le");
     expect(urssaf.cta.url).toBe("https://menao.example/commercial/demarrer");
+    const prime = notificationContent(
+      "conseiller_prime",
+      { kind: "validation", entreprise: "BAINS & CO", montant_centimes: 11000 },
+      pro,
+    );
+    expect(prime.subject).toBe("BAINS & CO est validé : +110\u00a0€");
+    expect(prime.cta.url).toBe("https://menao.example/commercial/resultats");
+    expect(
+      notificationContent("conseiller_prime", { kind: "abonnement", entreprise: "X" }, pro).subject,
+    ).toBe("X devient abonné");
+    const relance = notificationContent(
+      "conseiller_relance",
+      { entreprise: "THERMO", jours: 3, etapes: ["decennale"] },
+      pro,
+    );
+    expect(relance.subject).toBe("THERMO bloqué depuis 3\u00a0jours");
+    expect(relance.preview).toContain("Il manque : décennale.");
+    expect(
+      notificationContent("conseiller_fin_essai", { entreprise: "OLIVIERS", jours: 7 }, pro)
+        .subject,
+    ).toBe("Fin d'essai dans 7\u00a0jours : OLIVIERS");
+    expect(notificationContent("conseiller_lien", { entreprise: "PAILLON" }, pro).cta.url).toBe(
+      "https://menao.example/commercial/inscriptions",
+    );
     const late = notificationContent(
       "equipe_ticket_en_retard",
       { ticket_id: ids.request_id, type: "contact", objet: null },
