@@ -59,26 +59,24 @@ function DayRow({ item, when }: { item: DayItem; when: string }) {
  */
 export default async function CommercialDayPage() {
   const space = await getCommercialSpace();
-  const { data, error } = space.active
-    ? await space.supabase.rpc("commercial_day")
-    : { data: null, error: null };
-  const items = data ?? [];
   const now = new Date().toISOString();
   const today = parisInputValues(now).date;
-  // Rendez-vous de Manon, à partir d'aujourd'hui (heure de Paris).
-  const { data: camille } = space.active
-    ? await space.supabase
-        .from("commercial_appointments")
-        .select("id, starts_at, kind, first_name, phone, email, address, city, trade, reason")
-        .eq("status", "prevu")
-        .gte("starts_at", parisLocalToDate(today, "00:00").toISOString())
-        .order("starts_at")
-        .limit(30)
-    : { data: null };
-  // Vos artisans (ADR 0396) : fins d'essai, dossiers bloqués, liens pas ouverts.
-  const { data: alertRows } = space.active
-    ? await space.supabase.rpc("commercial_artisan_alerts")
-    : { data: null };
+  // Trois lectures en parallèle (ADR 0396) : la journée, les rendez-vous de Manon (à partir
+  // d'aujourd'hui, heure de Paris) et « Vos artisans ».
+  const [{ data, error }, { data: camille }, { data: alertRows }] = space.active
+    ? await Promise.all([
+        space.supabase.rpc("commercial_day"),
+        space.supabase
+          .from("commercial_appointments")
+          .select("id, starts_at, kind, first_name, phone, email, address, city, trade, reason")
+          .eq("status", "prevu")
+          .gte("starts_at", parisLocalToDate(today, "00:00").toISOString())
+          .order("starts_at")
+          .limit(30),
+        space.supabase.rpc("commercial_artisan_alerts"),
+      ])
+    : [{ data: null, error: null }, { data: null }, { data: null }];
+  const items = data ?? [];
   const alerts: ArtisanAlert[] = sortCommercialAlerts(
     (alertRows ?? [])
       .filter((r) => ["fin_essai", "bloque", "lien"].includes(r.kind))

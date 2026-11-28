@@ -169,7 +169,7 @@ export default async function CommercialProspectPage({
         </div>
 
         {/* Refonte « Nette » (ADR 0260) : le copilote et l'historique à gauche ; l'entreprise et le suivi à droite. */}
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
           <div className="flex min-w-0 flex-col gap-6">
             <Alert tone="info">{d.firstContact}</Alert>
 

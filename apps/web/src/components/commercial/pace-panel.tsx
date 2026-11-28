@@ -27,7 +27,7 @@ export function PacePanel({ pace }: { pace: CommercialPace }) {
   return (
     <div className="flex flex-col gap-5">
       <WeekCard pace={pace} />
-      <div className="grid items-start gap-5 lg:grid-cols-[1.25fr_1fr]">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[1.25fr_1fr]">
         <WeekBars weeks={pace.me.weeks} today={pace.today} settings={s} />
         <div className="flex flex-col gap-5">
           <TeamGoal pace={pace} />

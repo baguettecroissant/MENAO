@@ -52,7 +52,7 @@ export default async function PrepareSignupPage({
         ) : !space.active ? (
           <Alert tone="error">{fr.commercialSpace.suspended}</Alert>
         ) : (
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="min-w-0 rounded-card border border-border bg-surface p-4 sm:p-6">
               <PrepareSignupWizard
                 trades={trades ?? []}

@@ -217,7 +217,7 @@ export function TourPlanner({ starts }: { starts: TourStart[] }) {
       {message && <Alert tone={message === t.empty ? "info" : "error"}>{message}</Alert>}
 
       {stops && start && route && (
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_24rem]">
+        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_24rem]">
           <div className="relative">
             <TourMap stops={stops} start={start} height="h-80 lg:h-[34rem]" />
             <span className="absolute top-3 left-3 inline-flex items-center gap-2 rounded-input bg-surface px-3 py-2 text-sm font-semibold shadow-card">

@@ -56,7 +56,7 @@ export default async function CommercialHomePage() {
         {/* Refonte « Nette » (ADR 0260) : le code à gauche, les inscriptions à droite. */}
         <div
           id="mon-code"
-          className="grid scroll-mt-6 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_25rem]"
+          className="grid grid-cols-1 scroll-mt-6 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_25rem]"
         >
           <div className="flex min-w-0 flex-col gap-6">
             {!commercial ? (

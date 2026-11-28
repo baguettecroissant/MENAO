@@ -787,6 +787,7 @@ export const fr = {
    * « Bien démarrer » (statut d'agent, formation, badge), tournée et « Montrer à l'artisan ».
    */
   commercialField: {
+    loading: "Chargement…",
     tabs: {
       label: "Navigation principale",
       today: "Aujourd'hui",
