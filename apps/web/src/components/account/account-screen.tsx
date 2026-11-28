@@ -53,6 +53,7 @@ export function AccountScreen({
   photoUrl = null,
   deletionRequestedAt,
   emailConfirmed,
+  phoneHint,
 }: {
   profile: {
     first_name: string | null;
@@ -71,6 +72,8 @@ export function AccountScreen({
   deletionRequestedAt: string | null;
   /** Retour d'un lien de confirmation d'adresse e-mail. */
   emailConfirmed: boolean;
+  /** Texte sous le téléphone propre au rôle (conseiller, ADR 0394). */
+  phoneHint?: string;
 }) {
   const rubrics = [
     { id: "informations", label: t.profile.title, Icon: UserRound },
@@ -120,6 +123,7 @@ export function AccountScreen({
               lastName={profile?.last_name ?? ""}
               phone={profile?.phone ?? null}
               pro={pro}
+              phoneHint={phoneHint}
             />
           </Section>
 

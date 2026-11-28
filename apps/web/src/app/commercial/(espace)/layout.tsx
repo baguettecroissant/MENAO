@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell/app-shell";
 import { CommercialDemoBanner, CommercialDemoGuard } from "@/components/commercial/demo-guard";
+import { HomeScreenDetector } from "@/components/commercial/field/home-screen-detector";
 import { fr } from "@/i18n/fr";
 import { getCommercialSpace } from "@/lib/commercial/space";
 
@@ -22,6 +23,8 @@ export default async function CommercialSpaceLayout({ children }: { children: Re
       topBanner={space.demo ? <CommercialDemoBanner /> : null}
     >
       {space.demo ? <CommercialDemoGuard>{children}</CommercialDemoGuard> : children}
+      {/* Étape « MENAO sur l'écran d'accueil » de « Bien démarrer » (ADR 0394). */}
+      {space.active && !space.demo && <HomeScreenDetector done={false} />}
     </AppShell>
   );
 }

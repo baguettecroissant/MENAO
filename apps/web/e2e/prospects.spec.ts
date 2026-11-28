@@ -11,12 +11,12 @@ test("prospects : journée, recherche, suivi, rendez-vous et ne plus contacter",
   await page.getByLabel("Adresse e-mail").fill("commercial@example.test");
   await page.getByLabel("Mot de passe").fill("menao-local-dev-only");
   await page.getByRole("button", { name: "Me connecter" }).click();
-  await expect(page).toHaveURL(/\/commercial$/);
+  await expect(page).toHaveURL(/\/commercial\/demarrer\?arrivee=1$/);
   const nav = page.getByRole("navigation", { name: "Navigation de l'espace commercial" });
 
-  // Ma journée : la relance en retard du seed.
-  await nav.getByRole("link", { name: "Ma journée" }).click();
-  await expect(page.getByRole("heading", { name: "Ma journée", level: 1 })).toBeVisible();
+  // Aujourd'hui : la relance en retard du seed.
+  await nav.getByRole("link", { name: "Aujourd'hui" }).click();
+  await expect(page.getByRole("heading", { name: "Aujourd'hui", level: 1 })).toBeVisible();
   const followUps = page.getByRole("region", { name: "Relances à faire" });
   await expect(followUps.getByText("PLOMBERIE PROSPECT EXEMPLE")).toBeVisible();
 
@@ -44,7 +44,7 @@ test("prospects : journée, recherche, suivi, rendez-vous et ne plus contacter",
   await expect(page.getByText("Suivi enregistré.")).toBeVisible();
   await capture(page, "prospects-fiche");
 
-  await nav.getByRole("link", { name: "Ma journée" }).click();
+  await nav.getByRole("link", { name: "Aujourd'hui" }).click();
   await expect(
     page
       .getByRole("region", { name: "Rendez-vous aujourd'hui" })

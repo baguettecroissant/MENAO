@@ -121,7 +121,7 @@ export const fr = {
       ] as const,
       seeTitle: "Ce que vous allez voir",
       tiles: {
-        day: ["Ma journée", "Rendez-vous, appels et relances du jour"],
+        day: ["Aujourd'hui", "Rendez-vous, appels et relances du jour"],
         prospects: ["Prospects", "Les entreprises du 06 sur la liste et la carte"],
         copilot: ["Le copilote", "La visite préparée, le message prêt, le compte rendu dicté"],
         results: ["Mes résultats", "Inscrits, validés, abonnés et primes du mois"],
@@ -256,7 +256,7 @@ export const fr = {
     guide: {
       title: "Guide terrain",
       intro:
-        "Le parcours de l'artisan, la journée type, la démo, les appels types, les objections et les règles à respecter.",
+        "Le parcours de l'artisan, l'organisation de la semaine, la démo, les appels types, les objections et les règles à respecter.",
       listLabel: "Rubriques du guide",
       back: "Guide terrain",
       previous: "Rubrique précédente",
@@ -308,7 +308,7 @@ export const fr = {
   },
   /** Suivi des prospects des commerciaux (F-65, lot 2, ADR 0206). */
   commercialProspects: {
-    nav: { day: "Ma journée", prospects: "Prospects" },
+    nav: { day: "Aujourd'hui", prospects: "Prospects" },
     list: {
       title: "Prospects",
       intro:
@@ -422,7 +422,7 @@ export const fr = {
       } as Record<string, string>,
     },
     day: {
-      title: "Ma journée",
+      title: "Aujourd'hui",
       intro: (date: string) => `Vos rendez-vous et vos relances du ${date}.`,
       appointments: "Rendez-vous aujourd'hui",
       appointmentsEmpty: "Aucun rendez-vous prévu aujourd'hui.",
@@ -430,9 +430,10 @@ export const fr = {
       followUpsEmpty: "Aucune relance en retard. Bravo.",
       late: (date: string) => `Prévue le ${date}`,
       at: (time: string) => `À ${time}`,
-      phoneTitle: "Créneaux téléphone",
+      // Conseil, pas une consigne : agents indépendants (ADR 0394).
+      phoneTitle: "Un conseil pour vos appels",
       phoneText:
-        "12 h à 13 h : prise de rendez-vous. 17 h à 18 h : relances et suivi. Les appels restent en semaine, de 10 h à 13 h et de 14 h à 20 h.",
+        "Les artisans décrochent plus volontiers à l'heure du déjeuner et en fin de journée. Par prudence, les appels restent en semaine, de 10 h à 13 h et de 14 h à 20 h.",
       call: "Appeler",
       allProspects: "Voir tous mes prospects",
       // Rendez-vous pris par la secrétaire vocale Manon (ADR 0226).
@@ -781,11 +782,357 @@ export const fr = {
    * Tableaux de lancement (F-66, ADR 0208) : « Mon planning » des commerciaux, et libellés du
    * tableau partagés avec le back-office (étapes, catégories, états, filtres).
    */
+  /**
+   * Espace des conseillers sur le terrain (F-194, lot 83, ADR 0394) : barre du bas sur téléphone,
+   * « Bien démarrer » (statut d'agent, formation, badge), tournée et « Montrer à l'artisan ».
+   */
+  commercialField: {
+    tabs: {
+      label: "Navigation principale",
+      today: "Aujourd'hui",
+      tour: "Tournée",
+      prospects: "Prospects",
+      gains: "Gains",
+      more: "Plus",
+    },
+    nav: { start: "Bien démarrer", tour: "Ma tournée" },
+    start: {
+      title: (firstName: string | null) => (firstName ? `Bienvenue, ${firstName}` : "Bienvenue"),
+      titleReady: "Bien démarrer",
+      intro:
+        "Tout ce qu'il faut pour commencer sur le terrain. Comptez environ 2 heures en tout, à votre rythme : vous pouvez vous arrêter et reprendre quand vous voulez.",
+      introReady:
+        "Vous êtes prêt pour le terrain. Gardez vos pièces à jour : l'attestation Urssaf se renouvelle tous les 6 mois.",
+      progress: (done: number, total: number) => `${done} étapes faites sur ${total}`,
+      next: "Prochaine étape",
+      groups: {
+        statut: "Mon statut d'agent",
+        telephone: "Mon téléphone",
+        formation: "Ma formation",
+        prospect: "Mon premier prospect",
+      },
+      groupCount: (done: number, total: number) => `${done} sur ${total}`,
+      steps: {
+        contrat: {
+          title: "Contrat d'agent commercial",
+          todo: "Déposez le contrat signé : MENAO le relit puis le confirme",
+          deposited: (date: string) => `Déposé le ${date}, en relecture par MENAO`,
+          done: (date: string) => `Signé le ${date}, confirmé par MENAO`,
+          action: "Déposer",
+          view: "Voir le PDF",
+        },
+        rsac: {
+          title: "Immatriculation au RSAC",
+          todo: "Votre numéro au registre spécial des agents commerciaux",
+          done: (numero: string, greffe: string | null) =>
+            greffe ? `Greffe de ${greffe} · n° ${numero}` : `N° ${numero}`,
+          number: "Numéro RSAC",
+          greffe: "Greffe (facultatif)",
+          save: "Enregistrer",
+          edit: "Modifier",
+          saved: "Numéro enregistré.",
+        },
+        urssaf: {
+          title: "Attestation de vigilance Urssaf",
+          todo: "À déposer, puis tous les 6 mois",
+          valid: (date: string) => `Valable jusqu'au ${date}`,
+          soon: (date: string) => `À renouveler : plus valable après le ${date}`,
+          expired: (date: string) => `Expirée le ${date} : déposez la nouvelle`,
+          action: "Déposer",
+          renew: "Renouveler",
+          view: "Voir",
+        },
+        rib: {
+          title: "RIB pour vos primes",
+          todo: "Vos primes sont virées le dernier jour du mois",
+          done: (date: string) => `Déposé le ${date}`,
+          action: "Déposer",
+          replace: "Remplacer",
+          view: "Voir",
+        },
+        ecran: {
+          title: "MENAO sur l'écran d'accueil",
+          todo: "Ouvrez MENAO depuis l'icône de votre téléphone",
+          done: (date: string) => `Installée le ${date}`,
+          action: "Comment faire",
+        },
+        rappels: {
+          title: "Rappels par e-mail",
+          todo: "Activez les rappels dans Mon compte, rubrique Communications",
+          done: "Bilan du lundi et rappel de votre attestation",
+          action: "Activer",
+        },
+        simulateur: {
+          title: "6 · Simulateur de vente",
+          todo: (pass: number) => `Une note de ${pass}/20 ou plus`,
+          done: (score: number) => `Réussi avec ${score}/20`,
+          tried: (score: number, pass: number) => `Meilleure note : ${score}/20 (il faut ${pass})`,
+          action: "S'entraîner",
+        },
+        premier_prospect: {
+          title: "Préparer une visite avec le copilote",
+          todo: "Choisissez un artisan de votre secteur : le copilote prépare la fiche",
+          done: "Une fiche de préparation faite",
+          action: "Choisir un prospect",
+        },
+        module: {
+          todo: (minutes: number) => `${minutes} min · quiz de 5 questions`,
+          done: (score: number) => `Quiz réussi : ${score}/5`,
+          tried: (score: number) => `Quiz : ${score}/5, il en faut 4 pour réussir`,
+          start: "Commencer",
+          retry: "Reprendre",
+          review: "Revoir",
+        },
+      },
+      upload: {
+        choose: "Choisir un fichier",
+        uploading: "Envoi…",
+        hint: "PDF, ou photo nette (JPEG ou PNG), 10 Mo au plus.",
+        done: "Pièce déposée.",
+        errors: {
+          too_large: "Fichier trop lourd : 10 Mo au plus.",
+          invalid_type: "Format refusé : PDF, JPEG ou PNG.",
+          rate_limited: "Trop d'envois d'affilée : réessayez dans un moment.",
+          unavailable: "Envoi impossible pour le moment. Réessayez.",
+        } as Record<string, string>,
+      },
+      training: {
+        title: "Formation d'équipe",
+        dates: "Lundi 4 et mardi 5 janvier 2027",
+        text: "L'équipe MENAO vous envoie le lieu et l'horaire. Apportez votre téléphone chargé.",
+      },
+      badge: {
+        title: "Prêt pour le terrain",
+        text: (pass: number) =>
+          `Le badge s'obtient avec le contrat confirmé, le RSAC, les 5 quiz réussis et une note de ${pass}/20 au simulateur. C'est un repère : votre code et vos primes marchent dès votre arrivée.`,
+        earned: "Badge obtenu",
+      },
+      contact: { title: "Une question ?", text: "Écrivez à l'équipe MENAO", action: "Écrire" },
+      homeScreenHelp:
+        "Sur iPhone : dans Safari, touchez Partager puis « Sur l'écran d'accueil ». Sur Android : dans Chrome, menu ⋮ puis « Ajouter à l'écran d'accueil ». Ouvrez ensuite MENAO depuis l'icône : l'étape se coche toute seule.",
+      ready: {
+        title: (firstName: string | null) =>
+          firstName ? `Prêt pour le terrain, ${firstName} !` : "Prêt pour le terrain !",
+        text: (score: number, code: string | null) =>
+          `Formation terminée, simulateur réussi avec ${score}/20.${code ? ` Votre code ${code} est actif : chaque artisan inscrit avec lui est rattaché à vous.` : ""}`,
+        cta: "Préparer ma première tournée",
+        later: "Plus tard",
+      },
+    },
+    formation: {
+      back: "Bien démarrer",
+      module: (n: number, total: number) => `Module ${n} sur ${total}`,
+      readGuide: "Lire la rubrique du guide",
+      startQuiz: "Faire le quiz",
+      question: (n: number, total: number) => `Question ${n} sur ${total}`,
+      check: "Valider ma réponse",
+      next: "Question suivante",
+      finish: "Voir mon résultat",
+      right: "Bonne réponse",
+      wrong: "Ce n'est pas la bonne réponse",
+      passed: (score: number) => `Module réussi : ${score}/5`,
+      failed: (score: number) => `${score}/5 : il en faut 4. Relisez la leçon et recommencez.`,
+      retry: "Recommencer le quiz",
+      backToStart: "Retour à Bien démarrer",
+      unavailable: "Le résultat n'a pas pu être enregistré. Réessayez.",
+      choicesLabel: "Réponses possibles",
+    },
+    tour: {
+      title: "Ma tournée",
+      intro:
+        "MENAO choisit des artisans libres de votre secteur, proches les uns des autres, dans le bon ordre. Vous retirez ou ajoutez ce que vous voulez.",
+      where: "Où",
+      aroundMe: "Autour de moi",
+      locating: "Recherche de votre position…",
+      fromCommune: "Depuis une commune",
+      communeLabel: "Commune de départ",
+      communePlaceholder: "Choisir une commune",
+      locationDenied:
+        "Position non disponible : autorisez-la pour MENAO dans les réglages du téléphone, ou choisissez une commune.",
+      trades: "Quels métiers",
+      duration: "Combien de temps",
+      durations: { court: "2 h", matinee: "Matinée", journee: "Journée" },
+      propose: "Proposer une tournée",
+      proposing: "Recherche des artisans…",
+      empty:
+        "Aucun artisan libre de ces métiers autour de ce point. Essayez un autre métier, une durée plus longue ou une autre commune.",
+      summary: (stops: number, km: string, duration: string) =>
+        `${stops} arrêt${stops > 1 ? "s" : ""} · ${km} km · environ ${duration}`,
+      stopsTitle: (n: number) => `${n} arrêt${n > 1 ? "s" : ""} proposé${n > 1 ? "s" : ""}`,
+      remove: (name: string) => `Retirer ${name}`,
+      add: "Ajouter",
+      addTitle: "Autres artisans proches",
+      addOne: (name: string) => `Ajouter ${name}`,
+      mine: "À recontacter",
+      start: "Commencer la tournée",
+      starting: "Préparation…",
+      how: "Comment MENAO choisit",
+      howText:
+        "Des artisans libres (suivis par personne, pas encore sur MENAO) de votre secteur et des métiers choisis, plus vos prospects à recontacter aujourd'hui ; d'abord les vôtres, puis les plus proches. Les arrêts sont suivis par vous pendant la tournée ; ceux que vous n'avez pas vus sont rendus à la fin.",
+      privacy:
+        "Votre position sert seulement à calculer le parcours, sur votre téléphone. MENAO ne l'enregistre pas et ne suit pas vos déplacements.",
+      phoneTip:
+        "Préparée sur ordinateur, la tournée vous attend dans l'onglet Tournée de votre téléphone.",
+      recent: "Mes dernières tournées",
+      recentRow: (date: string, stops: number, interested: number) =>
+        `${date} · ${stops} arrêts · ${interested} intéressé${interested > 1 ? "s" : ""}`,
+      mapLabel: "Carte de la tournée",
+      errors: {
+        unavailable: "La tournée n'a pas pu être préparée. Réessayez.",
+        notFree: "Ces artisans ne sont plus libres : proposez une nouvelle tournée.",
+      },
+    },
+    stop: {
+      progress: (n: number, total: number) => `Arrêt ${n} sur ${total}`,
+      counts: (seen: number, interested: number) =>
+        `${seen} vu${seen > 1 ? "s" : ""} · ${interested} intéressé${interested > 1 ? "s" : ""}`,
+      go: "Y aller",
+      created: (year: string) => `créée en ${year}`,
+      hookTitle: "Accroche du copilote :",
+      hookMissing:
+        "Pas encore de fiche de préparation. Le copilote la prépare en quelques secondes depuis la fiche du prospect.",
+      prepare: "Préparer avec le copilote",
+      call: "Appeler",
+      show: "Montrer à l'artisan",
+      outcomes: {
+        interesse: "Intéressé",
+        a_rappeler: "À rappeler",
+        absent: "Absent",
+        pas_interesse: "Pas intéressé",
+      },
+      absentHint: "on repassera",
+      callBackAt: "Rappeler le",
+      callBackSave: "Enregistrer le rappel",
+      note: "Note vocale",
+      noteHint: "Dictez ce qui s'est dit : le copilote en fait le compte rendu, vous le relisez.",
+      previous: "Arrêt précédent",
+      skip: "Passer cet arrêt",
+      nextStop: "Arrêt suivant",
+      done: (label: string) => `Noté : ${label}`,
+      fix: "Corriger",
+      end: "Terminer la tournée",
+      endConfirm: "Terminer maintenant ? Les arrêts non vus seront rendus.",
+      allDone: "Tous les arrêts sont passés.",
+      afterTitle: "Et maintenant ?",
+      signup: "Il commence son inscription",
+      signupHint: "QR code avec votre code, sur votre écran",
+      sms: "Lui envoyer le lien par SMS",
+      smsHint: "Message prêt, envoyé depuis votre téléphone",
+      smsBody: (link: string) =>
+        `Bonjour, comme convenu, voici le lien pour vous inscrire sur MENAO avec mon code : ${link}`,
+      errors: {
+        unavailable: "Pas enregistré. Réessayez.",
+        date: "Choisissez une date de rappel dans les 90 prochains jours.",
+      },
+      list: "Tous les arrêts",
+    },
+    summary: {
+      title: (firstName: string | null) =>
+        firstName ? `Belle tournée, ${firstName}` : "Belle tournée",
+      when: (date: string) => `Tournée du ${date}`,
+      funnel: { stops: "Arrêts", seen: "Vus", interested: "Intéressés", signups: "Inscriptions" },
+      funnelLabel: "Bilan de la tournée",
+      atStake: (amount: string) => `Jusqu'à ${amount} en jeu`,
+      atStakeText: (n: number, amount: string) =>
+        `${n} inscription${n > 1 ? "s" : ""} × ${amount} à la validation du dossier`,
+      sorted: "Déjà rangé pour vous",
+      callBacks: (n: number) =>
+        `${n} rappel${n > 1 ? "s" : ""} ajouté${n > 1 ? "s" : ""} à « Aujourd'hui »`,
+      absents: (n: number) =>
+        `${n} absent${n > 1 ? "s" : ""} à revoir dans une semaine, dans « Aujourd'hui »`,
+      signups: (n: number) =>
+        `${n} inscription${n > 1 ? "s" : ""} commencée${n > 1 ? "s" : ""} avec votre code`,
+      signupsHint: "Suivez-les dans « Gains »",
+      next: "Préparer la prochaine",
+      private:
+        "Ce bilan est pour vous : ce n'est pas un rapport à rendre. L'équipe MENAO ne voit que vos résultats (inscrits, validés).",
+    },
+    show: {
+      label: "Montrer à l'artisan",
+      close: "Fermer",
+      tabs: {
+        demo: "La démo",
+        calcul: "Le calcul",
+        formules: "Les formules",
+        inscription: "S'inscrire",
+      },
+      demoTitle: "MENAO en 2 minutes",
+      demoText:
+        "L'espace d'exemples : une demande, un devis dicté, la signature et le paiement, sa fiche. Des données fictives, rien n'est enregistré.",
+      demoOpen: "Ouvrir la démo",
+      calcTitle: "Combien de chantiers pour rembourser MENAO ?",
+      job: "Montant moyen d'un chantier",
+      margin: "Sa marge",
+      marginPerJob: "Marge par chantier",
+      plan: (name: string) => `Formule ${name}`,
+      perMonth: (amount: string) => `${amount} / mois`,
+      paidBy: (name: string) => `${name} remboursée par`,
+      calcNote:
+        "Calcul indicatif : prix mensuel de la formule comparé à la marge d'un chantier moyen. MENAO ne garantit aucun nombre de demandes.",
+      plansTitle: "Les formules",
+      plansNote: "Prix HT par mois, sans commission sur ses chantiers. 2 mois d'essai gratuits.",
+      signupTitle: "Son inscription, avec votre code",
+      signupText:
+        "Il scanne ce code avec l'appareil photo de son téléphone : l'inscription vous est rattachée.",
+      signupCta: "Je m'inscris",
+      noCode: "Votre code n'est pas actif : demandez à l'équipe MENAO.",
+    },
+    // Back-office : arrivée des conseillers (Apporteurs › Commerciaux et fiche).
+    admin: {
+      title: "Bien démarrer",
+      lead: "Où en est chaque conseiller : pièces du statut d'agent, formation et badge « Prêt pour le terrain ». Les pièces sont privées (lecture par le conseiller et les admins).",
+      columns: {
+        name: "Conseiller",
+        contract: "Contrat",
+        rsac: "RSAC",
+        urssaf: "Urssaf",
+        rib: "RIB",
+        formation: "Formation",
+        state: "État",
+      },
+      contract: { none: "pas déposé", toConfirm: "à confirmer", signed: "signé" },
+      urssaf: {
+        manquante: "à déposer",
+        valide: "à jour",
+        bientot: "à renouveler",
+        expiree: "expirée",
+      },
+      missing: "manquant",
+      formation: (quizzes: number, best: number | null) =>
+        `${quizzes} / 5${best !== null ? ` · ${best}/20` : ""}`,
+      ready: "Prêt",
+      inProgress: "En cours",
+      empty: "Aucun conseiller pour l'instant.",
+      alertsTitle: "À surveiller",
+      alerts: {
+        contract: (name: string) => `${name} : contrat déposé, à relire et confirmer`,
+        urssafSoon: (name: string, date: string) =>
+          `${name} : attestation Urssaf plus valable après le ${date}`,
+        urssafExpired: (name: string) => `${name} : attestation Urssaf expirée`,
+      },
+      card: {
+        title: "Bien démarrer",
+        documents: "Pièces",
+        contract: "Contrat signé",
+        urssaf: "Attestation Urssaf",
+        rib: "RIB",
+        view: "Voir",
+        none: "pas encore déposé",
+        signedOn: "Date de signature",
+        confirm: "Confirmer le contrat",
+        unconfirm: "Retirer la confirmation",
+        confirmed: (date: string) => `Contrat confirmé, signé le ${date}.`,
+        toConfirm:
+          "Le conseiller a déposé son contrat signé : relisez-le, puis confirmez la date de signature.",
+        error: "Confirmation impossible : vérifiez la date.",
+      },
+    },
+  },
   commercialLaunch: {
     nav: "Mon planning",
     title: "Mon planning",
     intro:
-      "Vos tâches semaine par semaine, les dates clés de l'équipe et les rendez-vous réguliers. Cochez une tâche dès qu'elle est faite.",
+      "Les dates clés de l'équipe et des idées de tâches, semaine par semaine. Vous organisez votre travail comme vous voulez : cochez ce qui vous sert.",
     notReady: "Votre planning n'est pas encore prêt.",
     notReadyText: "L'équipe MENAO le prépare : il apparaîtra ici.",
     phases: {
@@ -3914,6 +4261,9 @@ export const fr = {
       phoneHintClient:
         "Utilisé pour le code de signature envoyé par SMS et pour que l'artisan puisse vous rappeler.",
       phoneHintPro: "Visible de vos clients une fois leur demande acceptée.",
+      // Conseiller (ADR 0394) : le numéro n'est jamais montré aux artisans par MENAO.
+      phoneHintCommercial:
+        "Pour que l'équipe MENAO puisse vous joindre. Les artisans voient votre numéro seulement quand vous les appelez ou leur écrivez depuis votre téléphone.",
       save: "Enregistrer mes informations",
       saved: "Vos informations sont enregistrées.",
     },

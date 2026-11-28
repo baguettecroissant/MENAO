@@ -36,6 +36,7 @@ export default async function AccountPage({ searchParams }: PageProps<"/compte">
       }
       deletionRequestedAt={deletion?.created_at ?? null}
       emailConfirmed={params.email === "confirme"}
+      phoneHint={role === "commercial" ? fr.account.profile.phoneHintCommercial : undefined}
     />
   );
 }

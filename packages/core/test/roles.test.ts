@@ -74,7 +74,7 @@ describe("homePathForRole", () => {
     expect(homePathForRole("admin")).toBe("/admin");
     expect(homePathForRole("support")).toBe("/admin/tickets");
     expect(homePathForRole("verification")).toBe("/admin/artisans");
-    expect(homePathForRole("commercial")).toBe("/commercial");
+    expect(homePathForRole("commercial")).toBe("/commercial/demarrer?arrivee=1");
     expect(homePathForRole("visiteur")).toBe("/connexion");
   });
 });

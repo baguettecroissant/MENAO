@@ -105,6 +105,8 @@ export const NOTIFICATION_TYPES = [
   "abonnement_arret",
   // Nouvelle candidature de commercial, pour les administrateurs (ADR 0389).
   "equipe_nouvelle_candidature",
+  // Attestation Urssaf d'un conseiller à renouveler (ADR 0394).
+  "conseiller_urssaf",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -2158,6 +2160,26 @@ export function notificationContent(
           label: "Voir la candidature",
           url: link(candidateId ? `/admin/candidats/${candidateId}` : "/admin/candidats"),
         },
+      };
+    }
+    case "conseiller_urssaf": {
+      // Attestation de vigilance Urssaf d'un conseiller, à renouveler tous les 6 mois (ADR 0394).
+      const until = dateDay(text(data, "expire_le"));
+      return {
+        subject: "Votre attestation Urssaf est à renouveler",
+        preview: until
+          ? `Elle n'est plus valable après le ${until}.`
+          : "Elle arrive au bout de ses 6 mois.",
+        title: "Votre attestation Urssaf est à renouveler",
+        paragraphs: [
+          hello(ctx.firstName),
+          until
+            ? `Votre attestation de vigilance Urssaf arrive au bout de ses 6 mois : elle n'est plus valable après le ${until}.`
+            : "Votre attestation de vigilance Urssaf arrive au bout de ses 6 mois.",
+          "Téléchargez la nouvelle sur votre espace Urssaf, puis déposez-la dans « Bien démarrer » : une photo suffit.",
+        ],
+        quote: null,
+        cta: { label: "Déposer mon attestation", url: link("/commercial/demarrer") },
       };
     }
     case "acces_suspendu":

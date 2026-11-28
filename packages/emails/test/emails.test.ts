@@ -1058,6 +1058,10 @@ describe("dossier et documents de l'artisan (F-50, F-51)", () => {
     );
     expect(candidate.paragraphs.join(" ")).toContain("sans CV");
     expect(candidate.cta.url).toBe(`https://menao.example/admin/candidats/${ids.request_id}`);
+    const urssaf = notificationContent("conseiller_urssaf", { expire_le: "2027-07-04" }, pro);
+    expect(urssaf.subject).toBe("Votre attestation Urssaf est à renouveler");
+    expect(urssaf.paragraphs.join(" ")).toContain("plus valable après le");
+    expect(urssaf.cta.url).toBe("https://menao.example/commercial/demarrer");
     const late = notificationContent(
       "equipe_ticket_en_retard",
       { ticket_id: ids.request_id, type: "contact", objet: null },

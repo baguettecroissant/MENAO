@@ -483,7 +483,7 @@ function MessagePanel({
 // Compte rendu dicté
 // ------------------------------------------------------------------------------------------------
 
-function ReportPanel({
+export function ReportPanel({
   prospectId,
   phone,
   link,

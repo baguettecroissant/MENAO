@@ -2770,6 +2770,184 @@ export type Database = {
         };
         Relationships: [];
       };
+      commercial_formation_results: {
+        Row: {
+          commercial_id: string;
+          created_at: string;
+          module: string;
+          score: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          commercial_id: string;
+          created_at?: string;
+          module: string;
+          score: number;
+          updated_at?: string;
+        };
+        Update: {
+          commercial_id?: string;
+          created_at?: string;
+          module?: string;
+          score?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_formation_results_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: false;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      commercial_onboarding: {
+        Row: {
+          badge_vu_le: string | null;
+          commercial_id: string;
+          contrat_depose_le: string | null;
+          contrat_path: string | null;
+          contrat_signe_le: string | null;
+          ecran_installe_le: string | null;
+          rib_depose_le: string | null;
+          rib_path: string | null;
+          rsac_greffe: string | null;
+          rsac_numero: string | null;
+          updated_at: string;
+          urssaf_deposee_le: string | null;
+          urssaf_path: string | null;
+          urssaf_rappel_le: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          badge_vu_le?: string | null;
+          commercial_id: string;
+          contrat_depose_le?: string | null;
+          contrat_path?: string | null;
+          contrat_signe_le?: string | null;
+          ecran_installe_le?: string | null;
+          rib_depose_le?: string | null;
+          rib_path?: string | null;
+          rsac_greffe?: string | null;
+          rsac_numero?: string | null;
+          updated_at?: string;
+          urssaf_deposee_le?: string | null;
+          urssaf_path?: string | null;
+          urssaf_rappel_le?: string | null;
+        };
+        Update: {
+          badge_vu_le?: string | null;
+          commercial_id?: string;
+          contrat_depose_le?: string | null;
+          contrat_path?: string | null;
+          contrat_signe_le?: string | null;
+          ecran_installe_le?: string | null;
+          rib_depose_le?: string | null;
+          rib_path?: string | null;
+          rsac_greffe?: string | null;
+          rsac_numero?: string | null;
+          updated_at?: string;
+          urssaf_deposee_le?: string | null;
+          urssaf_path?: string | null;
+          urssaf_rappel_le?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_onboarding_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: true;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      commercial_tour_stops: {
+        Row: {
+          outcome: Database["public"]["Enums"]["tour_outcome"] | null;
+          position: number;
+          prospect_id: string;
+          suivi_cree: boolean;
+          tour_id: string;
+          visited_at: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          outcome?: Database["public"]["Enums"]["tour_outcome"] | null;
+          position: number;
+          prospect_id: string;
+          suivi_cree?: boolean;
+          tour_id: string;
+          visited_at?: string | null;
+        };
+        Update: {
+          outcome?: Database["public"]["Enums"]["tour_outcome"] | null;
+          position?: number;
+          prospect_id?: string;
+          suivi_cree?: boolean;
+          tour_id?: string;
+          visited_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_tour_stops_prospect_id_fkey";
+            columns: ["prospect_id"];
+            isOneToOne: false;
+            referencedRelation: "prospects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "commercial_tour_stops_tour_id_fkey";
+            columns: ["tour_id"];
+            isOneToOne: false;
+            referencedRelation: "commercial_tours";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      commercial_tours: {
+        Row: {
+          commercial_id: string;
+          created_at: string;
+          distance_m: number;
+          duree: string;
+          ended_at: string | null;
+          id: string;
+          metiers: string[];
+          status: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          commercial_id: string;
+          created_at?: string;
+          distance_m: number;
+          duree: string;
+          ended_at?: string | null;
+          id?: string;
+          metiers?: string[];
+          status?: string;
+        };
+        Update: {
+          commercial_id?: string;
+          created_at?: string;
+          distance_m?: number;
+          duree?: string;
+          ended_at?: string | null;
+          id?: string;
+          metiers?: string[];
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "commercial_tours_commercial_id_fkey";
+            columns: ["commercial_id"];
+            isOneToOne: false;
+            referencedRelation: "commercials";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       commercial_trainings: {
         Row: {
           commercial_id: string;
@@ -7153,6 +7331,7 @@ export type Database = {
           zone_codes_postaux: string[];
         }[];
       };
+      admin_commercials_onboarding: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_complete_spot_check: {
         Args: { p_id: string; p_insurer_called?: boolean; p_note?: string; p_result: string };
         Returns: undefined;
@@ -7481,6 +7660,10 @@ export type Database = {
         }[];
       };
       admin_send_candidate_demo: { Args: { p_id: string }; Returns: undefined };
+      admin_set_commercial_contract: {
+        Args: { p_commercial: string; p_signe_le: string };
+        Returns: undefined;
+      };
       admin_set_commercial_demo: { Args: { p_enabled: boolean }; Returns: undefined };
       admin_set_commercial_pace: {
         Args: { p_commercial: string; p_rythme_raison?: string; p_rythme_semaine?: number };
@@ -8157,7 +8340,11 @@ export type Database = {
       };
       commercial_demo_open: { Args: { p_key: string }; Returns: boolean };
       commercial_do_not_contact: { Args: { p_id: string }; Returns: undefined };
+      commercial_end_tour: { Args: { p_tour: string }; Returns: undefined };
       commercial_follow_prospect: { Args: { p_id: string }; Returns: undefined };
+      commercial_mark_badge_seen: { Args: Record<PropertyKey, never>; Returns: undefined };
+      commercial_mark_home_screen: { Args: Record<PropertyKey, never>; Returns: undefined };
+      commercial_onboarding_state: { Args: Record<PropertyKey, never>; Returns: Json };
       commercial_pace: { Args: Record<PropertyKey, never>; Returns: Json };
       commercial_prospect: {
         Args: { p_id: string };
@@ -8213,9 +8400,55 @@ export type Database = {
       commercial_release_prospect: { Args: { p_id: string }; Returns: undefined };
       commercial_results: { Args: Record<PropertyKey, never>; Returns: Json };
       commercial_save_brief: { Args: { p_content: Json; p_id: string }; Returns: string };
+      commercial_save_formation: {
+        Args: { p_module: string; p_score: number };
+        Returns: undefined;
+      };
+      commercial_save_rsac: { Args: { p_greffe?: string; p_numero: string }; Returns: undefined };
       commercial_save_training: {
         Args: { p_persona: string; p_score: number; p_turns: number };
         Returns: string;
+      };
+      commercial_start_tour: {
+        Args: { p_distance_m: number; p_duree: string; p_metiers: string[]; p_prospects: string[] };
+        Returns: string;
+      };
+      commercial_tour: { Args: { p_id: string }; Returns: Json };
+      commercial_tour_candidates: {
+        Args: { p_ape: string[]; p_lat: number; p_lng: number; p_radius_m?: number };
+        Returns: {
+          adresse: string;
+          ape_code: string;
+          commune: string;
+          date_creation: string;
+          distance_m: number;
+          id: string;
+          lat: number;
+          lng: number;
+          mine: boolean;
+          nom: string;
+          rge: boolean;
+          tranche_effectif: string;
+        }[];
+      };
+      commercial_tour_outcome: {
+        Args: {
+          p_next_action_at?: string;
+          p_outcome: Database["public"]["Enums"]["tour_outcome"];
+          p_prospect: string;
+          p_tour: string;
+        };
+        Returns: undefined;
+      };
+      commercial_tour_starts: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          code_postal: string;
+          commune: string;
+          lat: number;
+          lng: number;
+          prospects: number;
+        }[];
       };
       commercial_update_prospect: {
         Args: {
@@ -9172,7 +9405,8 @@ export type Database = {
         | "essai_fin_proche"
         | "abonnement_reconduction"
         | "abonnement_arret"
-        | "equipe_nouvelle_candidature";
+        | "equipe_nouvelle_candidature"
+        | "conseiller_urssaf";
       partner_commission_kind: "demande_qualifiee" | "abonne_payant";
       partner_commission_status: "en_attente" | "validee" | "payee" | "annulee";
       partner_status: "actif" | "suspendu";
@@ -9215,6 +9449,7 @@ export type Database = {
         | "accompagnement"
         | "invitation_artisan"
         | "rappel_pro";
+      tour_outcome: "interesse" | "a_rappeler" | "absent" | "pas_interesse";
       value_for_money: "excellent" | "convenable" | "trop_cher";
       welcome_gift_item: "tshirt" | "casquette";
       zone_mode: "rayon" | "communes" | "departements" | "regions" | "france";
@@ -9529,6 +9764,7 @@ export const Constants = {
         "abonnement_reconduction",
         "abonnement_arret",
         "equipe_nouvelle_candidature",
+        "conseiller_urssaf",
       ],
       partner_commission_kind: ["demande_qualifiee", "abonne_payant"],
       partner_commission_status: ["en_attente", "validee", "payee", "annulee"],
@@ -9573,6 +9809,7 @@ export const Constants = {
         "invitation_artisan",
         "rappel_pro",
       ],
+      tour_outcome: ["interesse", "a_rappeler", "absent", "pas_interesse"],
       value_for_money: ["excellent", "convenable", "trop_cher"],
       welcome_gift_item: ["tshirt", "casquette"],
       zone_mode: ["rayon", "communes", "departements", "regions", "france"],

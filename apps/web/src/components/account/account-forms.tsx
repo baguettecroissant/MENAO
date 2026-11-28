@@ -36,11 +36,14 @@ export function ProfileForm({
   lastName,
   phone,
   pro,
+  phoneHint,
 }: {
   firstName: string;
   lastName: string;
   phone: string | null;
   pro: boolean;
+  /** Texte sous le téléphone propre au rôle (conseiller, ADR 0394). */
+  phoneHint?: string;
 }) {
   const [state, action, pending] = useActionState(saveAccountProfile, initialFormState);
   const errors = state.fieldErrors ?? {};
@@ -67,7 +70,7 @@ export function ProfileForm({
         label={t.profile.phone}
         name="phone"
         labelNote={pro ? undefined : t.profile.phoneOptional}
-        hint={pro ? t.profile.phoneHintPro : t.profile.phoneHintClient}
+        hint={phoneHint ?? (pro ? t.profile.phoneHintPro : t.profile.phoneHintClient)}
         defaultValue={state.values?.phone ?? (phone ? phone.replace(/^\+33/, "0") : "")}
         errors={errors.phone}
       />

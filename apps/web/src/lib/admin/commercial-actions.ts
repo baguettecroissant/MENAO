@@ -306,3 +306,27 @@ export async function setCommercialDemo(_prev: FormState, formData: FormData): P
   revalidatePath(PATH);
   return { success: td.saved };
 }
+
+/**
+ * Contrat signé déposé par le conseiller, relu puis confirmé avec sa date de signature, ou
+ * confirmation retirée (F-194, ADR 0394).
+ */
+export async function confirmCommercialContract(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const id = text(formData, "id") ?? "";
+  const remove = text(formData, "retirer") === "1";
+  const date = text(formData, "signe_le") ?? "";
+  if (!UUID.test(id) || (!remove && !/^\d{4}-\d{2}-\d{2}$/.test(date))) {
+    return { error: fr.commercialField.admin.card.error };
+  }
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_set_commercial_contract", {
+    p_commercial: id,
+    p_signe_le: (remove ? null : date) as string,
+  });
+  if (error) return { error: fr.commercialField.admin.card.error };
+  revalidateCommercial(id);
+  return {};
+}

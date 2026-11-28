@@ -8,7 +8,10 @@ test("espace commercial : code, QR code, inscrits, guide terrain et cartes", asy
   await page.getByLabel("Adresse e-mail").fill("commercial@example.test");
   await page.getByLabel("Mot de passe").fill("menao-local-dev-only");
   await page.getByRole("button", { name: "Me connecter" }).click();
-  await expect(page).toHaveURL(/\/commercial$/);
+  // Arrivée par « Bien démarrer » tant que le badge n'est pas obtenu (ADR 0394).
+  await expect(page).toHaveURL(/\/commercial\/demarrer\?arrivee=1$/);
+  await expect(page.getByRole("heading", { name: "Bienvenue, Rémi", level: 1 })).toBeVisible();
+  await page.goto("/commercial");
 
   await expect(page.getByRole("heading", { name: "Bonjour Rémi", level: 1 })).toBeVisible();
   const code = page.getByRole("region", { name: "Votre code" });
@@ -90,7 +93,7 @@ test("espace commercial : code, QR code, inscrits, guide terrain et cartes", asy
 
   // Le back-office et l'espace pro lui restent fermés.
   await page.goto("/admin");
-  await expect(page).toHaveURL(/\/commercial$/);
+  await expect(page).toHaveURL(/\/commercial\/demarrer\?arrivee=1$/);
   await page.goto("/pro/tableau-de-bord");
   await expect(page).not.toHaveURL(/\/pro\/tableau-de-bord$/);
 });
