@@ -232,7 +232,7 @@ $$;
 revoke execute on function public.commercial_mark_badge_seen() from public, anon;
 grant execute on function public.commercial_mark_badge_seen() to authenticated;
 
--- Back-office : l'arrivée de chaque conseiller (hors radiés), avec ses pièces et sa formation.
+-- Back-office : l'arrivée de chaque conseiller, avec ses pièces et sa formation.
 create function public.admin_commercials_onboarding()
 returns jsonb
 language plpgsql
@@ -252,7 +252,6 @@ begin
       'state', app.commercial_onboarding_json(c.id)
     ) order by c.nom, c.id)
     from public.commercials c
-    where c.status <> 'radie'
   ), '[]'::jsonb);
 end;
 $$;

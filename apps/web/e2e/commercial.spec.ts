@@ -93,7 +93,7 @@ test("espace commercial : code, QR code, inscrits, guide terrain et cartes", asy
 
   // Le back-office et l'espace pro lui restent fermés.
   await page.goto("/admin");
-  await expect(page).toHaveURL(/\/commercial$/);
+  await expect(page).toHaveURL(/\/commercial\/demarrer\?arrivee=1$/);
   await page.goto("/pro/tableau-de-bord");
   await expect(page).not.toHaveURL(/\/pro\/tableau-de-bord$/);
 });

@@ -60,7 +60,7 @@ test("terrain : bien démarrer, quiz, tournée, suite d'une visite et bilan", as
   await expect(
     page.getByRole("heading", { name: "PLOMBERIE PROSPECT EXEMPLE", level: 1 }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Intéressé" }).click();
+  await page.getByRole("button", { name: "Intéressé", exact: true }).click();
   await expect(page.getByText("Noté : Intéressé")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Et maintenant ?" })).toBeVisible();
 

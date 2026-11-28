@@ -120,7 +120,7 @@ select is(app.send_urssaf_reminders('2027-06-18 10:00+02'), 0, 'Urssaf : pas enc
 select is(app.send_urssaf_reminders('2027-06-19 10:00+02'), 1, 'Urssaf : rappel 15 jours avant');
 select is(app.send_urssaf_reminders('2027-06-25 10:00+02'), 0, 'Urssaf : un seul rappel par dépôt');
 select is((select data ->> 'expire_le' from public.notifications
-  where user_id = 'c1830000-0000-4000-8000-000000000002' and type = 'conseiller_urssaf'), '2027-07-04',
+  where user_id = 'c1830000-0000-4000-8000-000000000002' and type = 'conseiller_urssaf' limit 1), '2027-07-04',
   'rappel : date de fin de l''attestation');
 
 -- ---------- Tournée de Sarah ----------
